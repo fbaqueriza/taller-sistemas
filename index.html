@@ -16,6 +16,7 @@
   --accent:#0f6e8c; --accent-ink:#0b5970; --accent-soft:#e1eef3;
   --good:#0ca30c; --warn:#fab219; --serious:#ec835a; --crit:#d03b3b;
   --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300; --grid:#e1e0d9; --axis:#c3c2b7;
+  --c-int:#7a4ea8; --c-int-soft:#eee6f6; --c-int-ink:#5b3585; --c-dis:#b8701c; --c-dis-soft:#f8ecd9; --c-dis-ink:#8a5210; --c-ret:#0f6e8c;
   --display:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
   --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
@@ -25,12 +26,14 @@
     --bg:#0f1311; --surface:#171c1a; --surface-2:#1f2623; --fg:#eef1ee; --fg2:#b6bfba; --muted:#8a938f; --line:#2a3330;
     --accent:#4fb3d1; --accent-ink:#8fd2e6; --accent-soft:#14303a;
     --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --grid:#2c2c2a; --axis:#383835; color-scheme:dark;
+    --c-int:#a98ad0; --c-int-soft:#2a2238; --c-int-ink:#c9b3e6; --c-dis:#d99a4a; --c-dis-soft:#33281a; --c-dis-ink:#e8b877; --c-ret:#4fb3d1;
   }
 }
 :root[data-theme="dark"]{
   --bg:#0f1311; --surface:#171c1a; --surface-2:#1f2623; --fg:#eef1ee; --fg2:#b6bfba; --muted:#8a938f; --line:#2a3330;
   --accent:#4fb3d1; --accent-ink:#8fd2e6; --accent-soft:#14303a;
   --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --grid:#2c2c2a; --axis:#383835; color-scheme:dark;
+  --c-int:#a98ad0; --c-int-soft:#2a2238; --c-int-ink:#c9b3e6; --c-dis:#d99a4a; --c-dis-soft:#33281a; --c-dis-ink:#e8b877; --c-ret:#4fb3d1;
 }
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5}
@@ -160,6 +163,22 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 .step.ahora i{background:var(--accent);color:#fff}
 .step.ahora em{color:var(--accent-ink)}
 .muted{color:var(--muted);margin:0}
+.capas{display:grid;gap:8px}
+.capa{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;padding:14px 16px;border-radius:6px;border:1px solid var(--line);background:var(--surface);border-left-width:5px}
+.capa.intencion{border-left-color:var(--c-int)}.capa.diseno{border-left-color:var(--c-dis)}.capa.retro{border-left-color:var(--c-ret)}
+.capa>div:first-child b{font-family:var(--display);font-weight:700;font-size:16px;display:block}
+.capa>div:first-child span{font-family:var(--mono);font-size:11px;color:var(--muted);display:block;margin-top:2px}
+.capa .items{display:grid;gap:8px;min-width:0}
+.capa .item{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:baseline;font-size:14px}
+.capa .item .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);white-space:nowrap;padding-top:2px}
+.capa .item .vals{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.chip{display:inline-block;padding:3px 9px;border-radius:12px;background:var(--surface-2);font-size:13px;color:var(--fg);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip.off{color:var(--muted);border:1px dashed var(--line);background:none}
+.chip.warn{background:var(--warn);color:#1a1200}
+.chip.good{background:var(--good);color:#fff}
+.chip.q{white-space:normal;font-style:italic;color:var(--fg2);background:none;padding-left:0}
+@media (max-width:640px){.capa{grid-template-columns:1fr}}
+.pal-n.int{background:var(--c-int-soft);color:var(--c-int-ink)}.pal-n.dis{background:var(--c-dis-soft);color:var(--c-dis-ink)}
 .errbox{background:var(--surface);border:1px solid var(--crit);border-radius:6px;padding:10px 14px;font-family:var(--mono);font-size:12px;color:var(--crit);display:grid;gap:3px}
 .lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
 .mcard{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;gap:6px;cursor:pointer;min-width:0}
@@ -270,6 +289,36 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
     </div>
   </details>
 
+  <details class="grp" open>
+    <summary><span>Diseño <small>información · reglas · auto-organización</small></span><b id="n-diseno"></b></summary>
+    <div class="grp-body">
+      <p class="hint-p">La capa de diseño de Meadows: quién ve qué y cuándo, qué reglas gobiernan el sistema, y cómo puede cambiar su propia estructura. No se simula, pero se visualiza y entra en el camino.</p>
+      <h3 style="margin-top:10px">Flujos de información <small style="font-family:var(--mono);font-weight:400;font-size:11px;color:var(--muted)">palanca 6</small></h3>
+      <div class="row row-head" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(90px,.7fr) 80px 28px"><span>Señal</span><span>Quién la ve</span><span>Cada cuánto</span><span>Retardo</span><span></span></div>
+      <div class="rows" id="info"></div>
+      <button class="add" data-add="info">+ agregar flujo de información</button>
+      <h3 style="margin-top:14px">Reglas del sistema <small style="font-family:var(--mono);font-weight:400;font-size:11px;color:var(--muted)">palanca 5</small></h3>
+      <div class="row row-head" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr) 28px"><span>Regla</span><span>Afecta a</span><span></span></div>
+      <div class="rows" id="normas"></div>
+      <button class="add" data-add="normas">+ agregar regla</button>
+      <div class="field" style="margin-top:14px"><label for="d-auto">Auto-organización <small style="font-family:var(--mono);font-size:11px;color:var(--muted)">palanca 4</small></label><textarea id="d-auto" data-m="auto" rows="2" placeholder="Cómo puede el sistema cambiar su propia estructura: agregar una fuente de ingreso, cerrar un stock, crear una regla nueva…"></textarea></div>
+    </div>
+  </details>
+
+  <details class="grp" open>
+    <summary><span>Intención <small>meta · paradigma · trascender</small></span><b id="n-intencion"></b></summary>
+    <div class="grp-body">
+      <p class="hint-p">Las capas más fuertes. La meta le da referencia al bucle de balance; el paradigma decide qué meta vale la pena; trascender es saber que ese paradigma es uno entre varios.</p>
+      <div class="fields">
+        <div class="field"><label for="i-meta">Meta <small style="font-family:var(--mono);font-size:11px;color:var(--muted)">palanca 3</small></label><input type="text" id="i-meta" data-m="meta" placeholder="para qué existe este sistema"></div>
+        <div class="field"><label for="i-metaValor">Valor objetivo del indicador</label><input type="number" id="i-metaValor" data-m="metaValor" step="any" placeholder="0"><span class="hint">del indicador elegido como objetivo</span></div>
+        <div class="field"><label for="i-metaPlazo">En cuántos pasos</label><input type="number" id="i-metaPlazo" data-m="metaPlazo" step="1" min="1" placeholder="0"></div>
+      </div>
+      <div class="field" style="margin-top:10px"><label for="i-paradigma">Paradigma <small style="font-family:var(--mono);font-size:11px;color:var(--muted)">palanca 2</small></label><textarea id="i-paradigma" data-m="paradigma" rows="2" placeholder="La idea desde la que surge el sistema. Qué es la plata, qué es el negocio, qué es el éxito."></textarea></div>
+      <div class="field" style="margin-top:10px"><label for="i-trascender">Trascender el paradigma <small style="font-family:var(--mono);font-size:11px;color:var(--muted)">palanca 1</small></label><textarea id="i-trascender" data-m="trascender" rows="2" placeholder="Qué otra forma de mirar esto existiría. Qué dejarías de medir si cambiaras de paradigma."></textarea></div>
+    </div>
+  </details>
+
   <details class="grp">
     <summary><span>Reglas de lectura <small>opcional · cuándo avisar</small></span><b id="n-reglas"></b></summary>
     <div class="grp-body">
@@ -309,6 +358,9 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 
   <div class="panel"><h2>Camino</h2><p class="note" id="camino-next"></p><ol class="camino" id="camino"></ol></div>
 
+  <div class="sec-head"><h2>Las tres capas</h2><p>De arriba hacia abajo, de la más fuerte a la más débil. Lo que simula el motor vive en la capa de abajo; las otras dos le dan sentido y forma.</p></div>
+  <div class="capas" id="capas"></div>
+
   <div class="sec-head"><h2>Alertas</h2></div>
   <div class="cards" id="cards"></div>
   <details class="plain"><summary>Lo que está bien <span id="ok-count"></span></summary><div class="cards" id="cards-ok" style="margin-top:10px"></div></details>
@@ -345,6 +397,8 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
       <li>Pagar lo que se pueda: <code>min(deuda, pesos)</code>, cargado como dos flujos de salida, uno desde cada stock</li>
       <li>Un sobrante que se reparte: <code>max(0, ingreso - gastos) * fraccion</code></li>
     </ul>
+    <h3>Las tres capas</h3>
+    <p>Meadows ordena doce palancas; conviene leerlas en tres capas. <b>Retroalimentación y parámetros</b> (12 a 7): números, buffers, estructura de stocks y flujos, retardos, bucles. Es lo que el motor simula. <b>Diseño</b> (6 a 4): quién ve qué información y cuándo, qué reglas gobiernan, cómo puede el sistema reorganizarse. <b>Intención</b> (3 a 1): la meta, el paradigma desde el que surge, y la capacidad de trascenderlo. Las capas de arriba no se simulan, pero deciden qué vale la pena simular. En Jugar, "Las tres capas" las muestra juntas con lo que cargaste en Describir.</p>
     <h3>Las doce palancas de Meadows, de la más débil a la más fuerte</h3>
     <ol reversed>
       <li value="12"><b>Parámetros.</b> Números, subsidios, impuestos, estándares.</li>
@@ -378,6 +432,7 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 'use strict';
 const KEY='taller-sistemas-v1';
 const FUERZA={12:'parámetros',11:'buffers',10:'estructura',9:'retardos',8:'bucles de balance',7:'bucles de refuerzo',6:'información',5:'reglas',4:'auto-organización',3:'metas',2:'paradigma',1:'trascender'};
+const CAPA=f=>f<=3?'int':f<=6?'dis':'ret';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const uid=()=>Math.random().toString(36).slice(2,8);
@@ -446,6 +501,11 @@ function compile(src){
 function tplVacio(){return {id:uid(),nombre:'Nuevo sistema',horizonte:24,unidad:'mes',objetivo:'',maximizar:1,formato:'num',contexto:'',stocks:[],flujos:[],params:[],indicadores:[],palancas:[],reglas:[],activas:[]};}
 function tplFinanzas(){return {id:uid(),nombre:'Finanzas personales',horizonte:24,unidad:'mes',objetivo:'neto_real',maximizar:1,formato:'ars',
   contexto:'Una persona con ingreso mensual, gastos que siguen la inflación, un colchón en pesos y dólares, inversiones y una deuda de tarjeta. Todo en pesos nominales; el indicador neto_real deflacta. Los indicadores se evalúan en orden, así que uno puede usar al anterior.',
+  info:[{k:'i1',senal:'pesos',quien:'yo',cada:'cuando llega el resumen',retardo:1},{k:'i2',senal:'neto_real',quien:'yo',cada:'una vez por mes en esta página',retardo:0}],
+  normas:[{k:'n1',texto:'La tarjeta solo para cuotas sin interés',afecta:'deuda'},{k:'n2',texto:'Lo que excede el colchón se dolariza',afecta:'compra_d'}],
+  auto:'Puedo abrir una fuente de ingreso nueva, o cerrar el stock de deuda para siempre con una regla.',
+  meta:'Un año de libertad para elegir proyectos',metaValor:40000000,metaPlazo:24,
+  paradigma:'La plata es tiempo libre comprado por adelantado.',trascender:'Medir meses de libertad en vez de pesos cambiaría qué palancas importan.',
   stocks:[{k:'pesos',nombre:'Pesos líquidos',inicial:400000,unidad:'$',min0:true},{k:'dolares',nombre:'Dólares ahorrados',inicial:5000,unidad:'USD',min0:true},{k:'inversiones',nombre:'Inversiones',inicial:0,unidad:'$',min0:true},{k:'deuda',nombre:'Deuda de tarjeta',inicial:300000,unidad:'$',min0:true}],
   params:[{k:'ingreso',nombre:'Ingreso mensual',valor:3000000,nota:'típico'},{k:'tipo_cambio',nombre:'Tipo de cambio hoy',valor:1535,unidad:'$',nota:'oficial venta 13-oct-2026; el dólar sigue la inflación',externo:true},{k:'gastos',nombre:'Gastos mensuales',valor:1135000,nota:'fijos + variables'},{k:'inflacion',nombre:'Inflación mensual',valor:0.019,unidad:'%',nota:'INDEC sep-2026',externo:true},{k:'ajuste_anual',nombre:'Crecimiento anual del ingreso',valor:0.21,unidad:'%',nota:'10 % cada 6 meses'},{k:'tasa_inv',nombre:'Rendimiento inversión (mensual)',valor:0.03,unidad:'%',nota:''},{k:'tasa_deuda',nombre:'Interés de la tarjeta (mensual)',valor:0.08,unidad:'%',nota:''},{k:'pago_deuda',nombre:'Pago mensual de la deuda',valor:50000,nota:'la cuota que pagás por mes'},{k:'ahorro_auto',nombre:'Ahorro automático (fracción del sobrante)',valor:0,unidad:'%',nota:'0 a 1'},{k:'compra_usd',nombre:'Compra mensual de dólares',valor:0,unidad:'USD',nota:'0 = no comprás'}],
   flujos:[{k:'entra_ingreso',nombre:'Ingreso',desde:'',hacia:'pesos',formula:'ingreso * (1 + ajuste_anual) ^ (t / 12)'},{k:'salen_gastos',nombre:'Gastos',desde:'pesos',hacia:'',formula:'gastos * (1 + inflacion) ^ t'},{k:'ahorro',nombre:'Ahorro automático',desde:'pesos',hacia:'inversiones',formula:'max(0, ingreso * (1 + ajuste_anual) ^ (t / 12) - gastos * (1 + inflacion) ^ t) * ahorro_auto'},{k:'rendimiento',nombre:'Rendimiento',desde:'',hacia:'inversiones',formula:'inversiones * tasa_inv'},{k:'interes',nombre:'Interés de la deuda',desde:'',hacia:'deuda',formula:'deuda * tasa_deuda'},{k:'pago_p',nombre:'Pago de deuda (sale de pesos)',desde:'pesos',hacia:'',formula:'min(deuda, min(pesos, pago_deuda))'},{k:'pago_d',nombre:'Pago de deuda (baja la deuda)',desde:'deuda',hacia:'',formula:'min(deuda, min(pesos, pago_deuda))'},{k:'compra_p',nombre:'Compra de dólares (sale de pesos)',desde:'pesos',hacia:'',formula:'if(pesos >= compra_usd * tipo_cambio * (1 + inflacion) ^ t, compra_usd * tipo_cambio * (1 + inflacion) ^ t, 0)'},{k:'compra_d',nombre:'Compra de dólares (entran USD)',desde:'',hacia:'dolares',formula:'if(pesos >= compra_usd * tipo_cambio * (1 + inflacion) ^ t, compra_usd, 0)'}],
@@ -454,6 +514,10 @@ function tplFinanzas(){return {id:uid(),nombre:'Finanzas personales',horizonte:2
   reglas:[{k:'r1',cuando:'deuda > 0 && pesos >= deuda',nivel:'atencion',fuerza:5,titulo:'Deuda cubierta: cortá el bucle hoy',texto:'Debés {deuda} y tenés {pesos}. Cada mes de espera cuesta {interes} de interés. Activá "Pagar la deuda hoy" y el bucle vicioso se apaga.'},{k:'r2',cuando:'deuda > 0 && pesos < deuda',nivel:'critico',fuerza:5,titulo:'Desplazar la carga',texto:'La deuda ({deuda}) supera la liquidez ({pesos}). El sobrante tiene que ir entero a la deuda antes que a cualquier inversión.'},{k:'r3',cuando:'colchon < 3',nivel:'atencion',fuerza:11,titulo:'Colchón corto',texto:'Tenés {colchon} de gasto en pesos. Un buffer de 3 a 6 meses absorbe shocks sin activar la deuda.'},{k:'r4',cuando:'ahorro_auto == 0 && ingreso > gastos',nivel:'atencion',fuerza:10,titulo:'El ahorro depende de la voluntad',texto:'Sobran {entra_ingreso} menos {salen_gastos} por mes y nada va solo a inversión. La inflación se come lo que queda en pesos.'},{k:'r5',cuando:'neto_real_fin < neto_real',nivel:'critico',fuerza:7,titulo:'El sistema se descapitaliza',texto:'El patrimonio real pasa de {neto_real} a {neto_real_fin} en {H} meses. Algún bucle vicioso domina.'}]};}
 function tplNegocio(){return {id:uid(),nombre:'Caja de un local',horizonte:12,unidad:'mes',objetivo:'caja',maximizar:1,formato:'ars',
   contexto:'Un local gastronómico: ventas diarias, insumos comprados a proveedores con plazo, costos fijos, y el retiro del dueño. El stock crítico es la caja.',
+  info:[{k:'i1',senal:'caja',quien:'el dueño',cada:'todos los días',retardo:0},{k:'i2',senal:'margen',quien:'el contador',cada:'cada mes',retardo:1}],
+  normas:[{k:'n1',texto:'No se retira más que el margen del mes anterior',afecta:'retiros'}],
+  auto:'',meta:'Un local que se sostiene sin el dueño adentro',metaValor:5000000,metaPlazo:12,
+  paradigma:'El local es una máquina de caja, no un hobby.',trascender:'',
   stocks:[{k:'caja',nombre:'Caja',inicial:2000000,unidad:'$',min0:false},{k:'proveedores',nombre:'Deuda con proveedores',inicial:1500000,unidad:'$',min0:true}],
   params:[{k:'ventas_dia',nombre:'Ventas por día',valor:400000,nota:''},{k:'dias',nombre:'Días abiertos por mes',valor:26,unidad:'días',nota:''},{k:'insumos',nombre:'Costo de insumos (fracción de ventas)',valor:0.35,unidad:'%',nota:''},{k:'fijos',nombre:'Costos fijos mensuales',valor:5000000,nota:'alquiler, sueldos, servicios'},{k:'retiro',nombre:'Retiro del dueño',valor:3000000,nota:''},{k:'inflacion',nombre:'Inflación mensual',valor:0.019,unidad:'%',nota:'',externo:true},{k:'crecimiento',nombre:'Crecimiento mensual de ventas',valor:0.02,unidad:'%',nota:'precio + volumen',externo:true},{k:'plazo',nombre:'Plazo de pago a proveedores',valor:1,unidad:'meses',nota:'1 = se paga al mes siguiente'}],
   flujos:[{k:'ventas',nombre:'Ventas',desde:'',hacia:'caja',formula:'ventas_dia * dias * (1 + crecimiento) ^ t'},{k:'compras',nombre:'Compras de insumos',desde:'',hacia:'proveedores',formula:'ventas_dia * dias * (1 + crecimiento) ^ t * insumos'},{k:'pago_prov_c',nombre:'Pago a proveedores (sale de caja)',desde:'caja',hacia:'',formula:'proveedores / plazo'},{k:'pago_prov_p',nombre:'Pago a proveedores (baja la deuda)',desde:'proveedores',hacia:'',formula:'proveedores / plazo'},{k:'costos_fijos',nombre:'Costos fijos',desde:'caja',hacia:'',formula:'fijos * (1 + inflacion) ^ t'},{k:'retiros',nombre:'Retiro del dueño',desde:'caja',hacia:'',formula:'retiro'}],
@@ -466,7 +530,8 @@ const TPL=[{n:'Vacío',f:tplVacio,d:'Empezá de cero.'},{n:'Finanzas personales'
 let LIB=[],M=null,DB=null,dirty=false,saveT=null,saving=false,pending=false,errs=[];
 function normalize(m){
   const b=tplVacio();const out={...b,...m};
-  for(const k of ['stocks','flujos','params','indicadores','palancas','reglas','activas','decisiones'])if(!Array.isArray(out[k]))out[k]=[];
+  for(const k of ['stocks','flujos','params','indicadores','palancas','reglas','activas','decisiones','info','normas'])if(!Array.isArray(out[k]))out[k]=[];
+  for(const k of ['auto','meta','paradigma','trascender'])if(typeof out[k]!=='string')out[k]='';
   if(!out.id)out.id=uid();out.horizonte=Math.max(2,Math.min(240,Math.round(out.horizonte||24)));out.t0=Math.max(0,Math.round(out.t0||0));
   return out;
 }
@@ -526,7 +591,9 @@ const COLS={
   params:{grid:'minmax(0,1.3fr) minmax(90px,.8fr) minmax(110px,.9fr) minmax(60px,.4fr) minmax(0,1fr) 70px 28px',cols:[['nombre','text','nombre'],['k','key','clave'],['valor','number','0'],['unidad','text','unidad'],['nota','text','nota'],['externo','check','']]},
   indicadores:{grid:'minmax(0,1fr) minmax(90px,.7fr) minmax(0,1.8fr) minmax(60px,.4fr) 28px',cols:[['nombre','text','nombre'],['k','key','clave'],['formula','formula','fórmula'],['unidad','text','unidad']]},
   palancas:{grid:'minmax(0,1.2fr) 60px minmax(90px,.7fr) minmax(90px,.8fr) minmax(90px,.8fr) minmax(0,1.3fr) 28px',cols:[['nombre','text','nombre'],['fuerza','fuerza',''],['tipo','tiposel',''],['campo','camposel',''],['valor','formula','nuevo valor'],['descripcion','text','por qué']]},
-  reglas:{grid:'minmax(0,1.4fr) 100px 60px minmax(0,1fr) minmax(0,1.6fr) 28px',cols:[['cuando','formula','condición'],['nivel','nivelsel',''],['fuerza','fuerza',''],['titulo','text','título'],['texto','text','texto con {claves}']]}
+  reglas:{grid:'minmax(0,1.4fr) 100px 60px minmax(0,1fr) minmax(0,1.6fr) 28px',cols:[['cuando','formula','condición'],['nivel','nivelsel',''],['fuerza','fuerza',''],['titulo','text','título'],['texto','text','texto con {claves}']]},
+  info:{grid:'minmax(0,1fr) minmax(0,1fr) minmax(90px,.7fr) 80px 28px',cols:[['senal','senalsel',''],['quien','text','quién la ve'],['cada','text','cada mes, semanal…'],['retardo','number','0']]},
+  normas:{grid:'minmax(0,2fr) minmax(0,1fr) 28px',cols:[['texto','text','la regla, en una frase'],['afecta','afectasel','']]}
 };
 function cell(list,r,[f,type,ph]){
   const a=`data-list="${list}" data-id="${r.id}" data-field="${f}"`;const v=r[f];
@@ -541,16 +608,22 @@ function cell(list,r,[f,type,ph]){
     case 'camposel':{const L=r.tipo==='stock'?M.stocks.map(s=>[s.k,s.nombre]):M.params.map(p=>[p.k,p.nombre]);return `<select ${a}>${L.map(([k,n])=>`<option value="${esc(k)}"${k===v?' selected':''}>${esc(n||k)}</option>`).join('')}</select>`;}
     case 'fuerza':return `<select ${a}>${Object.keys(FUERZA).sort((x,y)=>y-x).map(n=>`<option value="${n}"${+n===+(v||12)?' selected':''}>${n}</option>`).join('')}</select>`;
     case 'nivelsel':return `<select ${a}>${['critico','atencion','ok'].map(n=>`<option value="${n}"${n===(v||'atencion')?' selected':''}>${n}</option>`).join('')}</select>`;
+    case 'senalsel':{const L=[...M.stocks.map(s=>[s.k,s.nombre]),...M.indicadores.map(x=>[x.k,x.nombre]),...M.flujos.map(f=>[f.k,f.nombre])];return `<select ${a}><option value="">(elegí la señal)</option>${L.map(([k,n])=>`<option value="${esc(k)}"${k===v?' selected':''}>${esc(n||k)}</option>`).join('')}</select>`;}
+    case 'afectasel':{const L=[...M.flujos.map(f=>[f.k,'flujo: '+(f.nombre||f.k)]),...M.params.map(p=>[p.k,'parámetro: '+(p.nombre||p.k)]),...M.stocks.map(s=>[s.k,'stock: '+(s.nombre||s.k)])];return `<select ${a}><option value="">(todo el sistema)</option>${L.map(([k,n])=>`<option value="${esc(k)}"${k===v?' selected':''}>${esc(n)}</option>`).join('')}</select>`;}
   }
 }
 function renderList(list){
   const C=COLS[list];
   $(list).innerHTML=M[list].map(r=>`<div class="row" style="grid-template-columns:${C.grid}" data-id="${r.id}">${C.cols.map(c=>cell(list,r,c)).join('')}<button class="del" data-del="${list}" data-id="${r.id}" aria-label="quitar">×</button></div>`).join('');
-  $('n-'+list).textContent=M[list].length;
+  const n=$('n-'+list);if(n)n.textContent=M[list].length;
+  if(list==='info'||list==='normas')$('n-diseno').textContent=`${M.info.length} señales · ${M.normas.length} reglas`;
 }
 function renderEditor(){
-  for(const r of ['stocks','flujos','params','indicadores','palancas','reglas']){for(const x of M[r])if(!x.id)x.id=uid();renderList(r);}
+  for(const r of ['stocks','flujos','params','indicadores','palancas','reglas','info','normas']){for(const x of M[r])if(!x.id)x.id=uid();renderList(r);}
+  $('n-diseno').textContent=`${M.info.length} señales · ${M.normas.length} reglas`;
   $('m-nombre').value=M.nombre||'';$('m-horizonte').value=M.horizonte;$('m-unidad').value=M.unidad||'';$('m-maximizar').value=M.maximizar?'1':'0';$('m-moneda').value=M.formato||'num';$('m-contexto').value=M.contexto||'';
+  $('d-auto').value=M.auto||'';$('i-meta').value=M.meta||'';$('i-metaValor').value=M.metaValor??'';$('i-metaPlazo').value=M.metaPlazo??'';$('i-paradigma').value=M.paradigma||'';$('i-trascender').value=M.trascender||'';
+  $('n-intencion').textContent=[M.meta&&'meta',M.paradigma&&'paradigma',M.trascender&&'trascender'].filter(Boolean).join(' · ')||'vacía';
   renderObjetivo();
 }
 function renderObjetivo(){
@@ -571,7 +644,7 @@ function renderDiagram(sim){
   const W=800,rowH=96,H=40+n*rowH;const bx=300,bw=200,bh=64;
   const pos={};S.forEach((s,i)=>{pos[s.k]={x:bx,y:30+i*rowH};});
   let g='';
-  for(const s of S){const p=pos[s.k];g+=`<rect class="stock" x="${p.x}" y="${p.y}" width="${bw}" height="${bh}" rx="3"/><text x="${p.x+bw/2}" y="${p.y+26}" text-anchor="middle" class="title">${esc(s.nombre||s.k)}</text><text x="${p.x+bw/2}" y="${p.y+46}" text-anchor="middle" class="val">${fmt(r0[s.k])}${s.unidad?' '+esc(s.unidad):''}</text>`;}
+  for(const s of S){const p=pos[s.k];const inf=M.info.find(i=>i.senal===s.k);g+=`<rect class="stock" x="${p.x}" y="${p.y}" width="${bw}" height="${bh}" rx="3"/><text x="${p.x+bw/2}" y="${p.y+24}" text-anchor="middle" class="title">${esc(s.nombre||s.k)}</text><text x="${p.x+bw/2}" y="${p.y+42}" text-anchor="middle" class="val">${fmtV(r0[s.k],s.k)}</text>${inf?`<text x="${p.x+bw/2}" y="${p.y+57}" text-anchor="middle" class="lab" style="fill:var(--c-dis-ink)">ve ${esc(inf.quien||'?')}${inf.cada?' · '+esc(inf.cada):''}${inf.retardo>0?' · +'+inf.retardo:''}</text>`:''}`;}
   const maxF=Math.max(1,...M.flujos.map(f=>Math.abs(r0[f.k]||0)));
   const w=v=>1.5+5*Math.abs(v)/maxF;
   const offs={};const bump=(k,side)=>{const key=k+side;offs[key]=(offs[key]||0)+1;return offs[key];};
@@ -697,7 +770,7 @@ function renderSens(list){
   const maxAbs=Math.max(1e-9,...list.map(x=>Math.abs(x.delta)));
   const spark=path=>{const w=120,h=36,n=path.length-1,mx=Math.max(1e-9,...path.map(Math.abs));const y=v=>h/2-(v/mx)*(h/2-3);return `<svg viewBox="0 0 ${w} ${h}" class="spark" aria-hidden="true"><line x1="0" x2="${w}" y1="${h/2}" y2="${h/2}" stroke="var(--grid)"/><path d="${path.map((v,i)=>(i?'L':'M')+(i/n*w).toFixed(1)+' '+y(v).toFixed(1)).join('')}" fill="none" stroke="var(--accent)" stroke-width="1.5"/></svg>`;};
   const rows=o?list:M.palancas.map(pl=>({pl,on:(M.activas||[]).includes(pl.k),delta:0,raw:0,path:[0,0]}));
-  $('pal-rows').innerHTML=rows.length?rows.map(x=>{const pos=x.delta>=0;return `<div class="pal${x.on?' on':''}"><label class="sw" title="${x.on?'apagar':'activar'}"><input type="checkbox" data-toggle="${esc(x.pl.k)}" ${x.on?'checked':''}><i></i></label><div class="pal-t"><b>${esc(x.pl.nombre||x.pl.k)} <span class="pal-n" title="${FUERZA[x.pl.fuerza]||''}">${x.pl.fuerza||12} · ${FUERZA[x.pl.fuerza]||'parámetros'}</span></b><span>${esc(x.pl.descripcion||'')}</span><em>${esc(x.pl.valor.includes('=')?x.pl.valor:nombreDe(x.pl.campo)+' → '+x.pl.valor)}</em>${x.on?`<div><button class="small" data-adopt="${esc(x.pl.k)}">Adoptar: hacerla permanente</button></div>`:''}</div><div class="pal-bar"><i style="width:${(100*Math.abs(x.delta)/maxAbs).toFixed(1)}%;background:${pos?'var(--good)':'var(--crit)'}"></i></div>${spark(x.path)}<div class="pal-v ${pos?'pos':'neg'}">${o?(pos?'+':'−')+fmtV(Math.abs(x.raw),o):'—'}<small>${x.on?'aporta al escenario':'si la activás'}</small></div></div>`;}).join(''):'';
+  $('pal-rows').innerHTML=rows.length?rows.map(x=>{const pos=x.delta>=0;return `<div class="pal${x.on?' on':''}"><label class="sw" title="${x.on?'apagar':'activar'}"><input type="checkbox" data-toggle="${esc(x.pl.k)}" ${x.on?'checked':''}><i></i></label><div class="pal-t"><b>${esc(x.pl.nombre||x.pl.k)} <span class="pal-n ${CAPA(x.pl.fuerza||12)}" title="${FUERZA[x.pl.fuerza]||''}">${x.pl.fuerza||12} · ${FUERZA[x.pl.fuerza]||'parámetros'}</span></b><span>${esc(x.pl.descripcion||'')}</span><em>${esc(x.pl.valor.includes('=')?x.pl.valor:nombreDe(x.pl.campo)+' → '+x.pl.valor)}</em>${x.on?`<div><button class="small" data-adopt="${esc(x.pl.k)}">Adoptar: hacerla permanente</button></div>`:''}</div><div class="pal-bar"><i style="width:${(100*Math.abs(x.delta)/maxAbs).toFixed(1)}%;background:${pos?'var(--good)':'var(--crit)'}"></i></div>${spark(x.path)}<div class="pal-v ${pos?'pos':'neg'}">${o?(pos?'+':'−')+fmtV(Math.abs(x.raw),o):'—'}<small>${x.on?'aporta al escenario':'si la activás'}</small></div></div>`;}).join(''):'';
 }
 function renderCamino(C,sens){
   const steps=[];
@@ -718,7 +791,10 @@ function compute(){
   renderTiles(base,sim);renderChart(base,sim);renderDiagram(sim);renderTable(sim);
   const sens=sensibilidad(sim,ME);renderSens(sens);renderSug(sugerencias(sim,ME));renderEstres(estres(sim,ME));renderDecisiones();
   $('avance-lede').textContent=`Estás en el ${M.unidad||'paso'} ${M.t0||0}. Avanzar mueve los stocks a lo que la simulación proyecta, con las palancas activas incluidas, y desde ahí volvés a decidir.`;
-  const C=[...patrones(sim),...reglas(sim,ME)];renderCards(C);renderCamino(C,sens);
+  const C=[...patrones(sim),...reglas(sim,ME)];
+  const me=metaEstado(sim);
+  if(me)C.push(me.ok?{tipo:'meta',nivel:'ok',titulo:'La meta llega',texto:`"${M.meta}": ${fmtV(me.v,M.objetivo)} en el ${M.unidad||'paso'} ${(M.t0||0)+me.plazo}, contra ${fmtV(M.metaValor,M.objetivo)} que te propusiste.`}:{tipo:'meta',nivel:'atencion',titulo:'La meta no llega',texto:`"${M.meta}": ${fmtV(me.v,M.objetivo)} en el ${M.unidad||'paso'} ${(M.t0||0)+me.plazo}, contra ${fmtV(M.metaValor,M.objetivo)}.${me.hit>=0?` Llega recién en el ${M.unidad||'paso'} ${(M.t0||0)+me.hit}.`:' No llega dentro del horizonte.'} Mirá qué palanca acorta más la brecha.`,fuerza:3});
+  renderCards(C);renderCamino(C,sens);renderCapas(C,sim);
   const box=$('errores');const u=[...new Set(errs)];box.hidden=!u.length;box.innerHTML=u.map(e=>'• '+esc(e)).join('<br>');
   document.querySelectorAll('.tabs [data-tab="describir"]').forEach(b=>b.textContent=u.length?`Describir (${u.length} ${u.length===1?'error':'errores'})`:'Describir');
 }
@@ -726,7 +802,7 @@ function compute(){
 /* ---------- eventos ---------- */
 document.addEventListener('input',e=>{
   const el=e.target;
-  if(el.dataset.m){const k=el.dataset.m;M[k]=el.type==='number'?(num(el.value)??M[k]):(k==='maximizar'?+el.value:el.value);if(k==='horizonte')M.horizonte=Math.max(2,Math.min(240,Math.round(M.horizonte||24)));if(k==='nombre')renderLib();}
+  if(el.dataset.m){const k=el.dataset.m;M[k]=el.type==='number'?num(el.value):(k==='maximizar'?+el.value:el.value);if(k==='horizonte')M.horizonte=Math.max(2,Math.min(240,Math.round(M.horizonte||24)));if(k==='nombre')renderLib();if(['meta','paradigma','trascender'].includes(k))$('n-intencion').textContent=[M.meta&&'meta',M.paradigma&&'paradigma',M.trascender&&'trascender'].filter(Boolean).join(' · ')||'vacía';}
   else if(el.dataset.list){
     const r=M[el.dataset.list].find(x=>x.id===el.dataset.id);if(!r)return;const f=el.dataset.field;
     if(el.type==='checkbox')r[f]=el.checked;else if(el.type==='number')r[f]=num(el.value);else if(f==='k')r[f]=slug(el.value);else if(f==='fuerza')r[f]=+el.value;else r[f]=el.value;
@@ -816,6 +892,34 @@ function renderEstres(list){
   const ext=M.params.filter(p=>p.externo).length;
   $('estres-rows').innerHTML=!o?'<p class="muted">Elegí un objetivo en Describir.</p>':!ext?'<p class="muted">No hay parámetros marcados como externos.</p>':list.length?list.map(x=>{const peor=x.s2.find(r=>r._clamp&&r._clamp.length);return `<div class="pal" style="grid-template-columns:minmax(0,1fr) minmax(110px,.6fr)"><div class="pal-t"><b>${esc(x.p.nombre||x.p.k)} ${x.f>1?'+20 %':'−20 %'}</b><em>${esc(x.p.k)}: ${fmtV(x.p.valor,x.p.k)} → ${fmtV(x.p.valor*x.f,x.p.k)}${peor?` · un stock se agota en el paso ${peor.t}`:''}</em></div><div class="pal-v neg">−${fmtV(Math.abs(x.raw),o)}<small>${esc(nombreDe(o))}</small></div></div>`;}).join(''):'<p class="muted">Ningún parámetro externo empeora el objetivo al 20 %.</p>';
 }
+function metaEstado(sim){
+  const o=M.objetivo,H=M.horizonte;
+  if(!M.meta||!o||M.metaValor==null||M.metaValor==='')return null;
+  const plazo=Math.min(H,M.metaPlazo>0?Math.round(M.metaPlazo):H);const v=sim[plazo][o];
+  const ok=M.maximizar?v>=M.metaValor:v<=M.metaValor;
+  const hit=sim.findIndex(r=>M.maximizar?r[o]>=M.metaValor:r[o]<=M.metaValor);
+  return {ok,plazo,v,hit};
+}
+function renderCapas(C,sim){
+  const o=M.objetivo;
+  const chip=(t,cls='')=>`<span class="chip ${cls}">${esc(t)}</span>`;
+  const q=t=>`<span class="chip q">${esc(t)}</span>`;
+  const item=(lbl,vals)=>`<div class="item"><span class="lbl">${lbl}</span><div class="vals">${vals}</div></div>`;
+  const me=metaEstado(sim);
+  let metaChip;
+  if(!M.meta)metaChip=chip('sin meta','off');
+  else if(me)metaChip=chip(`${M.meta} · ${me.ok?'llega':'no llega'}: ${fmtV(me.v,o)} en el ${M.unidad||'paso'} ${(M.t0||0)+me.plazo} contra ${fmtV(M.metaValor,o)}`,me.ok?'good':'warn');
+  else metaChip=chip(M.meta)+(o?chip('sin valor objetivo','off'):'');
+  const int=item('Meta',metaChip)+item('Paradigma',M.paradigma?q(M.paradigma):chip('sin definir','off'))+item('Trascender',M.trascender?q(M.trascender):chip('sin definir','off'));
+  const info=M.info.length?M.info.map(i=>chip(`${nombreDe(i.senal)||'?'} → ${i.quien||'?'}${i.cada?' · '+i.cada:''}${i.retardo>0?' · retardo '+i.retardo:''}`)).join(''):chip('nadie mira nada todavía','off');
+  const normas=M.normas.length?M.normas.map(n=>chip(n.texto+(n.afecta?' · '+nombreDe(n.afecta):''))).join(''):chip('sin reglas','off');
+  const dis=item('Información',info)+item('Reglas',normas)+item('Auto-organización',M.auto?q(M.auto):chip('sin definir','off'));
+  const loops=C.filter(x=>['bucle de refuerzo','oscilación','deriva'].includes(x.tipo)).map(x=>chip(x.titulo,x.nivel==='critico'?'warn':''));
+  const buffers=M.stocks.filter(s=>s.min0).map(s=>chip(s.nombre||s.k));
+  const retardos=M.info.filter(i=>i.retardo>0).map(i=>chip(`${nombreDe(i.senal)}: ${i.retardo} ${i.retardo===1?(M.unidad||'paso'):plural(M.unidad)}`));
+  const ret=item('Stocks y flujos',chip(`${M.stocks.length} stocks · ${M.flujos.length} flujos`))+item('Bucles',loops.length?loops.join(''):chip('ninguno detectado','off'))+item('Buffers',buffers.length?buffers.join(''):chip('ningún stock no negativo','off'))+item('Retardos',retardos.length?retardos.join(''):chip('ninguno declarado','off'))+item('Parámetros',chip(`${M.params.filter(p=>!p.externo).length} propios · ${M.params.filter(p=>p.externo).length} externos`));
+  $('capas').innerHTML=`<div class="capa intencion"><div><b>Intención</b><span>palancas 3 · 2 · 1</span></div><div class="items">${int}</div></div><div class="capa diseno"><div><b>Diseño</b><span>palancas 6 · 5 · 4</span></div><div class="items">${dis}</div></div><div class="capa retro"><div><b>Retroalimentación y parámetros</b><span>palancas 12 a 7 · lo que simula el motor</span></div><div class="items">${ret}</div></div>`;
+}
 function renderSug(list){
   const o=M.objetivo;$('sug-count').textContent=list.length?`(${list.length})`:'';
   const ya=new Set(M.palancas.map(p=>p.campo+'|'+p.valor));
@@ -824,7 +928,7 @@ function renderSug(list){
 document.addEventListener('click',e=>{
   const b=e.target.closest('button,[data-open]');if(!b)return;
   if(b.dataset.add){
-    const L=b.dataset.add;const id=uid();const base={stocks:{nombre:'',k:'',inicial:0,unidad:'',min0:true},flujos:{nombre:'',k:'f_'+id,desde:'',hacia:M.stocks[0]?M.stocks[0].k:'',formula:''},params:{nombre:'',k:'',valor:0,nota:''},indicadores:{nombre:'',k:'',formula:''},palancas:{nombre:'',k:'pl_'+id,fuerza:12,tipo:'param',campo:M.params[0]?M.params[0].k:'',valor:'',descripcion:''},reglas:{k:'r_'+id,cuando:'',nivel:'atencion',fuerza:12,titulo:'',texto:''}}[L];
+    const L=b.dataset.add;const id=uid();const base={info:{senal:M.stocks[0]?M.stocks[0].k:'',quien:'',cada:'',retardo:0},normas:{texto:'',afecta:''},stocks:{nombre:'',k:'',inicial:0,unidad:'',min0:true},flujos:{nombre:'',k:'f_'+id,desde:'',hacia:M.stocks[0]?M.stocks[0].k:'',formula:''},params:{nombre:'',k:'',valor:0,nota:''},indicadores:{nombre:'',k:'',formula:''},palancas:{nombre:'',k:'pl_'+id,fuerza:12,tipo:'param',campo:M.params[0]?M.params[0].k:'',valor:'',descripcion:''},reglas:{k:'r_'+id,cuando:'',nivel:'atencion',fuerza:12,titulo:'',texto:''}}[L];
     M[L].push({id,...base});renderList(L);const first=$(L).querySelector(`[data-id="${id}"] input`);if(first)first.focus();
   }else if(b.dataset.del){const L=M[b.dataset.del];const i=L.findIndex(x=>x.id===b.dataset.id);if(i>=0)L.splice(i,1);renderEditor();}
   else if(b.dataset.tpl!==undefined){const m=normalize(TPL[+b.dataset.tpl].f());LIB.push(m);setCurrent(m);showTab('describir');}
