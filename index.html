@@ -113,6 +113,32 @@ button.del:hover{color:var(--crit)}
 .diagram .eye .pupila{fill:var(--fg)}
 .diagram .clock circle{fill:var(--surface);stroke:var(--warn);stroke-width:2}
 .diagram .clock path{stroke:var(--fg2);stroke-width:1.6;stroke-linecap:round}
+.vivo-bar{position:sticky;top:calc(env(safe-area-inset-top,0px) + 46px);z-index:4;padding:10px 14px}
+.vivo-bar .btns{gap:10px}
+#vivo-play{font-size:16px;width:44px;height:36px;padding:0}
+.vivo-t{font-family:var(--mono);font-size:13px;color:var(--fg2);min-width:150px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:none;border-radius:0;padding:6px 10px;background:var(--surface);color:var(--fg2);font-size:13px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.diagram .flow.activa{stroke-dasharray:7 5;animation:fluye .8s linear infinite}
+.vuelta .arco.activa{stroke-dasharray:6 5;animation:fluye .9s linear infinite}
+@keyframes fluye{to{stroke-dashoffset:-12}}
+@media (prefers-reduced-motion:reduce){.diagram .flow.activa,.vuelta .arco.activa{animation:none}}
+.diagram .loopbadge rect{fill:var(--surface);stroke-width:1.2}
+.diagram .loopbadge text{font-family:var(--mono);font-size:9.5px;font-weight:600}
+.diagram .loopbadge.ref rect{stroke:var(--good)}.diagram .loopbadge.ref text{fill:var(--good)}
+.diagram .loopbadge.bal rect{stroke:var(--accent)}.diagram .loopbadge.bal text{fill:var(--accent)}
+.vuelta .nodo.val{font-family:var(--mono);font-size:10px;fill:var(--fg2)}
+.probar{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.pb{display:grid;gap:4px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.pb.distinto{border-color:var(--accent);background:var(--accent-soft)}
+.pb-top{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.pb-top b{font-family:var(--mono);font-weight:500;white-space:nowrap}
+.pb input[type=range]{width:100%;padding:0;background:none;border:none;accent-color:var(--accent)}
+.pb small{font-size:11.5px;color:var(--muted)}
+.pb.distinto .pb-hoy{text-decoration:line-through}
+#shocks button{font-size:13px;padding:4px 9px}
 .bucles{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
 .bucle{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;gap:8px;min-width:0;border-top-width:4px}
 .bucle.ref{border-top-color:var(--good)}.bucle.bal{border-top-color:var(--accent)}
@@ -394,6 +420,19 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 </section>
 
 <section class="tab" id="tab-jugar" hidden>
+  <div class="panel vivo-bar">
+    <div class="btns">
+      <button id="vivo-play" class="primary" aria-label="Correr o pausar" title="Correr el tiempo">▶</button>
+      <button id="vivo-reset" title="Volver al inicio">Al inicio</button>
+      <span class="seg" id="vivo-vel"><button data-v="600">lento</button><button data-v="250" class="on">normal</button><button data-v="80">rápido</button></span>
+      <span class="vivo-t" id="vivo-t"></span>
+      <span class="seg" id="vivo-modo" title="Qué escenario corre"><button data-modo="base">Base</button><button data-modo="activo" class="on">Con lo activo</button><button data-modo="plan">Plan completo</button></span>
+      <button id="btn-quedarme" title="Mover el modelo hasta este punto del tiempo: los stocks pasan a lo que ves y el reloj avanza">Quedarme acá</button>
+    </div>
+    <p class="note" id="vivo-manda"></p>
+  </div>
+
+  <div class="panel diagram" id="diagram"></div>
   <div class="tiles" id="tiles"></div>
 
   <div class="chart-wrap">
@@ -405,11 +444,10 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 
   <div class="panel">
     <div class="btns" style="justify-content:space-between;align-items:flex-start">
-      <div><h2 style="margin:0">Palancas</h2><p class="note" id="esc-lede"></p></div>
-      <div class="btns"><button id="btn-adopt-all" class="primary">Adoptar las activas</button><button id="btn-reset">Apagar todas</button></div>
+      <div><h2 style="margin:0">Qué probar</h2><p class="note" id="esc-lede"></p></div>
+      <div class="btns"><button id="btn-nueva-pal">+ nueva palanca</button><button id="btn-adopt-all" class="primary">Adoptar las activas</button><button id="btn-reset">Apagar todas</button></div>
     </div>
     <div id="pal-rows" style="margin-top:6px"></div>
-    <div class="btns" style="margin-top:8px"><button class="add" id="btn-nueva-pal" style="margin:0">+ nueva palanca</button></div>
     <form id="pal-form" class="pal-form" hidden>
       <div class="fields">
         <div class="field"><label for="np-nombre">Nombre</label><input type="text" id="np-nombre" placeholder="qué hacés, en pocas palabras" required></div>
@@ -420,14 +458,19 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
       </div>
       <div class="btns" style="margin-top:10px"><button type="submit" class="primary">Agregar y activar</button><button type="button" id="np-cancel">Cancelar</button><span class="hint-p">Para fórmulas con varias asignaciones o detalles finos, usá Describir.</span></div>
     </form>
-    <div class="btns" style="justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)">
-      <div><b>Avanzar el tiempo</b><p class="note" id="avance-lede"></p></div>
-      <div class="btns"><button data-avanzar="1">+1</button><button data-avanzar="3">+3</button><button data-avanzar="6">+6</button><button data-avanzar="12">+12</button></div>
-    </div>
+
+    <h3 style="margin-top:16px">Mover un número</h3>
+    <p class="hint-p" style="margin-bottom:8px">Los parámetros que controlás, como deslizadores. "Hoy" es lo que tiene el modelo; lo que muevas corre en la simulación hasta que lo adoptes o lo vuelvas atrás.</p>
+    <div class="probar" id="probar"></div>
+    <div class="btns" id="probar-btns" style="margin-top:8px" hidden><button id="btn-ovr-adopt" class="primary">Adoptar estos valores</button><button id="btn-ovr-reset">Volver a hoy</button></div>
+
+    <h3 style="margin-top:16px">Pasa algo</h3>
+    <p class="hint-p" style="margin-bottom:8px">Un sacudón en el momento en que está el reloj: un stock pierde o gana un 20 % de golpe. Para ver si el sistema lo absorbe o lo amplifica.</p>
+    <div class="btns" id="shocks"></div>
   </div>
   <details class="plain" id="dec-box"><summary>Decisiones y avances <span id="dec-count"></span></summary><div id="decisiones" style="margin-top:8px"></div></details>
 
-  <div class="sec-head"><h2>Bucles</h2><p id="bucles-lede">Los circuitos que el motor encuentra en tus fórmulas. R se refuerza a sí mismo; B corrige hacia un nivel. El signo de cada flecha dice si las dos puntas se mueven juntas (+) o al revés (−).</p></div>
+  <div class="sec-head"><h2>Cada bucle, de cerca</h2><p>Los circuitos que el motor encuentra en tus fórmulas, con los valores del momento en que está el reloj. R se refuerza a sí mismo; B corrige hacia un nivel. El signo de cada flecha dice si las dos puntas se mueven juntas (+) o al revés (−).</p></div>
   <div class="bucles" id="bucles"></div>
 
   <div class="panel">
@@ -435,7 +478,7 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
     <ol class="plan" id="plan"></ol>
     <form id="plan-form" class="btns" style="margin-top:10px"><input type="text" id="plan-nuevo" placeholder="un paso propio, en una frase" style="flex:1;min-width:200px"><button type="submit">Agregar al plan</button></form>
     <h3 style="margin-top:16px">Para sumar al plan</h3>
-    <p class="hint-p" style="margin-bottom:8px">Alertas y palancas con efecto positivo que todavía no están en tu plan. Ordenadas por urgencia y después por fuerza.</p>
+    <p class="hint-p" style="margin-bottom:8px">Alertas accionables y palancas con efecto positivo que todavía no están en tu plan. Por urgencia y después por fuerza.</p>
     <div id="plan-sug"></div>
   </div>
 
@@ -446,7 +489,6 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
   <div class="sec-head"><h2>Las tres capas</h2><p>De la más fuerte a la más débil. El motor simula la de abajo; las otras dos le dan sentido.</p></div>
   <div class="capas" id="capas"></div>
 
-  <details class="plain" open><summary>Mapa de stocks y flujos</summary><p class="hint-p" style="margin:8px 0">Los tanques son stocks; el nivel es cuánto tienen respecto del máximo que alcanzan en el horizonte. Las flechas son flujos con su valor en el paso actual. El ojo marca quién lo observa; el reloj, el retardo con que lo ve.</p><div class="diagram" id="diagram"></div></details>
   <details class="plain"><summary>Escenarios adversos <span id="estres-count"></span></summary>
     <p class="hint-p" style="margin:8px 0">Qué pasa si lo que no controlás se mueve un 20 % en tu contra.</p>
     <div id="estres-rows"></div>
@@ -498,8 +540,8 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
     <p>El motor busca circuitos en tus fórmulas: un flujo que depende de un stock y a la vez lo mueve. Mide, sobre el estado actual, cómo cambia cada flujo cuando el stock sube un 1 %, y arma las vueltas de hasta tres stocks. <b>R</b> es un bucle de refuerzo: el producto de los signos es positivo y el stock se alimenta a sí mismo. <b>B</b> es un bucle de balance: el producto es negativo y el flujo lo empuja de vuelta. El porcentaje es la ganancia por paso: cuánto del stock vuelve a entrar o salir en una vuelta. Un flujo con umbral, como "si hay plata, comprá", no aparece hasta que el estado está cerca del umbral.</p>
     <h3>Plan de mejora</h3>
     <p>Es tu lista. Se arma con lo que el motor sugiere (alertas y palancas con efecto positivo que todavía no están en el plan) y con pasos propios. Cada paso tiene estado; los que son palancas se activan o adoptan desde el plan, y al adoptarlos quedan hechos solos. Una sugerencia desaparece cuando la agregás, así nada se repite.</p>
-    <h3>Probar, adoptar, avanzar, deshacer</h3>
-    <p>En Jugar, <b>activar</b> una palanca es probarla: el escenario la incluye y ves el efecto. <b>Adoptar</b> es decidir: sus cambios pasan al modelo como la nueva realidad y quedan registrados. <b>Avanzar el tiempo</b> mueve los stocks a lo que la simulación proyecta, con las palancas activas incluidas, y corre el reloj: desde ahí volvés a decidir. "Decisiones y avances" muestra cómo cambió la proyección con cada paso; <b>deshacer</b> vuelve a ese punto, descartando lo posterior. Los <b>parámetros externos</b> (inflación, tipo de cambio) no se sugieren como acciones: alimentan los escenarios adversos.</p>
+    <h3>Jugar: correr, probar, decidir</h3>
+    <p><b>▶</b> corre el tiempo sobre la simulación: el dibujo, los números, el gráfico y los bucles muestran cada paso. Tocar el gráfico lleva el reloj a ese punto. Los tres modos comparan escenarios: <b>Base</b> es el modelo sin tocar, <b>Con lo activo</b> incluye las palancas prendidas y los números que moviste, <b>Plan completo</b> prende además todas las palancas pendientes del plan. <b>Activar</b> una palanca es probarla; <b>adoptar</b> es decidir: pasa al modelo y queda registrada. Los <b>deslizadores</b> mueven cualquier parámetro propio mientras ves "hoy" al lado; se adoptan o se vuelven atrás. <b>Pasa algo</b> mete un sacudón en el paso donde está el reloj. <b>Quedarme acá</b> mueve el modelo hasta ese momento: los stocks pasan a lo que ves y el reloj del modelo avanza; desde ahí volvés a decidir. Todo queda en "Decisiones y avances", con deshacer. Los <b>parámetros externos</b> (inflación, tipo de cambio) no se sugieren como acciones: alimentan los escenarios adversos.</p>
     <h3>Qué detecta el motor por su cuenta</h3>
     <ul>
       <li><b>Bucle de refuerzo dominante:</b> un stock que crece o cae acelerando.</li>
@@ -633,6 +675,7 @@ function simular(m){
   const t0=m.t0||0;
   for(let i=0;i<=H;i++){
     const t=t0+i;
+    if(m._pert)for(const q of m._pert)if(q.t===t&&st[q.k]!==undefined)st[q.k]=st[q.k]*q.f;
     const sc={...base,...st,t,H};
     const fv={};for(const f of fl){fv[f.k]=safe(f.c,sc,'flujo "'+(f.nombre||f.k)+'"');}
     Object.assign(sc,fv);
@@ -772,51 +815,6 @@ function renderCards(C){
 
 /* ---------- compute ---------- */
 
-function renderTiles(base,sim){
-  const r0=sim[0],rH=sim[sim.length-1],bH=base[base.length-1];
-  const items=[];const o=M.objetivo;
-  const t0=M.t0||0,nd=(M.decisiones||[]).filter(d=>d.tipo!=='avance').length;
-  items.push({k:'Dónde estás',v:`${M.unidad||'paso'} ${t0}`,d:`${nd} ${nd===1?'decisión adoptada':'decisiones adoptadas'}`});
-  if(o){
-    const d=rH[o]-bH[o];const good=M.maximizar?d>=0:d<=0;const act=(M.activas||[]).length;
-    items.push({k:nombreDe(o)+' hoy',v:fmtV(r0[o],o),d:'objetivo'});
-    items.push({k:`A ${M.horizonte} ${plural(M.unidad)}, sin palancas`,v:fmtV(bH[o],o),d:'escenario base'});
-    if(act)items.push({k:`A ${M.horizonte} ${plural(M.unidad)}, con ${act} ${act===1?'palanca':'palancas'}`,v:fmtV(rH[o],o),d:(d>=0?'+':'')+fmtV(d,o)+' contra la base',cls:good?'pos':'neg'});
-  }
-  for(const s of M.stocks.slice(0,2))items.push({k:s.nombre||s.k,v:fmtV(r0[s.k],s.k),d:`→ ${fmtV(rH[s.k],s.k)} al final`});
-  $('tiles').innerHTML=items.map(x=>`<div class="tile ${x.cls||''}"><span class="k">${esc(x.k)}</span><span class="v">${x.v}</span><span class="d">${esc(x.d)}</span></div>`).join('');
-}
-function renderChart(base,sim){
-  lastSim=sim;lastBase=base;
-  const o=M.objetivo;const act=(M.activas||[]).length;
-  const all=[...(o?[o]:[]),...M.stocks.map(s=>s.k),...M.indicadores.map(x=>x.k).filter(k=>k!==o)];
-  const uniq=[...new Set(all)].slice(0,6);
-  if(!vis||!uniq.some(k=>vis.has(k)))vis=new Set(uniq.slice(0,o?1:3));
-  series=uniq.map((k,i)=>({k,name:nombreDe(k),c:COLORS[i],data:sim}));
-  $('legend').innerHTML=series.map(s=>`<label><input type="checkbox" data-vis="${esc(s.k)}" ${vis.has(s.k)?'checked':''}><i style="background:${s.c}"></i>${esc(s.name)}</label>`).join('')+(o&&act?`<span style="display:inline-flex;align-items:center;gap:6px"><i style="background:var(--muted);height:0;border-top:2px dashed var(--muted)"></i>${esc(nombreDe(o))} sin palancas</span>`:'');
-  const ser=series.filter(s=>vis.has(s.k));
-  const extra=(o&&act&&vis.has(o))?[{k:o,name:nombreDe(o)+' (base)',c:'var(--muted)',data:base,dash:true}]:[];
-  const all2=[...ser,...extra];
-  const W=720,Hh=300,pl=62,pr=130,pt=16,pb=30,n=sim.length-1;
-  if(!ser.length||n<1){$('chart').innerHTML='<p class="muted">Elegí series en la leyenda.</p>';return;}
-  let lo=0,hi=0;for(const s of all2)for(const r of s.data){lo=Math.min(lo,r[s.k]);hi=Math.max(hi,r[s.k]);}
-  if(hi===lo)hi=lo+1;const step=nice((hi-lo)/5);lo=Math.floor(lo/step)*step;hi=Math.ceil(hi/step)*step;
-  const x=t=>pl+(W-pl-pr)*t/n,y=v=>pt+(Hh-pt-pb)*(1-(v-lo)/(hi-lo));
-  let g='';for(let v=lo;v<=hi+1e-9;v+=step)g+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="${Math.abs(v)<1e-9?'var(--axis)':'var(--grid)'}"/><text x="${pl-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--mono)">${fmt(v)}</text>`;
-  const t0=M.t0||0;
-  const xs=n<=12?2:n<=36?6:12;for(let t=0;t<=n;t+=xs)g+=`<text x="${x(t)}" y="${Hh-8}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="var(--mono)">${t===0?'hoy':t0+t}</text>`;
-  const lines=all2.map(s=>`<path d="${s.data.map((r,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(r[s.k]).toFixed(1)).join('')}" fill="none" stroke="${s.c}" stroke-width="2" ${s.dash?'stroke-dasharray="5 4"':''} stroke-linejoin="round"/>${s.dash?'':`<circle cx="${x(n)}" cy="${y(s.data[n][s.k])}" r="4" fill="${s.c}" stroke="var(--surface)" stroke-width="2"/>`}`).join('');
-  const labs=all2.map(s=>({s,yy:y(s.data[n][s.k]),v:s.data[n][s.k]})).sort((a,b)=>a.yy-b.yy);for(let i=1;i<labs.length;i++)if(labs[i].yy-labs[i-1].yy<14)labs[i].yy=labs[i-1].yy+14;
-  const endl=labs.map(l=>`<text x="${W-pr+10}" y="${l.yy+4}" font-size="11" fill="var(--fg2)" font-family="var(--mono)">${esc(l.s.name)} ${fmtV(l.v,l.s.k)}</text>`).join('');
-  $('chart').innerHTML=`<svg viewBox="0 0 ${W} ${Hh}" id="svgc" role="img" aria-label="Simulación"><g>${g}</g>${lines}${endl}<line id="xh" x1="0" x2="0" y1="${pt}" y2="${Hh-pb}" stroke="var(--fg2)" stroke-dasharray="3 3" opacity="0"/><rect x="${pl}" y="${pt}" width="${W-pl-pr}" height="${Hh-pt-pb}" fill="transparent" id="hit"/></svg>`;
-  const svg=$('svgc'),hit=$('hit'),xh=$('xh'),tip=$('tip'),wrap=svg.parentElement.parentElement;
-  hit.addEventListener('pointermove',ev=>{const rect=svg.getBoundingClientRect();const px=(ev.clientX-rect.left)*W/rect.width;const t=Math.max(0,Math.min(n,Math.round((px-pl)/(W-pl-pr)*n)));
-    xh.setAttribute('x1',x(t));xh.setAttribute('x2',x(t));xh.setAttribute('opacity','1');
-    tip.innerHTML=`<b>${t===0?'hoy':(M.unidad||'paso')+' '+(t0+t)}</b><br>`+all2.map(s=>`<span style="color:${s.c}">●</span> ${esc(s.name)}: ${fmtV(s.data[t][s.k],s.k)}`).join('<br>');
-    tip.style.display='block';const wr=wrap.getBoundingClientRect();let tx=ev.clientX-wr.left+14;if(tx+tip.offsetWidth>wr.width-8)tx=ev.clientX-wr.left-tip.offsetWidth-14;tip.style.left=tx+'px';tip.style.top=(ev.clientY-wr.top-10)+'px';});
-  hit.addEventListener('pointerleave',()=>{tip.style.display='none';xh.setAttribute('opacity','0');});
-  $('sim-lede').textContent=o?`${nombreDe(o)}: de ${fmtV(sim[0][o],o)} a ${fmtV(sim[n][o],o)} en ${n} ${plural(M.unidad)}${act?` con las palancas activas; sin ellas terminaría en ${fmtV(base[n][o],o)}`:''}. Pasá el cursor para ver cada paso.`:'Elegí un indicador objetivo en Describir.';
-}
 function aplicarLista(m,keys){let mx=m;for(const k of keys){const pl=M.palancas.find(p=>p.k===k);if(!pl)continue;const r=aplicarPalanca(mx,pl);if(r)mx=r;}return mx;}
 function sensibilidad(sim,ME){
   const H=M.horizonte,o=M.objetivo;if(!o)return [];
@@ -835,121 +833,9 @@ function renderSens(list){
   const rows=o?list:M.palancas.map(pl=>({pl,on:(M.activas||[]).includes(pl.k),delta:0,raw:0,path:[0,0]}));
   $('pal-rows').innerHTML=rows.length?rows.map(x=>{const pos=x.delta>=0;const cambio=x.pl.valor.includes('=')?x.pl.valor:nombreDe(x.pl.campo)+' → '+x.pl.valor;return `<div class="pal${x.on?' on':''}" title="${esc(cambio)}"><label class="sw" title="${x.on?'apagar':'activar'}"><input type="checkbox" data-toggle="${esc(x.pl.k)}" ${x.on?'checked':''}><i></i></label><div class="pal-t"><b>${esc(x.pl.nombre||x.pl.k)} <span class="pal-n ${CAPA(x.pl.fuerza||12)}" title="${FUERZA[x.pl.fuerza]||''}">${x.pl.fuerza||12} · ${FUERZA[x.pl.fuerza]||'parámetros'}</span>${x.on?`<button class="small inline" data-adopt="${esc(x.pl.k)}">Adoptar</button>`:''}</b><span>${esc(x.pl.descripcion||cambio)}</span><div class="pal-bar"><i style="width:${(100*Math.abs(x.delta)/maxAbs).toFixed(1)}%;background:${pos?'var(--good)':'var(--crit)'}"></i></div></div>${spark(x.path)}<div class="pal-v ${pos?'pos':'neg'}">${o?(pos?'+':'−')+fmtV(Math.abs(x.raw),o):'—'}<small>${x.on?'aporta':'si la activás'}</small></div></div>`;}).join(''):'';
 }
-function compute(){
-  errs=[];
-  const base=simular(M);
-  const act=M.activas||[];
-  const ME=act.length?aplicarLista(M,act):M;
-  const sim=ME===M?base:simular(ME);
-  renderTiles(base,sim);renderChart(base,sim);renderDiagram(sim);renderTable(sim);
-  const sens=sensibilidad(sim,ME);renderSens(sens);renderSug(sugerencias(sim,ME));renderEstres(estres(sim,ME));renderDecisiones();
-  $('avance-lede').textContent=`Estás en el ${M.unidad||'paso'} ${M.t0||0}. Avanzar mueve los stocks a lo que la simulación proyecta, con las palancas activas incluidas, y desde ahí volvés a decidir.`;
-  const C=[...patrones(sim),...reglas(sim,ME)];
-  const me=metaEstado(sim);
-  if(me)C.push(me.ok?{tipo:'meta',nivel:'ok',titulo:'La meta llega',texto:`"${M.meta}": ${fmtV(me.v,M.objetivo)} en el ${M.unidad||'paso'} ${(M.t0||0)+me.plazo}, contra ${fmtV(M.metaValor,M.objetivo)} que te propusiste.`}:{tipo:'meta',nivel:'atencion',titulo:'La meta no llega',texto:`"${M.meta}": ${fmtV(me.v,M.objetivo)} en el ${M.unidad||'paso'} ${(M.t0||0)+me.plazo}, contra ${fmtV(M.metaValor,M.objetivo)}.${me.hit>=0?` Llega recién en el ${M.unidad||'paso'} ${(M.t0||0)+me.hit}.`:' No llega dentro del horizonte.'} Mirá qué palanca acorta más la brecha.`,fuerza:3});
-  renderCards(C);renderPlan(C,sens);renderCapas(C,sim);renderBucles(bucles(ME,sim));
-  const box=$('errores');const u=[...new Set(errs)];box.hidden=!u.length;box.innerHTML=u.map(e=>'• '+esc(e)).join('<br>');
-  document.querySelectorAll('.tabs [data-tab="describir"]').forEach(b=>b.textContent=u.length?`Describir (${u.length} ${u.length===1?'error':'errores'})`:'Describir');
-  if(u.length&&$('tab-describir').classList.contains('basic')&&u.some(e=>/^(indicador|regla)/.test(e)))setAdv(true);
-}
 
-function renderDiagram(sim){
-  const r0=sim[0];const S=M.stocks;const n=S.length;
-  if(!n){$('diagram').innerHTML='<p class="muted">Agregá stocks en Describir para ver el mapa.</p>';return;}
-  const W=800,rowH=100,H=40+n*rowH;const bx=300,bw=200,bh=68;
-  const pos={};S.forEach((s,i)=>{pos[s.k]={x:bx,y:30+i*rowH};});
-  let g='';
-  for(const s of S){
-    const p=pos[s.k];const inf=M.info.find(i=>i.senal===s.k);
-    const vals=sim.map(r=>r[s.k]);const mx=Math.max(1e-9,...vals.map(Math.abs));const lvl=Math.max(0,Math.min(1,Math.abs(r0[s.k])/mx))*(bh-4);
-    g+=`<g class="tank"><rect class="stock" x="${p.x}" y="${p.y}" width="${bw}" height="${bh}" rx="4"/><rect class="nivel" x="${p.x+2}" y="${p.y+bh-2-lvl}" width="${bw-4}" height="${lvl}" rx="3"/>`;
-    g+=`<text x="${p.x+bw/2}" y="${p.y+26}" text-anchor="middle" class="title">${esc(s.nombre||s.k)}</text><text x="${p.x+bw/2}" y="${p.y+46}" text-anchor="middle" class="val">${fmtV(r0[s.k],s.k)}</text>`;
-    if(s.min0)g+=`<text x="${p.x+bw-6}" y="${p.y+bh-6}" text-anchor="end" class="lab" style="font-size:9px;letter-spacing:.06em">COLCHÓN</text>`;
-    if(inf){
-      const ex=p.x+bw-14,ey=p.y+2;
-      g+=`<g class="eye"><title>${esc('ve '+(inf.quien||'?')+(inf.cada?' · '+inf.cada:''))}</title><circle cx="${ex}" cy="${ey}" r="9"/><path d="M${ex-5.5} ${ey} Q${ex} ${ey-5} ${ex+5.5} ${ey} Q${ex} ${ey+5} ${ex-5.5} ${ey}Z"/><circle cx="${ex}" cy="${ey}" r="1.8" class="pupila"/></g>`;
-      if(inf.retardo>0){const cx2=p.x+bw-38,cy2=p.y+2;g+=`<g class="clock"><title>${esc('retardo de '+inf.retardo)}</title><circle cx="${cx2}" cy="${cy2}" r="9"/><path d="M${cx2} ${cy2-5} L${cx2} ${cy2} L${cx2+3.5} ${cy2+2.5}" fill="none"/></g><text x="${cx2}" y="${cy2+20}" text-anchor="middle" class="lab" style="font-size:9px">+${inf.retardo}</text>`;}
-    }
-    g+='</g>';
-  }
-  const maxF=Math.max(1,...M.flujos.map(f=>Math.abs(r0[f.k]||0)));
-  const w=v=>1.5+5*Math.abs(v)/maxF;
-  const offs={};const bump=(k,side)=>{const key=k+side;offs[key]=(offs[key]||0)+1;return offs[key];};
-  for(const f of M.flujos){
-    const v=r0[f.k]||0,lab=`${esc(f.nombre||f.k)} ${fmtV(v,f.k)}`;
-    const from=pos[f.desde],to=pos[f.hacia];
-    if(!from&&!to)continue;
-    if(from&&to){const i=bump(f.desde+'>'+f.hacia,'');const x1=from.x+bw-20-i*14,y1=from.y+(from.y<to.y?bh:0),x2=to.x+bw-20-i*14,y2=to.y+(from.y<to.y?0:bh);const xm=from.x+bw+20+i*16;
-      g+=`<path class="flow" style="stroke-width:${w(v)}" d="M${x1} ${y1} C${xm} ${y1} ${xm} ${y2} ${x2} ${y2}"/><text x="${xm+6}" y="${(y1+y2)/2+4}" class="lab">${lab}</text>`;}
-    else if(to){const i=bump(f.hacia,'L');const y=to.y+14+(i-1)*18;g+=`<rect class="ext" x="30" y="${y-12}" width="150" height="20" rx="3"/><text x="105" y="${y+3}" text-anchor="middle" class="lab">${lab}</text><line class="flow" style="stroke-width:${w(v)}" x1="180" y1="${y}" x2="${to.x-2}" y2="${y}"/>`;}
-    else{const i=bump(f.desde,'R');const y=from.y+14+(i-1)*18;g+=`<line class="flow" style="stroke-width:${w(v)}" x1="${from.x+bw}" y1="${y}" x2="${W-182}" y2="${y}"/><rect class="ext" x="${W-180}" y="${y-12}" width="150" height="20" rx="3"/><text x="${W-105}" y="${y+3}" text-anchor="middle" class="lab">${lab}</text>`;}
-  }
-  $('diagram').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Mapa de stocks y flujos"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--accent)"/></marker></defs>${g}</svg>`;
-}
 
 /* ---------- bucles: detección por derivadas numéricas sobre el estado actual ---------- */
-function bucles(ME,sim){
-  const r0=sim[0];const st=ME.stocks.map(s=>s.k);if(!st.length)return [];
-  const base={};for(const p of ME.params)base[p.k]=p.valor||0;
-  const sc0={...base,H:ME.horizonte,t:r0.t};for(const k of st)sc0[k]=r0[k];
-  const fl=ME.flujos.map(f=>{let c;try{c=compile(f.formula).fn;}catch(e){c=()=>0;}return {...f,c};});
-  const ev=(c,sc)=>{try{const v=c(sc);return isFinite(v)?v:0;}catch(e){return 0;}};
-  // aristas: stock S → flujo f (signo de df/dS) y flujo f → stock T (+ si entra, − si sale)
-  const edges=[];// {from:stockKey, via:flow, to:stockKey, sign, e1 (elasticidad), e2 (fracción del stock)}
-  for(const f of fl){
-    const v0=ev(f.c,sc0);
-    for(const S of st){
-      const s0=sc0[S];const h=Math.max(Math.abs(s0)*0.01,1e-6);
-      const v1=ev(f.c,{...sc0,[S]:s0+h});const d=(v1-v0)/h;
-      const rel=Math.abs(d*h)/(Math.abs(v0)+Math.abs(d*h)+1e-9);
-      if(rel<1e-6)continue;
-      const sign1=d>0?1:-1;
-      for(const [T,sign2] of [[f.hacia,1],[f.desde,-1]]){
-        if(!T||!st.includes(T))continue;
-        edges.push({from:S,via:f,to:T,s1:sign1,s2:sign2,sign:sign1*sign2,g:Math.abs(d)});
-      }
-    }
-  }
-  // ciclos simples de largo 1..3
-  const out=[];const seen=new Set();
-  const byFrom={};for(const e of edges)(byFrom[e.from]=byFrom[e.from]||[]).push(e);
-  function dfs(start,node,path,depth){
-    for(const e of byFrom[node]||[]){
-      if(e.to===start){const cyc=[...path,e];const key=cyc.map(x=>x.via.k).sort().join('|')+'#'+cyc.map(x=>x.from).sort().join('|');if(seen.has(key))continue;seen.add(key);
-        const sign=cyc.reduce((a,x)=>a*x.sign,1);const g=cyc.reduce((a,x)=>a*x.g,1);out.push({edges:cyc,tipo:sign>0?'R':'B',g});}
-      else if(depth<3&&!path.some(x=>x.to===e.to)&&st.indexOf(e.to)>st.indexOf(start))dfs(start,e.to,[...path,e],depth+1);
-    }
-  }
-  for(const S of st)dfs(S,S,[],1);
-  return out.sort((a,b)=>b.g-a.g);
-}
-function wrapTxt(t,max){const L=[];let cur='';for(const w of String(t).split(' ')){if(cur&&(cur+' '+w).length>max){L.push(cur);cur=w;}else cur=cur?cur+' '+w:w;}if(cur)L.push(cur);return L;}
-function vueltaSvg(b){
-  const nodos=[];for(const e of b.edges){nodos.push({t:nombreDe(e.from),p:e.s1});nodos.push({t:nombreDe(e.via.k),p:e.s2});}
-  const W=300,Hh=230,cx0=150,cy=115,r=78,n=nodos.length,step=2*Math.PI/n;
-  const pt=(a,rad=r)=>[cx0+rad*Math.cos(a),cy+rad*Math.sin(a)];
-  const N=nodos.map((nd,i)=>{const th=-Math.PI/2+i*step;const lines=wrapTxt(nd.t,16);const hw=Math.max(...lines.map(l=>l.length))*3.1+6,hh=lines.length*6.5+4;const gap=(hw*Math.abs(Math.sin(th))+hh*Math.abs(Math.cos(th)))/r+0.12;return {th,lines,gap,p:nd.p};});
-  let g='';
-  N.forEach((nd,i)=>{const nx=N[(i+1)%n];let a1=nd.th+nd.gap,a2=nd.th+step-nx.gap;if(a2-a1<0.16){const m=nd.th+step/2;a1=m-0.08;a2=m+0.08;}
-    const [x1,y1]=pt(a1),[x2,y2]=pt(a2);const [px,py]=pt((a1+a2)/2,r+13);const neg=nd.p<0;
-    g+=`<path class="arco" d="M${x1.toFixed(1)} ${y1.toFixed(1)} A${r} ${r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" marker-end="url(#ahb)"/><text class="pol${neg?' neg':''}" x="${px.toFixed(1)}" y="${py.toFixed(1)}">${neg?'−':'+'}</text>`;});
-  N.forEach(nd=>{const [x,y]=pt(nd.th);nd.lines.forEach((l,j)=>{g+=`<text class="nodo" x="${x.toFixed(1)}" y="${(y+(j-(nd.lines.length-1)/2)*13).toFixed(1)}">${esc(l)}</text>`;});});
-  const rr=22,a0=-Math.PI*0.35,b0=Math.PI*1.15;
-  g+=`<path class="giro" d="M${(cx0+rr*Math.cos(a0)).toFixed(1)} ${(cy+rr*Math.sin(a0)).toFixed(1)} A${rr} ${rr} 0 1 1 ${(cx0+rr*Math.cos(b0)).toFixed(1)} ${(cy+rr*Math.sin(b0)).toFixed(1)}" marker-end="url(#ahb)"/><text class="centro" x="${cx0}" y="${cy}">${b.tipo}</text>`;
-  return `<svg viewBox="0 0 ${W} ${Hh}" class="vuelta ${b.tipo==='R'?'ref':'bal'}" role="img"><defs><marker id="ahb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>${g}</svg>`;
-}
-function renderBucles(list){
-  if(!list.length){$('bucles').innerHTML='<p class="muted">El motor no encontró circuitos: ningún flujo depende de un stock al que a su vez mueve. Los bucles aparecen cuando una fórmula usa el stock que alimenta o vacía.</p>';return;}
-  const o=M.objetivo;
-  $('bucles').innerHTML=list.slice(0,6).map(b=>{
-    const stocks=[...new Set(b.edges.map(e=>e.from))].map(nombreDe);const flujos=[...new Set(b.edges.map(e=>e.via.nombre||e.via.k))];
-    const vuelta=b.edges.map(e=>`${nombreDe(e.from)} ${e.s1>0?'sube':'baja'} → ${e.via.nombre||e.via.k} ${e.s1>0?'sube':'baja'} → ${nombreDe(e.to)} ${e.s1*e.s2>0?'sube':'baja'}`).join('; ');
-    const gpct=b.g<10?nf1.format(b.g*100)+' % por '+(M.unidad||'paso')+(b.edges.length>1?' en la vuelta':''):'muy fuerte';
-    const estado=b.tipo==='R'?(b.g>=0.005?'gira':'casi quieto'):(b.g>=0.005?'corrige':'corrige poco');
-    const que=b.tipo==='R'?'Se refuerza: cuanto más hay, más entra o más sale. Virtuoso o vicioso según el stock.':'Corrige: cuando el stock se mueve, el flujo lo empuja de vuelta.';
-    return `<div class="bucle ${b.tipo==='R'?'ref':'bal'}"><div class="bucle-t"><b>${esc(stocks.join(' · '))}</b><span class="chip ${b.tipo==='R'?'':''}">${b.tipo==='R'?'refuerzo':'balance'} · ${estado} · ${gpct}</span><p>${que}</p><em>${esc(vuelta)}</em></div>${vueltaSvg(b)}</div>`;
-  }).join('')+(list.length>6?`<p class="muted">Y ${list.length-6} más, más débiles.</p>`:'');
-}
 
 /* ---------- plan de mejora ---------- */
 function sugerenciasPlan(C,sens){
@@ -993,6 +879,263 @@ function crearPalanca(){
   M.palancas.push(pl);M.activas=(M.activas||[]).concat(pl.k);renderList('palancas');$('pal-form').hidden=true;dirty=true;compute();scheduleSave();
 }
 
+/* ---------- el juego: tiempo, modo, deslizadores, sacudones (estado de sesión, no se guarda) ---------- */
+let TCUR=0,RUN=null,VEL=250,MODO='activo',OVR={},PERT=[],lastME=null,lastLoops=[];
+function modeloJuego(){
+  const act=MODO==='base'?[]:MODO==='plan'?[...new Set([...(M.activas||[]),...(M.plan||[]).filter(p=>p.palanca&&p.estado!=='hecho').map(p=>p.palanca)])]:(M.activas||[]);
+  const mx=structuredClone(act.length?aplicarLista(M,act):M);
+  if(MODO!=='base')for(const [k,v] of Object.entries(OVR)){const p=mx.params.find(x=>x.k===k);if(p)p.valor=v;}
+  mx._pert=PERT.slice();mx._act=act;
+  return mx;
+}
+function compute(){
+  errs=[];
+  const base=simular(M);
+  const ME=modeloJuego();lastME=ME;
+  const sim=simular(ME);
+  lastBase=base;lastSim=sim;
+  if(TCUR>M.horizonte)TCUR=M.horizonte;
+  const sens=sensibilidad(sim,ME);renderSens(sens);renderSug(sugerencias(sim,ME));renderEstres(estres(sim,ME));renderDecisiones();
+  const C=[...patrones(sim),...reglas(sim,ME)];
+  const me=metaEstado(sim);
+  if(me)C.push(me.ok?{tipo:'meta',nivel:'ok',titulo:'La meta llega',texto:`"${M.meta}": ${fmtV(me.v,M.objetivo)} en el ${M.unidad||'paso'} ${(M.t0||0)+me.plazo}, contra ${fmtV(M.metaValor,M.objetivo)} que te propusiste.`}:{tipo:'meta',nivel:'atencion',titulo:'La meta no llega',texto:`"${M.meta}": ${fmtV(me.v,M.objetivo)} en el ${M.unidad||'paso'} ${(M.t0||0)+me.plazo}, contra ${fmtV(M.metaValor,M.objetivo)}.${me.hit>=0?` Llega recién en el ${M.unidad||'paso'} ${(M.t0||0)+me.hit}.`:' No llega dentro del horizonte.'} Mirá qué palanca acorta más la brecha.`,fuerza:3});
+  renderCards(C);renderPlan(C,sens);renderCapas(C,sim);
+  renderProbar();renderShocks();renderTable(sim);
+  renderVivo();
+  const box=$('errores');const u=[...new Set(errs)];box.hidden=!u.length;box.innerHTML=u.map(e=>'• '+esc(e)).join('<br>');
+  document.querySelectorAll('.tabs [data-tab="describir"]').forEach(b=>b.textContent=u.length?`Describir (${u.length} ${u.length===1?'error':'errores'})`:'Describir');
+  if(u.length&&$('tab-describir').classList.contains('basic')&&u.some(e=>/^(indicador|regla)/.test(e)))setAdv(true);
+  $('vivo-modo').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.modo===MODO));
+}
+/* lo que depende del reloj */
+function renderVivo(){
+  const sim=lastSim,base=lastBase,ME=lastME;if(!sim.length)return;
+  const r=sim[TCUR];
+  lastLoops=bucles(ME,r);
+  renderDiagram(sim,TCUR,lastLoops);renderKpis(base,sim,TCUR);renderChart(base,sim,TCUR);renderBucles(lastLoops,sim,TCUR);
+  const t0=M.t0||0,H=M.horizonte,u=M.unidad||'paso';
+  $('vivo-t').textContent=`${u} ${t0+TCUR} · paso ${TCUR} de ${H}`;
+  $('btn-quedarme').disabled=TCUR===0;
+  $('vivo-play').textContent=RUN?'❚❚':'▶';
+  const o=M.objetivo;let manda='';
+  const maxSt=Math.max(1e-9,...M.stocks.map(s=>Math.abs(r[s.k]||0)));
+  if(lastLoops.length&&lastLoops[0].peso>maxSt*0.002){const b=lastLoops[0];manda=`<b>Manda ${esc(nombreDe(b.edges[0].from))}</b>: ${b.tipo==='R'?'se refuerza':'corrige'} al ${nf1.format(b.g*100)} % por ${u}.`;}
+  else if(TCUR>0)manda='<b>Ningún bucle pesa ahora</b>: el sistema se mueve por lo que entra y sale.';
+  if(o&&TCUR>0){const d=r[o]-sim[TCUR-1][o];const good=M.maximizar?d>=0:d<=0;manda+=` ${esc(nombreDe(o))} ${good?'mejora':'empeora'} ${fmtV(Math.abs(d),o)} en este ${u}.`;}
+  if(!manda)manda=TCUR===0?'Apretá ▶ para que corra el tiempo, o mové algo abajo y mirá cómo responde.':'';
+  if(PERT.length)manda+=` <span class="chip warn">${PERT.length} ${PERT.length===1?'sacudón':'sacudones'}</span>`;
+  $('vivo-manda').innerHTML=manda;
+}
+function stopRun(){if(RUN){clearInterval(RUN);RUN=null;}$('vivo-play').textContent='▶';}
+function playRun(){
+  if(RUN){stopRun();return;}
+  if(TCUR>=M.horizonte)TCUR=0;
+  RUN=setInterval(()=>{TCUR++;if(TCUR>=M.horizonte){TCUR=M.horizonte;stopRun();}renderVivo();},VEL);
+  $('vivo-play').textContent='❚❚';
+}
+function quedarme(){
+  if(TCUR<=0)return;const r=lastSim[TCUR];const n=TCUR;
+  const antes=[{k:'__t0',v:M.t0||0}],despues=[{k:'__t0',v:(M.t0||0)+n}];
+  for(const st of M.stocks){const v=Math.round((r[st.k]||0)*100)/100;antes.push({k:st.k,v:st.inicial||0});despues.push({k:st.k,v});st.inicial=v;}
+  M.t0=(M.t0||0)+n;
+  M.decisiones=M.decisiones||[];
+  M.decisiones.push({id:uid(),tipo:'avance',fecha:new Date().toISOString().slice(0,10),t:M.t0,nombre:`Avanzar ${n} ${n===1?(M.unidad||'paso'):plural(M.unidad)}`,antes,despues,proy:proyeccion()});
+  PERT=PERT.filter(q=>q.t>=M.t0);TCUR=0;stopRun();
+  renderList('stocks');dirty=true;compute();scheduleSave();
+}
+
+/* ---------- deslizadores ---------- */
+function renderProbar(){
+  const ps=M.params.filter(p=>!p.externo&&typeof p.valor==='number');
+  const box=$('probar');const keys=ps.map(p=>p.k).join('|');
+  if(box.dataset.keys!==keys){
+    box.dataset.keys=keys;
+    box.innerHTML=ps.length?ps.map(p=>{const hoy=p.valor||0;const cur=OVR[p.k]??hoy;const max=hoy>0&&hoy<=1?1:Math.abs(hoy)*2||10;const step=nice((max)/100);return `<label class="pb" data-k="${esc(p.k)}"><span class="pb-top"><span>${esc(p.nombre||p.k)}</span><b>${fmtV(cur,p.k)}</b></span><input type="range" data-ovr="${esc(p.k)}" min="0" max="${max}" step="${step}" value="${cur}"><small>hoy <span class="pb-hoy">${fmtV(hoy,p.k)}</span>${p.nota?' · '+esc(p.nota):''}</small></label>`;}).join(''):'<p class="muted">No hay parámetros propios para mover. Marcá en Describir cuáles controlás.</p>';
+  }
+  for(const p of ps){const el=box.querySelector(`.pb[data-k="${p.k}"]`);if(!el)continue;const hoy=p.valor||0;const cur=OVR[p.k]??hoy;el.classList.toggle('distinto',cur!==hoy);el.querySelector('b').textContent=fmtV(cur,p.k);el.querySelector('.pb-hoy').textContent=fmtV(hoy,p.k);const inp=el.querySelector('input');if(document.activeElement!==inp)inp.value=cur;}
+  $('probar-btns').hidden=!Object.keys(OVR).length;
+}
+function moverParam(k,v){
+  const p=M.params.find(x=>x.k===k);if(!p)return;
+  if(v===(p.valor||0))delete OVR[k];else OVR[k]=v;
+  const el=$('probar').querySelector(`.pb[data-k="${k}"]`);if(el){el.querySelector('b').textContent=fmtV(v,k);el.classList.toggle('distinto',v!==(p.valor||0));}
+  $('probar-btns').hidden=!Object.keys(OVR).length;
+  if(MODO==='base')MODO='activo';
+  scheduleCompute();
+}
+function adoptarOvr(){
+  const ks=Object.keys(OVR);if(!ks.length)return;
+  const antes=[],despues=[];
+  for(const k of ks){const p=M.params.find(x=>x.k===k);if(!p)continue;antes.push({k,v:p.valor||0});despues.push({k,v:OVR[k]});p.valor=OVR[k];}
+  M.decisiones=M.decisiones||[];
+  M.decisiones.push({id:uid(),tipo:'palanca',fecha:new Date().toISOString().slice(0,10),t:M.t0||0,nombre:ks.length===1?`Mover ${nombreDe(ks[0])}`:`Mover ${ks.length} números`,antes,despues,proy:null});
+  OVR={};renderList('params');dirty=true;compute();scheduleSave();
+  const d=M.decisiones[M.decisiones.length-1];d.proy=proyeccion();renderDecisiones();
+}
+
+/* ---------- sacudones ---------- */
+function renderShocks(){
+  const t=(M.t0||0)+TCUR;
+  $('shocks').innerHTML=M.stocks.map(s=>`<button data-shock="${esc(s.k)}" data-f="0.8" title="en el ${M.unidad||'paso'} ${t}">−20 % ${esc(s.nombre||s.k)}</button><button data-shock="${esc(s.k)}" data-f="1.2" title="en el ${M.unidad||'paso'} ${t}">+20 % ${esc(s.nombre||s.k)}</button>`).join('')+(PERT.length?`<button id="btn-shock-clear" class="del" style="font-size:13px;padding:4px 8px">quitar sacudones</button>`:'');
+}
+
+/* ---------- KPIs del momento ---------- */
+function renderKpis(base,sim,tc){
+  const r=sim[tc],b=base[tc],rH=sim[sim.length-1],bH=base[base.length-1];
+  const items=[];const o=M.objetivo;const u=M.unidad||'paso';
+  if(o){
+    const d=r[o]-b[o];const good=M.maximizar?d>=0:d<=0;
+    items.push({k:`${nombreDe(o)} ahora (${u} ${(M.t0||0)+tc})`,v:fmtV(r[o],o),d:Math.abs(d)>1e-9?`${d>=0?'+':''}${fmtV(d,o)} contra la base`:'igual que la base',cls:Math.abs(d)>1e-9?(good?'pos':'neg'):''});
+    const dH=rH[o]-bH[o];const goodH=M.maximizar?dH>=0:dH<=0;
+    items.push({k:`${nombreDe(o)} al final (${u} ${(M.t0||0)+M.horizonte})`,v:fmtV(rH[o],o),d:Math.abs(dH)>1e-9?`${dH>=0?'+':''}${fmtV(dH,o)} contra la base`:'escenario base',cls:Math.abs(dH)>1e-9?(goodH?'pos':'neg'):''});
+  }
+  for(const s of M.stocks.slice(0,3))items.push({k:s.nombre||s.k,v:fmtV(r[s.k],s.k),d:`→ ${fmtV(rH[s.k],s.k)} al final`});
+  $('tiles').innerHTML=items.map(x=>`<div class="tile ${x.cls||''}"><span class="k">${esc(x.k)}</span><span class="v">${x.v}</span><span class="d">${esc(x.d)}</span></div>`).join('');
+}
+
+/* ---------- gráfico con cursor ---------- */
+function renderChart(base,sim,tc){
+  const o=M.objetivo;const act=lastME&&lastME._act?lastME._act.length:0;const difiere=act>0||Object.keys(OVR).length>0||PERT.length>0;
+  const all=[...(o?[o]:[]),...M.stocks.map(s=>s.k),...M.indicadores.map(x=>x.k).filter(k=>k!==o)];
+  const uniq=[...new Set(all)].slice(0,6);
+  if(!vis||!uniq.some(k=>vis.has(k)))vis=new Set(uniq.slice(0,o?1:3));
+  series=uniq.map((k,i)=>({k,name:nombreDe(k),c:COLORS[i],data:sim}));
+  $('legend').innerHTML=series.map(s=>`<label><input type="checkbox" data-vis="${esc(s.k)}" ${vis.has(s.k)?'checked':''}><i style="background:${s.c}"></i>${esc(s.name)}</label>`).join('')+(o&&difiere?`<span style="display:inline-flex;align-items:center;gap:6px"><i style="background:none;height:0;border-top:2px dashed var(--muted)"></i>${esc(nombreDe(o))} base</span>`:'');
+  const ser=series.filter(s=>vis.has(s.k));
+  const extra=(o&&difiere&&vis.has(o))?[{k:o,name:nombreDe(o)+' (base)',c:'var(--muted)',data:base,dash:true}]:[];
+  const all2=[...ser,...extra];
+  const W=720,Hh=300,pl=62,pr=130,pt=16,pb=30,n=sim.length-1;
+  if(!ser.length||n<1){$('chart').innerHTML='<p class="muted">Elegí series en la leyenda.</p>';return;}
+  let lo=0,hi=0;for(const s of all2)for(const r of s.data){lo=Math.min(lo,r[s.k]);hi=Math.max(hi,r[s.k]);}
+  if(hi===lo)hi=lo+1;const step=nice((hi-lo)/5);lo=Math.floor(lo/step)*step;hi=Math.ceil(hi/step)*step;
+  const x=t=>pl+(W-pl-pr)*t/n,y=v=>pt+(Hh-pt-pb)*(1-(v-lo)/(hi-lo));
+  let g='';for(let v=lo;v<=hi+1e-9;v+=step)g+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="${Math.abs(v)<1e-9?'var(--axis)':'var(--grid)'}"/><text x="${pl-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--mono)">${fmt(v)}</text>`;
+  const t0=M.t0||0;
+  const xs=n<=12?2:n<=36?6:12;for(let t=0;t<=n;t+=xs)g+=`<text x="${x(t)}" y="${Hh-8}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="var(--mono)">${t===0?'hoy':t0+t}</text>`;
+  const lines=all2.map(s=>`<path d="${s.data.map((r,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(r[s.k]).toFixed(1)).join('')}" fill="none" stroke="${s.c}" stroke-width="2" ${s.dash?'stroke-dasharray="5 4"':''} stroke-linejoin="round"/>${s.dash?'':`<circle cx="${x(n)}" cy="${y(s.data[n][s.k])}" r="4" fill="${s.c}" stroke="var(--surface)" stroke-width="2"/>`}`).join('');
+  const labs=all2.map(s=>({s,yy:y(s.data[n][s.k]),v:s.data[n][s.k]})).sort((a,b)=>a.yy-b.yy);for(let i=1;i<labs.length;i++)if(labs[i].yy-labs[i-1].yy<14)labs[i].yy=labs[i-1].yy+14;
+  const endl=labs.map(l=>`<text x="${W-pr+10}" y="${l.yy+4}" font-size="11" fill="var(--fg2)" font-family="var(--mono)">${esc(l.s.name)} ${fmtV(l.v,l.s.k)}</text>`).join('');
+  const cur=tc>0?`<line x1="${x(tc)}" x2="${x(tc)}" y1="${pt}" y2="${Hh-pb}" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="2 3"/>`+ser.map(s=>`<circle cx="${x(tc)}" cy="${y(s.data[tc][s.k])}" r="4.5" fill="var(--surface)" stroke="${s.c}" stroke-width="2.5"/>`).join(''):'';
+  const pertm=PERT.map(q=>q.t-t0).filter(i=>i>=0&&i<=n).map(i=>`<text x="${x(i)}" y="${pt+10}" text-anchor="middle" font-size="11" fill="var(--warn)">⚡</text>`).join('');
+  $('chart').innerHTML=`<svg viewBox="0 0 ${W} ${Hh}" id="svgc" role="img" aria-label="Simulación"><g>${g}</g>${lines}${endl}${cur}${pertm}<line id="xh" x1="0" x2="0" y1="${pt}" y2="${Hh-pb}" stroke="var(--fg2)" stroke-dasharray="3 3" opacity="0"/><rect x="${pl}" y="${pt}" width="${W-pl-pr}" height="${Hh-pt-pb}" fill="transparent" id="hit"/></svg>`;
+  const svg=$('svgc'),hit=$('hit'),xh=$('xh'),tip=$('tip'),wrap=svg.parentElement.parentElement;
+  hit.addEventListener('pointermove',ev=>{const rect=svg.getBoundingClientRect();const px=(ev.clientX-rect.left)*W/rect.width;const t=Math.max(0,Math.min(n,Math.round((px-pl)/(W-pl-pr)*n)));
+    xh.setAttribute('x1',x(t));xh.setAttribute('x2',x(t));xh.setAttribute('opacity','1');
+    tip.innerHTML=`<b>${t===0?'hoy':(M.unidad||'paso')+' '+(t0+t)}</b><br>`+all2.map(s=>`<span style="color:${s.c}">●</span> ${esc(s.name)}: ${fmtV(s.data[t][s.k],s.k)}`).join('<br>');
+    tip.style.display='block';const wr=wrap.getBoundingClientRect();let tx=ev.clientX-wr.left+14;if(tx+tip.offsetWidth>wr.width-8)tx=ev.clientX-wr.left-tip.offsetWidth-14;tip.style.left=tx+'px';tip.style.top=(ev.clientY-wr.top-10)+'px';});
+  hit.addEventListener('pointerleave',()=>{tip.style.display='none';xh.setAttribute('opacity','0');});
+  hit.addEventListener('click',ev=>{const rect=svg.getBoundingClientRect();const px=(ev.clientX-rect.left)*W/rect.width;TCUR=Math.max(0,Math.min(n,Math.round((px-pl)/(W-pl-pr)*n)));stopRun();renderVivo();});
+  $('sim-lede').textContent=o?`${nombreDe(o)}: de ${fmtV(sim[0][o],o)} a ${fmtV(sim[n][o],o)} en ${n} ${plural(M.unidad)}${difiere?`; la base terminaría en ${fmtV(base[n][o],o)}`:''}. Tocá el gráfico para llevar el reloj a ese punto.`:'Elegí un indicador objetivo en Describir.';
+}
+
+/* ---------- el dibujo vivo ---------- */
+function renderDiagram(sim,tc,loops){
+  const r=sim[tc];const S=M.stocks;const n=S.length;
+  if(!n){$('diagram').innerHTML='<p class="muted">Agregá stocks en Describir para ver el sistema.</p>';return;}
+  const W=800,bw=200,bh=72,bx=300,EW=200,EH=30,EG=36;
+  const nIn={},nOut={};for(const s of S){nIn[s.k]=0;nOut[s.k]=0;}
+  for(const f of M.flujos){if(f.hacia&&nIn[f.hacia]!==undefined&&!(f.desde&&nOut[f.desde]!==undefined))nIn[f.hacia]++;if(f.desde&&nOut[f.desde]!==undefined&&!(f.hacia&&nIn[f.hacia]!==undefined))nOut[f.desde]++;}
+  const pos={};let cy=34;
+  for(const s of S){const rows=Math.max(nIn[s.k],nOut[s.k]);const h=Math.max(bh,rows*EG);pos[s.k]={x:bx,y:cy+(h-bh)/2,top:cy,h};cy+=h+30;}
+  const H=cy+6;
+  const cut=(t,m)=>{t=String(t);return t.length>m?t.slice(0,m-1)+'…':t;};
+  let g='';
+  for(const s of S){
+    const p=pos[s.k];const inf=M.info.find(i=>i.senal===s.k);
+    const vals=sim.map(q=>q[s.k]);const mx=Math.max(1e-9,...vals.map(Math.abs));const lvl=Math.max(0,Math.min(1,Math.abs(r[s.k])/mx))*(bh-4);
+    g+=`<g class="tank"><rect class="stock" x="${p.x}" y="${p.y}" width="${bw}" height="${bh}" rx="4"/><rect class="nivel" x="${p.x+2}" y="${p.y+bh-2-lvl}" width="${bw-4}" height="${lvl}" rx="3"/>`;
+    g+=`<text x="${p.x+bw/2}" y="${p.y+27}" text-anchor="middle" class="title">${esc(cut(s.nombre||s.k,24))}</text><text x="${p.x+bw/2}" y="${p.y+48}" text-anchor="middle" class="val">${fmtV(r[s.k],s.k)}</text>`;
+    if(s.min0)g+=`<text x="${p.x+bw-6}" y="${p.y+bh-6}" text-anchor="end" class="lab" style="font-size:9px;letter-spacing:.06em">COLCHÓN</text>`;
+    const lp=loops.filter(b=>b.edges.some(e=>e.from===s.k)).slice(0,2);
+    lp.forEach((b,i)=>{g+=`<g class="loopbadge ${b.tipo==='R'?'ref':'bal'}"><rect x="${p.x+6+i*58}" y="${p.y+bh-20}" width="52" height="15" rx="7"/><text x="${p.x+32+i*58}" y="${p.y+bh-9}" text-anchor="middle">${b.tipo} ${nf1.format(b.g*100)} %</text></g>`;});
+    if(inf){
+      const ex=p.x+bw-14,ey=p.y+2;
+      g+=`<g class="eye"><title>${esc('ve '+(inf.quien||'?')+(inf.cada?' · '+inf.cada:''))}</title><circle cx="${ex}" cy="${ey}" r="9"/><path d="M${ex-5.5} ${ey} Q${ex} ${ey-5} ${ex+5.5} ${ey} Q${ex} ${ey+5} ${ex-5.5} ${ey}Z"/><circle cx="${ex}" cy="${ey}" r="1.8" class="pupila"/></g>`;
+      if(inf.retardo>0){const cx2=p.x+bw-38,cy2=p.y+2;g+=`<g class="clock"><title>${esc('retardo de '+inf.retardo)}</title><circle cx="${cx2}" cy="${cy2}" r="9"/><path d="M${cx2} ${cy2-5} L${cx2} ${cy2} L${cx2+3.5} ${cy2+2.5}" fill="none"/></g>`;}
+    }
+    g+='</g>';
+  }
+  const maxF=Math.max(1e-9,...sim.flatMap(q=>M.flujos.map(f=>Math.abs(q[f.k]||0))));
+  const w=v=>1.2+4.5*Math.abs(v)/maxF;
+  const act=v=>RUN&&Math.abs(v)>maxF*0.01?' activa':'';
+  const ext=(x,y,f,v)=>`<rect class="ext" x="${x}" y="${y-EH/2}" width="${EW}" height="${EH}" rx="4"/><text x="${x+EW/2}" y="${y-3}" text-anchor="middle" class="lab">${esc(cut(f.nombre||f.k,30))}</text><text x="${x+EW/2}" y="${y+10}" text-anchor="middle" class="val" style="font-size:11px">${fmtV(v,f.k)}</text>`;
+  const cnt={};const slot=(k,side)=>{const key=k+side;cnt[key]=(cnt[key]||0);return cnt[key]++;};
+  const yFor=(p,side,i)=>{const rows=side==='L'?nIn[p.k]:nOut[p.k];const total=rows*EG;const y0=p.top+(p.h-total)/2+EG/2;return y0+i*EG;};
+  for(const f of M.flujos){
+    const v=r[f.k]||0;
+    const from=pos[f.desde],to=pos[f.hacia];
+    if(!from&&!to)continue;
+    if(from&&to){const i=slot(f.desde+'>'+f.hacia,'X');const x1=from.x+bw-24-i*14,y1=from.y+(from.y<to.y?bh:0),x2=to.x+bw-24-i*14,y2=to.y+(from.y<to.y?0:bh);const xm=from.x+bw+40+i*18;
+      g+=`<path class="flow${act(v)}" style="stroke-width:${w(v)}" d="M${x1} ${y1} C${xm} ${y1} ${xm} ${y2} ${x2} ${y2}"/><text x="${xm+8}" y="${(y1+y2)/2+4}" class="lab">${esc(cut(f.nombre||f.k,22))} ${fmtV(v,f.k)}</text>`;}
+    else if(to){const i=slot(f.hacia,'L');const y=yFor({...to,k:f.hacia},'L',i);g+=ext(20,y,f,v)+`<line class="flow${act(v)}" style="stroke-width:${w(v)}" x1="${20+EW}" y1="${y}" x2="${to.x-2}" y2="${y}"/>`;}
+    else{const i=slot(f.desde,'R');const y=yFor({...from,k:f.desde},'R',i);g+=`<line class="flow${act(v)}" style="stroke-width:${w(v)}" x1="${from.x+bw}" y1="${y}" x2="${W-20-EW-2}" y2="${y}"/>`+ext(W-20-EW,y,f,v);}
+  }
+  $('diagram').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="El sistema"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--accent)"/></marker></defs><text x="${W-10}" y="16" text-anchor="end" class="lab">${M.unidad||'paso'} ${(M.t0||0)+tc}</text>${g}</svg>`;
+}
+
+/* ---------- bucles: detección por derivadas numéricas sobre el estado del momento ---------- */
+function bucles(ME,r0){
+  const st=ME.stocks.map(s=>s.k);if(!st.length||!r0)return [];
+  const base={};for(const p of ME.params)base[p.k]=p.valor||0;
+  const sc0={...base,H:ME.horizonte,t:r0.t};for(const k of st)sc0[k]=r0[k];
+  const fl=ME.flujos.map(f=>{let c;try{c=compile(f.formula).fn;}catch(e){c=()=>0;}return {...f,c};});
+  const ev=(c,sc)=>{try{const v=c(sc);return isFinite(v)?v:0;}catch(e){return 0;}};
+  const edges=[];
+  for(const f of fl){
+    const v0=ev(f.c,sc0);
+    for(const S of st){
+      const s0=sc0[S];const h=Math.max(Math.abs(s0)*0.01,1e-6);
+      const v1=ev(f.c,{...sc0,[S]:s0+h});const d=(v1-v0)/h;
+      const rel=Math.abs(d*h)/(Math.abs(v0)+Math.abs(d*h)+1e-9);
+      if(rel<1e-6)continue;
+      const sign1=d>0?1:-1;
+      for(const [T,sign2] of [[f.hacia,1],[f.desde,-1]]){
+        if(!T||!st.includes(T))continue;
+        edges.push({from:S,via:f,to:T,s1:sign1,s2:sign2,sign:sign1*sign2,g:Math.abs(d)});
+      }
+    }
+  }
+  const out=[];const seen=new Set();
+  const byFrom={};for(const e of edges)(byFrom[e.from]=byFrom[e.from]||[]).push(e);
+  function dfs(start,node,path,depth){
+    for(const e of byFrom[node]||[]){
+      if(e.to===start){const cyc=[...path,e];const key=cyc.map(x=>x.via.k).sort().join('|')+'#'+cyc.map(x=>x.from).sort().join('|');if(seen.has(key))continue;seen.add(key);
+        const sign=cyc.reduce((a,x)=>a*x.sign,1);const g=cyc.reduce((a,x)=>a*x.g,1);out.push({edges:cyc,tipo:sign>0?'R':'B',g});}
+      else if(depth<3&&!path.some(x=>x.to===e.to)&&st.indexOf(e.to)>st.indexOf(start))dfs(start,e.to,[...path,e],depth+1);
+    }
+  }
+  for(const S of st)dfs(S,S,[],1);
+  for(const b of out)b.peso=b.g*Math.max(...b.edges.map(e=>Math.abs(r0[e.via.k]||0)));
+  return out.sort((a,b)=>b.peso-a.peso);
+}
+function wrapTxt(t,max){const L=[];let cur='';for(const w of String(t).split(' ')){if(cur&&(cur+' '+w).length>max){L.push(cur);cur=w;}else cur=cur?cur+' '+w:w;}if(cur)L.push(cur);return L;}
+function vueltaSvg(b,r){
+  const nodos=[];for(const e of b.edges){nodos.push({t:nombreDe(e.from),p:e.s1,v:fmtV(r[e.from],e.from)});nodos.push({t:nombreDe(e.via.k),p:e.s2,v:fmtV(r[e.via.k],e.via.k)});}
+  const W=300,Hh=236,cx0=150,cy=118,r0=80,n=nodos.length,step=2*Math.PI/n;
+  const pt=(a,rad=r0)=>[cx0+rad*Math.cos(a),cy+rad*Math.sin(a)];
+  const N=nodos.map((nd,i)=>{const th=-Math.PI/2+i*step;const lines=wrapTxt(nd.t,16);const hw=Math.max(...lines.map(l=>l.length))*3.1+6,hh=(lines.length+1)*6.5+4;const gap=(hw*Math.abs(Math.sin(th))+hh*Math.abs(Math.cos(th)))/r0+0.12;return {th,lines,gap,p:nd.p,v:nd.v};});
+  let g='';
+  N.forEach((nd,i)=>{const nx=N[(i+1)%n];let a1=nd.th+nd.gap,a2=nd.th+step-nx.gap;if(a2-a1<0.16){const m=nd.th+step/2;a1=m-0.08;a2=m+0.08;}
+    const [x1,y1]=pt(a1),[x2,y2]=pt(a2);const [px,py]=pt((a1+a2)/2,r0+13);const neg=nd.p<0;
+    g+=`<path class="arco${RUN?' activa':''}" d="M${x1.toFixed(1)} ${y1.toFixed(1)} A${r0} ${r0} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" marker-end="url(#ahb)"/><text class="pol${neg?' neg':''}" x="${px.toFixed(1)}" y="${py.toFixed(1)}">${neg?'−':'+'}</text>`;});
+  N.forEach(nd=>{const [x,y]=pt(nd.th);const tot=nd.lines.length+1;nd.lines.forEach((l,j)=>{g+=`<text class="nodo" x="${x.toFixed(1)}" y="${(y+(j-(tot-1)/2)*13).toFixed(1)}">${esc(l)}</text>`;});g+=`<text class="nodo val" x="${x.toFixed(1)}" y="${(y+(nd.lines.length-(tot-1)/2)*13).toFixed(1)}">${nd.v}</text>`;});
+  const rr=22,a0=-Math.PI*0.35,b0=Math.PI*1.15;
+  g+=`<path class="giro" d="M${(cx0+rr*Math.cos(a0)).toFixed(1)} ${(cy+rr*Math.sin(a0)).toFixed(1)} A${rr} ${rr} 0 1 1 ${(cx0+rr*Math.cos(b0)).toFixed(1)} ${(cy+rr*Math.sin(b0)).toFixed(1)}" marker-end="url(#ahb)"/><text class="centro" x="${cx0}" y="${cy}">${b.tipo}</text>`;
+  return `<svg viewBox="0 0 ${W} ${Hh}" class="vuelta ${b.tipo==='R'?'ref':'bal'}" role="img"><defs><marker id="ahb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>${g}</svg>`;
+}
+function renderBucles(list,sim,tc){
+  if(!list.length){$('bucles').innerHTML='<p class="muted">En este momento el motor no encuentra circuitos: ningún flujo depende de un stock al que a su vez mueve. Aparecen cuando una fórmula usa el stock que alimenta o vacía, y pueden prenderse al cruzar un umbral.</p>';return;}
+  const r=sim[tc];const u=M.unidad||'paso';
+  $('bucles').innerHTML=list.slice(0,6).map(b=>{
+    const stocks=[...new Set(b.edges.map(e=>e.from))].map(nombreDe);
+    const vuelta=b.edges.map(e=>`${nombreDe(e.from)} ${e.s1>0?'sube':'baja'} → ${e.via.nombre||e.via.k} ${e.s1>0?'sube':'baja'} → ${nombreDe(e.to)} ${e.s1*e.s2>0?'sube':'baja'}`).join('; ');
+    const gpct=b.g<10?nf1.format(b.g*100)+' % por '+u+(b.edges.length>1?' en la vuelta':''):'muy fuerte';
+    const estado=b.tipo==='R'?(b.g>=0.005?'gira':'casi quieto'):(b.g>=0.005?'corrige':'corrige poco');
+    const que=b.tipo==='R'?'Se refuerza: cuanto más hay, más entra o más sale. Virtuoso o vicioso según el stock.':'Corrige: cuando el stock se mueve, el flujo lo empuja de vuelta.';
+    return `<div class="bucle ${b.tipo==='R'?'ref':'bal'}"><div class="bucle-t"><b>${esc(stocks.join(' · '))}</b><span class="chip">${b.tipo==='R'?'refuerzo':'balance'} · ${estado} · ${gpct}</span><p>${que}</p><em>${esc(vuelta)}</em></div>${vueltaSvg(b,r)}</div>`;
+  }).join('')+(list.length>6?`<p class="muted">Y ${list.length-6} más, más débiles.</p>`:'');
+}
+
 /* ---------- eventos ---------- */
 document.addEventListener('input',e=>{
   const el=e.target;
@@ -1010,6 +1153,7 @@ document.addEventListener('input',e=>{
     }
   }else if(el.dataset.vis!==undefined){if(el.checked)vis.add(el.dataset.vis);else vis.delete(el.dataset.vis);renderChart(lastBase,lastSim);return;}
   else if(el.dataset.toggle!==undefined){toggleLever(el.dataset.toggle,el.checked);return;}
+  else if(el.dataset.ovr!==undefined){moverParam(el.dataset.ovr,+el.value);return;}
   else return;
   dirty=true;scheduleCompute();scheduleSave();
 });
@@ -1133,6 +1277,15 @@ document.addEventListener('click',e=>{
   else if(b.id==='btn-adopt-all'){for(const k of [...(M.activas||[])])adoptar(k);return;}
   else if(b.dataset.undo){deshacer(b.dataset.undo);return;}
   else if(b.dataset.avanzar){avanzar(+b.dataset.avanzar);return;}
+  else if(b.id==='vivo-play'){playRun();return;}
+  else if(b.id==='vivo-reset'){TCUR=0;stopRun();renderVivo();return;}
+  else if(b.dataset.v){VEL=+b.dataset.v;$('vivo-vel').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));if(RUN){stopRun();playRun();}return;}
+  else if(b.dataset.modo){MODO=b.dataset.modo;compute();return;}
+  else if(b.id==='btn-quedarme'){quedarme();return;}
+  else if(b.dataset.shock){PERT.push({t:(M.t0||0)+TCUR,k:b.dataset.shock,f:+b.dataset.f});compute();return;}
+  else if(b.id==='btn-shock-clear'){PERT=[];compute();return;}
+  else if(b.id==='btn-ovr-adopt'){adoptarOvr();return;}
+  else if(b.id==='btn-ovr-reset'){OVR={};compute();return;}
   else if(b.dataset.planAdd){planAdd(b.dataset.planAdd);return;}
   else if(b.dataset.planUp){planMove(b.dataset.planUp,-1);return;}
   else if(b.dataset.planDown){planMove(b.dataset.planDown,1);return;}
