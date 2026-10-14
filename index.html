@@ -282,9 +282,15 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 
 <section class="tab" id="tab-jugar" hidden>
   <div class="panel">
-    <div class="btns" style="justify-content:space-between;align-items:flex-start"><div><h2 style="margin:0">Palancas</h2><p class="note" id="esc-lede"></p></div><button id="btn-reset">Apagar todas</button></div>
+    <div class="btns" style="justify-content:space-between;align-items:flex-start"><div><h2 style="margin:0">Palancas</h2><p class="note" id="esc-lede"></p></div><div class="btns"><button id="btn-adopt-all">Adoptar las activas</button><button id="btn-reset">Apagar todas</button></div></div>
     <div id="pal-rows" style="margin-top:10px"></div>
+    <p class="hint-p" style="margin-top:10px">Activar es probar. Adoptar es decidir: los cambios de la palanca pasan al modelo como nueva realidad y quedan registrados abajo, con deshacer.</p>
   </div>
+  <details class="plain"><summary>Sugerencias del motor <span id="sug-count"></span></summary>
+    <p class="hint-p" style="margin:8px 0">El motor prueba mover cada parámetro un 10 % en la dirección que mejora el objetivo. Son palancas débiles (parámetros, fuerza 12); las fuertes, como estructura, reglas o metas, las tenés que escribir vos en Describir. Con un clic cada sugerencia se agrega como palanca.</p>
+    <div id="sug-rows"></div>
+  </details>
+  <details class="plain" id="dec-box"><summary>Decisiones adoptadas <span id="dec-count"></span></summary><div id="decisiones" style="margin-top:8px"></div></details>
   <div class="tiles" id="tiles"></div>
   <div class="chart-wrap">
     <div class="legend" id="legend"></div>
@@ -334,6 +340,8 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
       <li><b>Paradigma.</b> La idea desde la que surge el sistema.</li>
       <li><b>Trascender el paradigma.</b> Saber que ningún paradigma es la verdad.</li>
     </ol>
+    <h3>Probar, adoptar, deshacer</h3>
+    <p>En Jugar, <b>activar</b> una palanca es probarla: el escenario la incluye y ves el efecto. <b>Adoptar</b> es decidir: sus cambios pasan al modelo como la nueva realidad, quedan registrados con fecha en "Decisiones adoptadas" y se pueden deshacer. Las <b>sugerencias del motor</b> buscan qué parámetros mueven más el objetivo y las convierten en palancas con un clic; después podés renombrarlas, cambiarles el valor o subirles la fuerza en Describir.</p>
     <h3>Qué detecta el motor por su cuenta</h3>
     <ul>
       <li><b>Bucle de refuerzo dominante:</b> un stock que crece o cae acelerando.</li>
@@ -438,7 +446,7 @@ const TPL=[{n:'Vacío',f:tplVacio,d:'Empezá de cero.'},{n:'Finanzas personales'
 let LIB=[],M=null,DB=null,dirty=false,saveT=null,saving=false,pending=false,errs=[];
 function normalize(m){
   const b=tplVacio();const out={...b,...m};
-  for(const k of ['stocks','flujos','params','indicadores','palancas','reglas','activas'])if(!Array.isArray(out[k]))out[k]=[];
+  for(const k of ['stocks','flujos','params','indicadores','palancas','reglas','activas','decisiones'])if(!Array.isArray(out[k]))out[k]=[];
   if(!out.id)out.id=uid();out.horizonte=Math.max(2,Math.min(240,Math.round(out.horizonte||24)));
   return out;
 }
@@ -664,7 +672,7 @@ function renderSens(list){
   const maxAbs=Math.max(1e-9,...list.map(x=>Math.abs(x.delta)));
   const spark=path=>{const w=120,h=36,n=path.length-1,mx=Math.max(1e-9,...path.map(Math.abs));const y=v=>h/2-(v/mx)*(h/2-3);return `<svg viewBox="0 0 ${w} ${h}" class="spark" aria-hidden="true"><line x1="0" x2="${w}" y1="${h/2}" y2="${h/2}" stroke="var(--grid)"/><path d="${path.map((v,i)=>(i?'L':'M')+(i/n*w).toFixed(1)+' '+y(v).toFixed(1)).join('')}" fill="none" stroke="var(--accent)" stroke-width="1.5"/></svg>`;};
   const rows=o?list:M.palancas.map(pl=>({pl,on:(M.activas||[]).includes(pl.k),delta:0,raw:0,path:[0,0]}));
-  $('pal-rows').innerHTML=rows.length?rows.map(x=>{const pos=x.delta>=0;return `<div class="pal${x.on?' on':''}"><label class="sw" title="${x.on?'apagar':'activar'}"><input type="checkbox" data-toggle="${esc(x.pl.k)}" ${x.on?'checked':''}><i></i></label><div class="pal-t"><b>${esc(x.pl.nombre||x.pl.k)} <span class="pal-n" title="${FUERZA[x.pl.fuerza]||''}">${x.pl.fuerza||12} · ${FUERZA[x.pl.fuerza]||'parámetros'}</span></b><span>${esc(x.pl.descripcion||'')}</span><em>${esc(x.pl.valor.includes('=')?x.pl.valor:nombreDe(x.pl.campo)+' → '+x.pl.valor)}</em></div><div class="pal-bar"><i style="width:${(100*Math.abs(x.delta)/maxAbs).toFixed(1)}%;background:${pos?'var(--good)':'var(--crit)'}"></i></div>${spark(x.path)}<div class="pal-v ${pos?'pos':'neg'}">${o?(pos?'+':'−')+fmtV(Math.abs(x.raw),o):'—'}<small>${x.on?'aporta al escenario':'si la activás'}</small></div></div>`;}).join(''):'';
+  $('pal-rows').innerHTML=rows.length?rows.map(x=>{const pos=x.delta>=0;return `<div class="pal${x.on?' on':''}"><label class="sw" title="${x.on?'apagar':'activar'}"><input type="checkbox" data-toggle="${esc(x.pl.k)}" ${x.on?'checked':''}><i></i></label><div class="pal-t"><b>${esc(x.pl.nombre||x.pl.k)} <span class="pal-n" title="${FUERZA[x.pl.fuerza]||''}">${x.pl.fuerza||12} · ${FUERZA[x.pl.fuerza]||'parámetros'}</span></b><span>${esc(x.pl.descripcion||'')}</span><em>${esc(x.pl.valor.includes('=')?x.pl.valor:nombreDe(x.pl.campo)+' → '+x.pl.valor)}</em>${x.on?`<div><button class="small" data-adopt="${esc(x.pl.k)}">Adoptar: hacerla permanente</button></div>`:''}</div><div class="pal-bar"><i style="width:${(100*Math.abs(x.delta)/maxAbs).toFixed(1)}%;background:${pos?'var(--good)':'var(--crit)'}"></i></div>${spark(x.path)}<div class="pal-v ${pos?'pos':'neg'}">${o?(pos?'+':'−')+fmtV(Math.abs(x.raw),o):'—'}<small>${x.on?'aporta al escenario':'si la activás'}</small></div></div>`;}).join(''):'';
 }
 function renderCamino(C,sens){
   const steps=[];
@@ -683,7 +691,7 @@ function compute(){
   const ME=act.length?aplicarLista(M,act):M;
   const sim=ME===M?base:simular(ME);
   renderTiles(base,sim);renderChart(base,sim);renderDiagram(sim);renderTable(sim);
-  const sens=sensibilidad(sim,ME);renderSens(sens);
+  const sens=sensibilidad(sim,ME);renderSens(sens);renderSug(sugerencias(sim,ME));renderDecisiones();
   const C=[...patrones(sim),...reglas(sim,ME)];renderCards(C);renderCamino(C,sens);
   const box=$('errores');const u=[...new Set(errs)];box.hidden=!u.length;box.innerHTML=u.map(e=>'• '+esc(e)).join('<br>');
   document.querySelectorAll('.tabs [data-tab="describir"]').forEach(b=>b.textContent=u.length?`Describir (${u.length} ${u.length===1?'error':'errores'})`:'Describir');
@@ -711,6 +719,45 @@ document.addEventListener('input',e=>{
 });
 let cT=null;function scheduleCompute(){clearTimeout(cT);cT=setTimeout(compute,120);}
 function toggleLever(k,on){M.activas=(M.activas||[]).filter(x=>x!==k);if(on)M.activas.push(k);dirty=true;compute();scheduleSave();}
+function adoptar(k){
+  const pl=M.palancas.find(p=>p.k===k);if(!pl)return;
+  const mx=aplicarPalanca(M,pl);if(!mx)return;
+  const antes=[],despues=[];
+  for(const p of mx.params){const o=M.params.find(x=>x.k===p.k);if(o&&o.valor!==p.valor){antes.push({k:p.k,v:o.valor});despues.push({k:p.k,v:p.valor});o.valor=p.valor;}}
+  for(const s of mx.stocks){const o=M.stocks.find(x=>x.k===s.k);if(o&&o.inicial!==s.inicial){antes.push({k:s.k,v:o.inicial});despues.push({k:s.k,v:s.inicial});o.inicial=s.inicial;}}
+  M.decisiones=M.decisiones||[];
+  M.decisiones.push({id:uid(),fecha:new Date().toISOString().slice(0,10),nombre:pl.nombre||pl.k,antes,despues});
+  M.activas=(M.activas||[]).filter(x=>x!==k);
+  renderList('params');renderList('stocks');dirty=true;compute();scheduleSave();
+}
+function deshacer(id){
+  const i=(M.decisiones||[]).findIndex(d=>d.id===id);if(i<0)return;const d=M.decisiones[i];
+  for(const {k,v} of d.antes){const p=M.params.find(x=>x.k===k);if(p)p.valor=v;const s=M.stocks.find(x=>x.k===k);if(s)s.inicial=v;}
+  M.decisiones.splice(i,1);renderList('params');renderList('stocks');dirty=true;compute();scheduleSave();
+}
+function renderDecisiones(){
+  const D=M.decisiones||[];$('dec-count').textContent=D.length?`(${D.length})`:'';
+  $('decisiones').innerHTML=D.length?D.slice().reverse().map(d=>`<div class="pal" style="grid-template-columns:minmax(0,1fr) auto"><div class="pal-t"><b>${esc(d.nombre)} <span class="pal-n">${esc(d.fecha)}</span></b><em>${d.despues.map(x=>`${esc(nombreDe(x.k))}: ${fmtV(d.antes.find(a=>a.k===x.k)?.v,x.k)} → ${fmtV(x.v,x.k)}`).join(' · ')||'sin cambios'}</em></div><button class="small" style="margin:0" data-undo="${d.id}">Deshacer</button></div>`).join(''):'<p class="muted">Todavía no adoptaste ninguna palanca.</p>';
+}
+function sugerencias(sim,ME){
+  const o=M.objetivo;if(!o)return [];const H=M.horizonte;const base=sim[H][o];const out=[];
+  for(const p of ME.params){
+    if(!(Math.abs(p.valor)>0))continue;
+    let best=null;
+    for(const f of [1.1,0.9]){
+      const mx=structuredClone(ME);mx.params.find(x=>x.k===p.k).valor=p.valor*f;
+      const s2=simular(mx);const d=s2[H][o]-base;const delta=M.maximizar?d:-d;
+      if(delta>1e-9&&(!best||delta>best.delta))best={p,f,delta,raw:d};
+    }
+    if(best)out.push(best);
+  }
+  return out.sort((a,b)=>b.delta-a.delta).slice(0,8);
+}
+function renderSug(list){
+  const o=M.objetivo;$('sug-count').textContent=list.length?`(${list.length})`:'';
+  const ya=new Set(M.palancas.map(p=>p.campo+'|'+p.valor));
+  $('sug-rows').innerHTML=!o?'<p class="muted">Elegí un objetivo en Describir.</p>':list.length?list.map(x=>{const expr=`${x.p.k} * ${x.f}`;const dup=ya.has(x.p.k+'|'+expr);return `<div class="pal" style="grid-template-columns:minmax(0,1fr) minmax(110px,.6fr) auto"><div class="pal-t"><b>${esc(x.p.nombre||x.p.k)} ${x.f>1?'+10 %':'−10 %'}</b><em>${esc(x.p.k)}: ${fmtV(x.p.valor,x.p.k)} → ${fmtV(x.p.valor*x.f,x.p.k)}</em></div><div class="pal-v pos">+${fmtV(Math.abs(x.raw),o)}<small>${esc(nombreDe(o))}</small></div><button class="small" style="margin:0" data-addsug="${esc(x.p.k)}" data-f="${x.f}" ${dup?'disabled title="ya existe como palanca"':''}>${dup?'Ya es palanca':'Agregar como palanca'}</button></div>`;}).join(''):'<p class="muted">Ningún parámetro mueve el objetivo al 10 %.</p>';
+}
 document.addEventListener('click',e=>{
   const b=e.target.closest('button,[data-open]');if(!b)return;
   if(b.dataset.add){
@@ -721,6 +768,10 @@ document.addEventListener('click',e=>{
   else if(b.dataset.dup){const src=LIB.find(x=>x.id===b.dataset.dup);if(!src)return;const m=structuredClone(src);m.id=uid();m.nombre=(src.nombre||'Modelo')+' (copia)';LIB.push(m);setCurrent(m);e.stopPropagation();}
   else if(b.dataset.delm){const i=LIB.findIndex(x=>x.id===b.dataset.delm);if(i<0)return;const gone=LIB[i];if(!b.dataset.sure){b.dataset.sure='1';b.textContent='¿Seguro? Borrar';e.stopPropagation();return;}LIB.splice(i,1);deleteRemote(gone.id);if(!LIB.length)LIB.push(normalize(tplFinanzas()));if(gone.id===M.id)setCurrent(LIB[0]);else renderLib();saveLocal();e.stopPropagation();return;}
   else if(b.dataset.toggleBtn){toggleLever(b.dataset.toggleBtn,true);return;}
+  else if(b.dataset.adopt){adoptar(b.dataset.adopt);return;}
+  else if(b.id==='btn-adopt-all'){for(const k of [...(M.activas||[])])adoptar(k);return;}
+  else if(b.dataset.undo){deshacer(b.dataset.undo);return;}
+  else if(b.dataset.addsug){const p=M.params.find(x=>x.k===b.dataset.addsug);if(!p)return;const f=b.dataset.f;M.palancas.push({id:uid(),k:'pl_'+uid(),nombre:`${p.nombre||p.k} ${f==='1.1'?'+10 %':'−10 %'}`,fuerza:12,tipo:'param',campo:p.k,valor:`${p.k} * ${f}`,descripcion:'Sugerida por el motor: parámetro sensible. Convertila en algo concreto o subila de fuerza si implica una regla o una estructura.'});renderList('palancas');dirty=true;compute();scheduleSave();return;}
   else if(b.id==='btn-reset'){M.activas=[];dirty=true;compute();scheduleSave();return;}
   else if(b.dataset.open){const m=LIB.find(x=>x.id===b.dataset.open);if(m&&m.id!==M.id)setCurrent(m);return;}
   else if(b.id==='btn-export'){const txt=JSON.stringify(M,null,2);$('json-io').value=txt;navigator.clipboard?.writeText(txt).then(()=>$('io-msg').textContent='Copiado al portapapeles.',()=>{$('json-io').select();$('io-msg').textContent='Seleccionado: copialo con Ctrl+C.';});return;}
