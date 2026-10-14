@@ -156,6 +156,67 @@ button.del:hover{color:var(--crit)}
 .pb.distinto .pb-hoy{text-decoration:line-through}
 #shocks button{font-size:13px;padding:4px 9px}
 .bucles{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+/* diagrama causal */
+.loopchips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.lc{font-size:12.5px;padding:4px 10px;border-radius:14px;background:var(--surface);color:var(--fg2)}
+.lc b{font-family:var(--display);margin-right:2px}
+.lc.ref b{color:var(--good)}.lc.bal b{color:var(--accent)}
+.lc.on{background:var(--accent-soft);border-color:var(--accent);color:var(--fg)}
+.diagram .pipe{stroke:var(--accent);opacity:.32;stroke-linecap:round}
+.diagram .pipe.hl{opacity:.9}
+.diagram .pipe.activa{stroke-dasharray:8 6;animation:fluye .8s linear infinite;opacity:.5}
+.diagram .info{fill:none;stroke:var(--fg2);stroke-width:1.3;opacity:.75}
+.diagram .info.cero{stroke-dasharray:3 4;opacity:.45}
+.diagram .info.hl{stroke-width:2.4;opacity:1;stroke:var(--fg)}
+.diagram .sg circle{fill:var(--surface);stroke:var(--line);stroke-width:1}
+.diagram .sg text{font-size:11px;font-weight:700;text-anchor:middle;fill:var(--accent-ink)}
+.diagram .sg.neg text{fill:var(--crit)}.diagram .sg.cero text{fill:var(--muted)}
+.diagram .cloud{fill:none;stroke:var(--muted);stroke-dasharray:3 3}
+.diagram .snode{cursor:grab;touch-action:none}
+.diagram .snode .box{fill:var(--surface);stroke:var(--fg2);stroke-width:1.3}
+.diagram .snode.hl .box{stroke:var(--fg);stroke-width:2.2}
+.diagram .snode.vacio .box{stroke:var(--crit);stroke-dasharray:5 4}
+.diagram .snode .fill{fill:var(--accent);opacity:.13}
+.diagram .snode .nm{font-weight:600;font-size:12.5px;fill:var(--fg);text-anchor:middle}
+.diagram .snode .vl{font-family:var(--mono);font-size:14px;fill:var(--fg);text-anchor:middle}
+.diagram .vnode{cursor:grab;touch-action:none}
+.diagram .vnode circle{fill:var(--surface);stroke:var(--accent);stroke-width:2}
+.diagram .vnode path{fill:var(--accent);opacity:.75}
+.diagram .vnode .vn{font-size:10.5px;fill:var(--fg2);text-anchor:middle}
+.diagram .vnode .vv{font-family:var(--mono);font-size:10px;fill:var(--muted);text-anchor:middle}
+.diagram .lmark{cursor:pointer}
+.diagram .lmark .bg{fill:var(--surface);opacity:.92}
+.diagram .lmark path{fill:none;stroke-width:2}
+.diagram .lmark text{font-family:var(--display);font-weight:700;font-size:13px;text-anchor:middle}
+.diagram .lmark.ref path{stroke:var(--good)}.diagram .lmark.ref text{fill:var(--good)}
+.diagram .lmark.bal path{stroke:var(--accent)}.diagram .lmark.bal text{fill:var(--accent)}
+.diagram .dim{opacity:.14}
+.diagram .pipe.dim{opacity:.06}
+/* acciones */
+#pal-rows .pal.acc{grid-template-columns:46px minmax(0,1fr) auto auto}
+.pal-ed{display:flex;gap:0;align-items:center}
+.pal-ed button{border:none;background:none;padding:4px 7px;color:var(--muted);font-size:14px;border-radius:4px}
+.pal-ed button:hover:not(:disabled){background:var(--surface-2);color:var(--fg)}
+.pal-ed button:disabled{opacity:.25;cursor:default}
+.pal-ed button.x:hover,.pal-ed button.sure{color:var(--crit)}
+.pal-ed button.sure{font-size:12px}
+.mejor{display:inline-block;margin-left:6px;font-size:11px;font-weight:500;padding:1px 7px;border-radius:10px;background:var(--good);color:#fff;vertical-align:middle}
+details.sub{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+details.sub>summary{cursor:pointer;font-weight:600;font-size:14px}
+@media (max-width:640px){#pal-rows .pal.acc{grid-template-columns:46px minmax(0,1fr) auto;grid-template-areas:"n t v" "n ed ed"}.pal-ed{grid-area:ed}}
+/* ayudante de fórmulas */
+.fx{grid-column:1/-1;border:1px solid var(--accent);border-radius:6px;background:var(--surface);padding:10px 12px;display:grid;gap:8px;margin:4px 0}
+.fx-prev{font-size:13px;color:var(--fg2);display:grid;gap:2px}
+.fx-prev b{font-weight:600}
+.fx-prev i{font-style:normal;font-family:var(--mono);color:var(--muted)}
+.fx-v{font-family:var(--mono);color:var(--fg)}
+.fx-err{color:var(--crit);font-family:var(--mono);font-size:12px}
+.fx-g{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.fx-g>span{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);min-width:84px}
+.fxc{font-size:12px;padding:2px 8px;border-radius:10px;background:var(--surface-2)}
+.fxc:hover{border-color:var(--accent)}
+.fx-st,b.fx-st{color:var(--s1)}.fx-pa,b.fx-pa{color:var(--c-dis-ink)}.fx-fl,b.fx-fl{color:var(--accent-ink)}.fx-in,b.fx-in{color:var(--c-int-ink)}
+.fx-op{font-family:var(--mono)}
 .bucle{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;gap:8px;min-width:0;border-top-width:4px}
 .bucle.ref{border-top-color:var(--good)}.bucle.bal{border-top-color:var(--accent)}
 .bucle-t b{font-weight:600;display:block}
@@ -444,14 +505,21 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
       <span class="seg" id="vivo-vel"><button data-v="600">lento</button><button data-v="250" class="on">normal</button><button data-v="80">rápido</button></span>
       <span class="vivo-t" id="vivo-t"></span>
       <span class="seg" id="vivo-modo" title="Qué escenario corre"><button data-modo="base">Base</button><button data-modo="activo" class="on">Con lo activo</button><button data-modo="plan">Plan completo</button></span>
-      <button id="btn-quedarme" title="Mover el modelo hasta este punto del tiempo: los stocks pasan a lo que ves y el reloj avanza">Quedarme acá</button>
+      <button id="btn-quedarme" title="Mover el modelo hasta este punto del tiempo">Quedarme acá</button>
     </div>
     <p class="note" id="vivo-manda"></p>
   </div>
 
-  <div class="panel diagram" id="diagram"></div>
-  <div class="tiles" id="tiles"></div>
+  <div class="panel">
+    <div class="loopchips" id="loopchips"></div>
+    <div class="diagram" id="diagram"></div>
+    <div class="btns" style="justify-content:space-between;margin-top:6px">
+      <p class="hint-p">Caja: lo que se acumula. Válvula: lo que la llena o la vacía. Línea fina: de qué depende cada válvula ahora, con + si se mueven juntos y − si al revés. Tocá una R o una B para ver ese bucle solo. Arrastrá para acomodar.</p>
+      <button id="btn-relayout" class="small" style="margin:0">Reacomodar</button>
+    </div>
+  </div>
 
+  <div class="tiles" id="tiles"></div>
   <div class="chart-wrap">
     <div class="legend" id="legend"></div>
     <div id="chart"></div>
@@ -461,59 +529,47 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 
   <div class="panel">
     <div class="btns" style="justify-content:space-between;align-items:flex-start">
-      <div><h2 style="margin:0">Qué probar</h2><p class="note" id="esc-lede"></p></div>
-      <div class="btns"><button id="btn-nueva-pal">+ nueva palanca</button><button id="btn-adopt-all" class="primary">Adoptar las activas</button><button id="btn-reset">Apagar todas</button></div>
+      <div><h2 style="margin:0">Acciones</h2><p class="note" id="esc-lede"></p></div>
+      <div class="btns"><button id="btn-nueva-pal">+ nueva acción</button><button id="btn-adopt-all" class="primary">Adoptar las activas</button><button id="btn-reset">Apagar todas</button></div>
     </div>
     <div id="pal-rows" style="margin-top:6px"></div>
     <form id="pal-form" class="pal-form" hidden>
+      <h3 id="pal-form-t" style="margin:0 0 8px">Nueva acción</h3>
+      <input type="hidden" id="np-id">
       <div class="fields">
         <div class="field"><label for="np-nombre">Nombre</label><input type="text" id="np-nombre" placeholder="qué hacés, en pocas palabras" required></div>
         <div class="field"><label for="np-campo">Qué cambia</label><select id="np-campo"></select></div>
-        <div class="field"><label for="np-valor">Nuevo valor</label><input type="text" id="np-valor" class="f" placeholder="un número o una fórmula" required></div>
         <div class="field"><label for="np-fuerza">Fuerza (Meadows)</label><select id="np-fuerza"></select></div>
-        <div class="field" style="grid-column:span 2"><label for="np-desc">Por qué</label><input type="text" id="np-desc" placeholder="opcional"></div>
+        <div class="field" style="grid-column:1/-1"><label for="np-valor">Nuevo valor</label><input type="text" id="np-valor" class="f" placeholder="tocá los elementos de abajo, o escribí un número" required autocomplete="off" spellcheck="false"></div>
+        <div class="field" style="grid-column:1/-1"><label for="np-desc">Por qué</label><input type="text" id="np-desc" placeholder="opcional"></div>
       </div>
-      <div class="btns" style="margin-top:10px"><button type="submit" class="primary">Agregar y activar</button><button type="button" id="np-cancel">Cancelar</button><span class="hint-p">Para fórmulas con varias asignaciones o detalles finos, usá Describir.</span></div>
+      <div class="btns" style="margin-top:10px"><button type="submit" id="np-submit" class="primary">Agregar y activar</button><button type="button" id="np-cancel">Cancelar</button></div>
     </form>
-
-    <h3 style="margin-top:16px">Mover un número</h3>
-    <p class="hint-p" style="margin-bottom:8px">Los parámetros que controlás, como deslizadores. "Hoy" es lo que tiene el modelo; lo que muevas corre en la simulación hasta que lo adoptes o lo vuelvas atrás.</p>
-    <div class="probar" id="probar"></div>
-    <div class="btns" id="probar-btns" style="margin-top:8px" hidden><button id="btn-ovr-adopt" class="primary">Adoptar estos valores</button><button id="btn-ovr-reset">Volver a hoy</button></div>
-
-    <h3 style="margin-top:16px">Pasa algo</h3>
-    <p class="hint-p" style="margin-bottom:8px">Un sacudón en el momento en que está el reloj: un stock pierde o gana un 20 % de golpe. Para ver si el sistema lo absorbe o lo amplifica.</p>
-    <div class="btns" id="shocks"></div>
+    <details class="sub"><summary>Mover un número</summary>
+      <p class="hint-p" style="margin:8px 0">Cada parámetro que controlás, con "hoy" al lado. Lo que muevas corre hasta que lo adoptes o vuelvas a hoy.</p>
+      <div class="probar" id="probar"></div>
+      <div class="btns" id="probar-btns" style="margin-top:8px" hidden><button id="btn-ovr-adopt" class="primary">Adoptar estos valores</button><button id="btn-ovr-reset">Volver a hoy</button></div>
+    </details>
+    <details class="sub"><summary>Pasa algo</summary>
+      <p class="hint-p" style="margin:8px 0">Un sacudón en el paso donde está el reloj: un stock pierde o gana un 20 % de golpe.</p>
+      <div class="btns" id="shocks"></div>
+    </details>
   </div>
-  <details class="plain" id="dec-box"><summary>Decisiones y avances <span id="dec-count"></span></summary><div id="decisiones" style="margin-top:8px"></div></details>
-
-  <div class="sec-head"><h2>Cada bucle, de cerca</h2><p>Los circuitos que el motor encuentra en tus fórmulas, con los valores del momento en que está el reloj. R se refuerza a sí mismo; B corrige hacia un nivel. El signo de cada flecha dice si las dos puntas se mueven juntas (+) o al revés (−).</p></div>
-  <div class="bucles" id="bucles"></div>
 
   <div class="panel">
-    <div class="btns" style="justify-content:space-between;align-items:flex-start"><div><h2 style="margin:0">Plan de mejora</h2><p class="note" id="plan-lede"></p></div></div>
+    <h2 style="margin:0">Plan de mejora</h2><p class="note" id="plan-lede"></p>
     <ol class="plan" id="plan"></ol>
     <form id="plan-form" class="btns" style="margin-top:10px"><input type="text" id="plan-nuevo" placeholder="un paso propio, en una frase" style="flex:1;min-width:200px"><button type="submit">Agregar al plan</button></form>
-    <h3 style="margin-top:16px">Para sumar al plan</h3>
-    <p class="hint-p" style="margin-bottom:8px">Alertas accionables y palancas con efecto positivo que todavía no están en tu plan. Por urgencia y después por fuerza.</p>
-    <div id="plan-sug"></div>
+    <details class="sub"><summary>Para sumar al plan</summary><div id="plan-sug" style="margin-top:8px"></div></details>
   </div>
 
-  <div class="sec-head"><h2>Alertas</h2></div>
   <div class="cards" id="cards"></div>
+
   <details class="plain"><summary>Lo que está bien <span id="ok-count"></span></summary><div class="cards" id="cards-ok" style="margin-top:10px"></div></details>
-
-  <div class="sec-head"><h2>Las tres capas</h2><p>De la más fuerte a la más débil. El motor simula la de abajo; las otras dos le dan sentido.</p></div>
-  <div class="capas" id="capas"></div>
-
-  <details class="plain"><summary>Escenarios adversos <span id="estres-count"></span></summary>
-    <p class="hint-p" style="margin:8px 0">Qué pasa si lo que no controlás se mueve un 20 % en tu contra.</p>
-    <div id="estres-rows"></div>
-  </details>
-  <details class="plain"><summary>Palancas que sugiere el motor <span id="sug-count"></span></summary>
-    <p class="hint-p" style="margin:8px 0">Parámetros que controlás, movidos un 10 % a favor. Son palancas débiles; las fuertes las escribís vos.</p>
-    <div id="sug-rows"></div>
-  </details>
+  <details class="plain" id="dec-box"><summary>Decisiones y avances <span id="dec-count"></span></summary><div id="decisiones" style="margin-top:8px"></div></details>
+  <details class="plain"><summary>Las tres capas</summary><div class="capas" id="capas" style="margin-top:10px"></div></details>
+  <details class="plain"><summary>Escenarios adversos <span id="estres-count"></span></summary><div id="estres-rows" style="margin-top:8px"></div></details>
+  <details class="plain"><summary>Acciones que sugiere el motor <span id="sug-count"></span></summary><div id="sug-rows" style="margin-top:8px"></div></details>
   <details class="plain"><summary>Tabla paso a paso</summary><div class="tbl" id="tbl"></div></details>
 </section>
 
@@ -529,6 +585,7 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
       <li><b>Escribí reglas de lectura.</b> Condiciones que te importan: "si la caja mínima baja de cero", "si la deuda supera la liquidez". El motor las evalúa y las convierte en alertas y pasos del camino.</li>
     </ol>
     <h3>Fórmulas</h3>
+    <p>No hace falta escribirlas de memoria: al tocar cualquier campo de fórmula aparece debajo un ayudante con todos los stocks, parámetros, flujos e indicadores del modelo. Tocás uno y entra en la fórmula; arriba la ves leída en palabras y con su valor de hoy, o el error si algo no cierra.</p>
     <p>Operadores: <code>+ - * / ^</code>, comparaciones <code>&lt; &gt; &lt;= &gt;= == !=</code>, lógica <code>&amp;&amp; ||</code>, paréntesis. Funciones: <code>min max abs sqrt log exp round floor ceil pow if(cond, a, b)</code>. <code>t</code> es el paso actual, de 0 en adelante.</p>
     <ul>
       <li>Algo que crece con inflación: <code>gastos * (1 + inflacion) ^ t</code></li>
@@ -554,6 +611,7 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
       <li><b>Trascender el paradigma.</b> Saber que ningún paradigma es la verdad.</li>
     </ol>
     <h3>Bucles</h3>
+    <p>En Jugar, el dibujo muestra cada caja, cada válvula y de qué depende cada una. Los bucles aparecen marcados con R o B; tocá uno, en el dibujo o en la fila de arriba, para verlo solo.</p>
     <p>El motor busca circuitos en tus fórmulas: un flujo que depende de un stock y a la vez lo mueve. Mide, sobre el estado actual, cómo cambia cada flujo cuando el stock sube un 1 %, y arma las vueltas de hasta tres stocks. <b>R</b> es un bucle de refuerzo: el producto de los signos es positivo y el stock se alimenta a sí mismo. <b>B</b> es un bucle de balance: el producto es negativo y el flujo lo empuja de vuelta. El porcentaje es la ganancia por paso: cuánto del stock vuelve a entrar o salir en una vuelta. Un flujo con umbral, como "si hay plata, comprá", no aparece hasta que el estado está cerca del umbral.</p>
     <h3>Plan de mejora</h3>
     <p>Es tu lista. Se arma con lo que el motor sugiere (alertas y palancas con efecto positivo que todavía no están en el plan) y con pasos propios. Cada paso tiene estado; los que son palancas se activan o adoptan desde el plan, y al adoptarlos quedan hechos solos. Una sugerencia desaparece cuando la agregás, así nada se repite.</p>
@@ -568,6 +626,7 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
     </ul>
   </div>
 </section>
+<div id="fx" class="fx" hidden><div id="fx-prev" class="fx-prev"></div><div id="fx-chips"></div></div>
 </main>
 
 <script>
@@ -758,6 +817,7 @@ function cell(list,r,[f,type,ph]){
   }
 }
 function renderList(list){
+  {const fx=$('fx');if(fx&&$(list)&&$(list).contains(fx)){fx.hidden=true;document.querySelector('main').appendChild(fx);FXEL=null;}}
   const C=COLS[list];
   $(list).innerHTML=M[list].map(r=>`<div class="row" style="grid-template-columns:${C.grid}" data-id="${r.id}">${C.cols.map(c=>cell(list,r,c)).join('')}<button class="del" data-del="${list}" data-id="${r.id}" aria-label="quitar">×</button></div>`).join('');
   const n=$('n-'+list);if(n)n.textContent=M[list].length;
@@ -844,14 +904,6 @@ function sensibilidad(sim,ME){
   }
   return out.sort((a,b)=>(b.on-a.on)||(b.delta-a.delta));
 }
-function renderSens(list){
-  const H=M.horizonte,o=M.objetivo;const act=(M.activas||[]).length;
-  $('esc-lede').textContent=!M.palancas.length?'Este modelo no tiene palancas. Definilas en Describir.':!o?'Elegí un indicador objetivo en Describir para medir el efecto de cada palanca.':`Prendé y apagá. ${act?`${act} ${act===1?'activa':'activas'}.`:'Ninguna activa: estás viendo el escenario base.'} El efecto de cada una se mide sobre el escenario actual, en ${nombreDe(o)} a ${H} ${plural(M.unidad)}.`;
-  const maxAbs=Math.max(1e-9,...list.map(x=>Math.abs(x.delta)));
-  const spark=path=>{const w=120,h=36,n=path.length-1,mx=Math.max(1e-9,...path.map(Math.abs));const y=v=>h/2-(v/mx)*(h/2-3);return `<svg viewBox="0 0 ${w} ${h}" class="spark" aria-hidden="true"><line x1="0" x2="${w}" y1="${h/2}" y2="${h/2}" stroke="var(--grid)"/><path d="${path.map((v,i)=>(i?'L':'M')+(i/n*w).toFixed(1)+' '+y(v).toFixed(1)).join('')}" fill="none" stroke="var(--accent)" stroke-width="1.5"/></svg>`;};
-  const rows=o?list:M.palancas.map(pl=>({pl,on:(M.activas||[]).includes(pl.k),delta:0,raw:0,path:[0,0]}));
-  $('pal-rows').innerHTML=rows.length?rows.map(x=>{const pos=x.delta>=0;const cambio=x.pl.valor.includes('=')?x.pl.valor:nombreDe(x.pl.campo)+' → '+x.pl.valor;return `<div class="pal${x.on?' on':''}" title="${esc(cambio)}"><label class="sw" title="${x.on?'apagar':'activar'}"><input type="checkbox" data-toggle="${esc(x.pl.k)}" ${x.on?'checked':''}><i></i></label><div class="pal-t"><b>${esc(x.pl.nombre||x.pl.k)} <span class="pal-n ${CAPA(x.pl.fuerza||12)}" title="${FUERZA[x.pl.fuerza]||''}">${x.pl.fuerza||12} · ${FUERZA[x.pl.fuerza]||'parámetros'}</span>${x.on?`<button class="small inline" data-adopt="${esc(x.pl.k)}">Adoptar</button>`:''}</b><span>${esc(x.pl.descripcion||cambio)}</span><div class="pal-bar"><i style="width:${(100*Math.abs(x.delta)/maxAbs).toFixed(1)}%;background:${pos?'var(--good)':'var(--crit)'}"></i></div></div>${spark(x.path)}<div class="pal-v ${pos?'pos':'neg'}">${o?(pos?'+':'−')+fmtV(Math.abs(x.raw),o):'—'}<small>${x.on?'aporta':'si la activás'}</small></div></div>`;}).join(''):'';
-}
 
 
 /* ---------- bucles: detección por derivadas numéricas sobre el estado actual ---------- */
@@ -884,19 +936,6 @@ function planPropio(t){t=(t||'').trim();if(!t)return;M.plan=M.plan||[];M.plan.pu
 function planMove(id,d){const P=M.plan||[];const i=P.findIndex(p=>p.id===id);const j=i+d;if(i<0||j<0||j>=P.length)return;[P[i],P[j]]=[P[j],P[i]];dirty=true;compute();scheduleSave();}
 
 /* ---------- palanca nueva desde Jugar ---------- */
-function abrirPalForm(){
-  const f=$('pal-form');f.hidden=false;
-  $('np-campo').innerHTML=[...M.params.filter(p=>!p.externo).map(p=>[p.k,'parámetro: '+(p.nombre||p.k)]),...M.stocks.map(s=>[s.k,'stock inicial: '+(s.nombre||s.k)])].map(([k,n])=>`<option value="${esc(k)}">${esc(n)}</option>`).join('');
-  $('np-fuerza').innerHTML=Object.keys(FUERZA).sort((a,b)=>b-a).map(n=>`<option value="${n}"${+n===12?' selected':''}>${n} · ${FUERZA[n]}</option>`).join('');
-  $('np-nombre').value='';$('np-valor').value='';$('np-desc').value='';$('np-nombre').focus();
-}
-function crearPalanca(){
-  const campo=$('np-campo').value;const esStock=M.stocks.some(s=>s.k===campo);
-  const pl={id:uid(),k:'pl_'+uid(),nombre:$('np-nombre').value.trim(),fuerza:+$('np-fuerza').value,tipo:esStock?'stock':'param',campo,valor:$('np-valor').value.trim(),descripcion:$('np-desc').value.trim()};
-  if(!pl.nombre||!pl.valor)return;
-  try{compile(pl.valor);}catch(e){$('np-valor').classList.add('err');$('np-valor').title=e.message;return;}
-  M.palancas.push(pl);M.activas=(M.activas||[]).concat(pl.k);renderList('palancas');$('pal-form').hidden=true;dirty=true;compute();scheduleSave();
-}
 
 /* ---------- el juego: tiempo, modo, deslizadores, sacudones (estado de sesión, no se guarda) ---------- */
 let TCUR=0,RUN=null,VEL=250,MODO='activo',OVR={},PERT=[],lastME=null,lastLoops=[];
@@ -931,7 +970,7 @@ function renderVivo(){
   const sim=lastSim,base=lastBase,ME=lastME;if(!sim.length)return;
   const r=sim[TCUR];
   lastLoops=bucles(ME,r);
-  renderDiagram(sim,TCUR,lastLoops);renderKpis(base,sim,TCUR);renderChart(base,sim,TCUR);renderBucles(lastLoops,sim,TCUR);
+  renderDiagram(sim,TCUR,lastLoops);renderKpis(base,sim,TCUR);renderChart(base,sim,TCUR);
   const t0=M.t0||0,H=M.horizonte,u=M.unidad||'paso';
   $('vivo-t').textContent=`${u} ${t0+TCUR} · paso ${TCUR} de ${H}`;
   $('btn-quedarme').disabled=TCUR===0;
@@ -999,18 +1038,6 @@ function renderShocks(){
 }
 
 /* ---------- KPIs del momento ---------- */
-function renderKpis(base,sim,tc){
-  const r=sim[tc],b=base[tc],rH=sim[sim.length-1],bH=base[base.length-1];
-  const items=[];const o=M.objetivo;const u=M.unidad||'paso';
-  if(o){
-    const d=r[o]-b[o];const good=M.maximizar?d>=0:d<=0;
-    items.push({k:`${nombreDe(o)} ahora (${u} ${(M.t0||0)+tc})`,v:fmtV(r[o],o),d:Math.abs(d)>1e-9?`${d>=0?'+':''}${fmtV(d,o)} contra la base`:'igual que la base',cls:Math.abs(d)>1e-9?(good?'pos':'neg'):''});
-    const dH=rH[o]-bH[o];const goodH=M.maximizar?dH>=0:dH<=0;
-    items.push({k:`${nombreDe(o)} al final (${u} ${(M.t0||0)+M.horizonte})`,v:fmtV(rH[o],o),d:Math.abs(dH)>1e-9?`${dH>=0?'+':''}${fmtV(dH,o)} contra la base`:'escenario base',cls:Math.abs(dH)>1e-9?(goodH?'pos':'neg'):''});
-  }
-  for(const s of M.stocks.slice(0,3))items.push({k:s.nombre||s.k,v:fmtV(r[s.k],s.k),d:`→ ${fmtV(rH[s.k],s.k)} al final`});
-  $('tiles').innerHTML=items.map(x=>`<div class="tile ${x.cls||''}"><span class="k">${esc(x.k)}</span><span class="v">${x.v}</span><span class="d">${esc(x.d)}</span></div>`).join('');
-}
 
 /* ---------- gráfico con cursor ---------- */
 function renderChart(base,sim,tc){
@@ -1048,85 +1075,6 @@ function renderChart(base,sim,tc){
 }
 
 /* ---------- el dibujo vivo ---------- */
-function renderDiagram(sim,tc,loops){
-  const r=sim[tc];const S=M.stocks;
-  if(!S.length){$('diagram').innerHTML='<p class="muted">Agregá stocks en Describir para ver el sistema.</p>';return;}
-  const CW=260,GX=100,PAD=24,RG=44,LH=15;
-  const cw=$('diagram').clientWidth||800;
-  const cols=Math.max(1,Math.min(3,Math.floor((cw+GX+60)/(CW+GX))));
-  // carriles, en el orden en que aparecen
-  const lanes=[],li={};
-  for(const s of S){const c=(s.carril||'').trim();if(!(c in li)){li[c]=lanes.length;lanes.push({t:c,st:[]});}lanes[li[c]].st.push(s);}
-  const named=lanes.some(l=>l.t);
-  const used=Math.min(cols,Math.max(...lanes.map(l=>l.st.length)));
-  const W=PAD*2+used*CW+(used-1)*GX;
-  const ins=k=>M.flujos.filter(f=>f.hacia===k),outs=k=>M.flujos.filter(f=>f.desde===k);
-  const hOf=s=>84+(Math.max(ins(s.k).length,1)+Math.max(outs(s.k).length,1)+2)*LH+14;
-  // posiciones
-  const pos={},bands=[];let y=PAD+8;
-  for(const L of lanes){
-    const top=y;if(named)y+=30;
-    for(let i=0;i<L.st.length;i+=used){
-      const row=L.st.slice(i,i+used);const hs=row.map(hOf);const rh=Math.max(...hs);
-      const rowW=row.length*CW+(row.length-1)*GX;const x0=(W-rowW)/2;
-      row.forEach((s,j)=>{pos[s.k]={x:x0+j*(CW+GX),y,h:hs[j]};});
-      y+=rh+RG;
-    }
-    y-=RG;if(named)y+=14;
-    bands.push({t:L.t,y0:top-8,y1:y+6});
-    y+=named?30:RG;
-  }
-  const H=y-(named?14:RG-10);
-  let g='';
-  if(named)for(const b of bands)g+=`<g class="lane"><rect x="6" y="${b.y0}" width="${W-12}" height="${b.y1-b.y0}" rx="8"/>${b.t?`<text x="18" y="${b.y0+18}">${esc(b.t.toUpperCase())}</text>`:''}</g>`;
-  const maxF=Math.max(1e-9,...sim.flatMap(q=>M.flujos.map(f=>Math.abs(q[f.k]||0))));
-  const w=v=>1.4+4.6*Math.abs(v)/maxF;
-  const act=v=>RUN&&Math.abs(v)>maxF*0.01?' activa':'';
-  const cut=(t,m)=>{t=String(t);return t.length>m?t.slice(0,Math.max(1,m-1))+'…':t;};
-  // tarjetas
-  for(const s of S){
-    const p=pos[s.k];const x=p.x,yy=p.y,h=p.h;const v=r[s.k];
-    const vals=sim.map(q=>q[s.k]);const mx=Math.max(1e-9,...vals.map(Math.abs));const lvl=Math.max(0,Math.min(1,Math.abs(v)/mx))*(h-4);
-    const vacio=s.min0&&Math.abs(v)<1e-9&&vals.some(q=>Math.abs(q)>1e-9);
-    g+=`<g class="st${vacio?' vacio':''}"><rect class="box" x="${x}" y="${yy}" width="${CW}" height="${h}" rx="6"/><rect class="fill" x="${x+2}" y="${yy+h-2-lvl}" width="${CW-4}" height="${lvl}" rx="4"/>`;
-    g+=`<text class="nm" x="${x+14}" y="${yy+24}">${esc(cut(s.nombre||s.k,26))}</text><text class="vl" x="${x+14}" y="${yy+46}">${fmtV(v,s.k)}</text>`;
-    let bx=x+14;
-    for(const b of loops.filter(b=>b.edges.some(e=>e.from===s.k)).slice(0,2)){g+=`<g class="loopbadge ${b.tipo==='R'?'ref':'bal'}"><rect x="${bx}" y="${yy+54}" width="56" height="16" rx="8"/><text x="${bx+28}" y="${yy+65.5}" text-anchor="middle">${b.tipo} ${nf1.format(b.g*100)} %</text></g>`;bx+=62;}
-    if(s.min0)g+=`<text class="tag" x="${x+CW-12}" y="${yy+66}" text-anchor="end">COLCHÓN</text>`;
-    const inf=M.info.find(i=>i.senal===s.k);
-    if(inf){const ex=x+CW-16,ey=yy+18;g+=`<g class="eye"><title>${esc('lo ve '+(inf.quien||'?')+(inf.cada?' · '+inf.cada:''))}</title><circle cx="${ex}" cy="${ey}" r="9"/><path d="M${ex-5.5} ${ey} Q${ex} ${ey-5} ${ex+5.5} ${ey} Q${ex} ${ey+5} ${ex-5.5} ${ey}Z"/><circle cx="${ex}" cy="${ey}" r="1.8" class="pupila"/></g>`;
-      if(inf.retardo>0){const cx2=x+CW-40;g+=`<g class="clock"><title>${esc('lo ve con '+inf.retardo+' de retardo')}</title><circle cx="${cx2}" cy="${ey}" r="9"/><path d="M${cx2} ${ey-5} L${cx2} ${ey} L${cx2+3.5} ${ey+2.5}" fill="none"/></g>`;}}
-    g+=`<line class="sep" x1="${x+10}" x2="${x+CW-10}" y1="${yy+76}" y2="${yy+76}"/>`;
-    let cy=yy+76;
-    const sec=(t,list,dir)=>{
-      cy+=LH+2;g+=`<text class="colh" x="${x+14}" y="${cy}">${t}</text>`;
-      if(!list.length){cy+=LH;g+=`<text class="it z" x="${x+14}" y="${cy}">nada</text>`;return;}
-      for(const f of list){
-        cy+=LH;const fv=r[f.k]||0;const val=fmtV(fv,f.k);const otro=dir==='in'?f.desde:f.hacia;const interno=otro&&pos[otro];
-        const cls=Math.abs(fv)<1e-9?'z':interno?'i':dir;
-        const room=CW-28;const nmMax=Math.max(6,Math.floor((room-val.length*6.1-10)/5.7));
-        const nm=(interno?(dir==='in'?'← ':'→ '):'')+(f.nombre||f.k);
-        g+=`<text class="it ${cls}" x="${x+14}" y="${cy}"><title>${esc((f.nombre||f.k)+(interno?(dir==='in'?' · desde ':' · hacia ')+nombreDe(otro):''))}</title>${esc(cut(nm,nmMax))}</text><text class="it v ${cls}" x="${x+CW-14}" y="${cy}" text-anchor="end">${val}</text>`;
-      }
-    };
-    sec('ENTRA',ins(s.k),'in');cy+=4;sec('SALE',outs(s.k),'out');
-    g+='</g>';
-  }
-  // flechas entre stocks
-  const pair={};
-  for(const f of M.flujos){
-    const A=pos[f.desde],B=pos[f.hacia];if(!A||!B)continue;
-    const key=f.desde+'>'+f.hacia;const o=(pair[key]=(pair[key]||0)+1)-1;const v=r[f.k]||0;let d;
-    if(Math.abs(A.y-B.y)<1){
-      const yA=A.y+30+o*12;
-      if(B.x>A.x){const sx=A.x+CW,ex=B.x;d=B.x-A.x<=CW+GX+1?`M${sx} ${yA} L${ex-2} ${yA}`:`M${A.x+CW/2} ${A.y} C${A.x+CW/2} ${A.y-34} ${B.x+CW/2} ${B.y-34} ${B.x+CW/2} ${B.y-2}`;}
-      else{const sx=A.x,ex=B.x+CW;d=A.x-B.x<=CW+GX+1?`M${sx} ${yA} L${ex+2} ${yA}`:`M${A.x+CW/2} ${A.y} C${A.x+CW/2} ${A.y-34} ${B.x+CW/2} ${B.y-34} ${B.x+CW/2} ${B.y-2}`;}
-    }else if(B.y>A.y){const sx=A.x+CW/2+o*14,sy=A.y+A.h,ex=B.x+CW/2+o*14,ey=B.y;d=`M${sx} ${sy} C${sx} ${sy+36} ${ex} ${ey-36} ${ex} ${ey-2}`;}
-    else{const sx=A.x+CW/2+o*14,sy=A.y,ex=B.x+CW/2+o*14,ey=B.y+B.h;d=`M${sx} ${sy} C${sx} ${sy-36} ${ex} ${ey+36} ${ex} ${ey+2}`;}
-    g+=`<path class="flow${act(v)}" style="stroke-width:${w(v)}" d="${d}"><title>${esc((f.nombre||f.k)+': '+fmtV(v,f.k))}</title></path>`;
-  }
-  $('diagram').innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;margin:0 auto" role="img" aria-label="El sistema"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--accent)"/></marker></defs><text x="${W-12}" y="18" text-anchor="end" class="lab">${M.unidad||'paso'} ${(M.t0||0)+tc}</text>${g}</svg>`;
-}
 window.addEventListener('resize',()=>{clearTimeout(window.__rz);window.__rz=setTimeout(()=>{if(!$('tab-jugar').hidden&&lastSim.length)renderVivo();},150);});
 
 /* ---------- bucles: detección por derivadas numéricas sobre el estado del momento ---------- */
@@ -1165,32 +1113,208 @@ function bucles(ME,r0){
   return out.sort((a,b)=>b.peso-a.peso);
 }
 function wrapTxt(t,max){const L=[];let cur='';for(const w of String(t).split(' ')){if(cur&&(cur+' '+w).length>max){L.push(cur);cur=w;}else cur=cur?cur+' '+w:w;}if(cur)L.push(cur);return L;}
-function vueltaSvg(b,r){
-  const nodos=[];for(const e of b.edges){nodos.push({t:nombreDe(e.from),p:e.s1,v:fmtV(r[e.from],e.from)});nodos.push({t:nombreDe(e.via.k),p:e.s2,v:fmtV(r[e.via.k],e.via.k)});}
-  const W=300,Hh=236,cx0=150,cy=118,r0=80,n=nodos.length,step=2*Math.PI/n;
-  const pt=(a,rad=r0)=>[cx0+rad*Math.cos(a),cy+rad*Math.sin(a)];
-  const N=nodos.map((nd,i)=>{const th=-Math.PI/2+i*step;const lines=wrapTxt(nd.t,16);const hw=Math.max(...lines.map(l=>l.length))*3.1+6,hh=(lines.length+1)*6.5+4;const gap=(hw*Math.abs(Math.sin(th))+hh*Math.abs(Math.cos(th)))/r0+0.12;return {th,lines,gap,p:nd.p,v:nd.v};});
-  let g='';
-  N.forEach((nd,i)=>{const nx=N[(i+1)%n];let a1=nd.th+nd.gap,a2=nd.th+step-nx.gap;if(a2-a1<0.16){const m=nd.th+step/2;a1=m-0.08;a2=m+0.08;}
-    const [x1,y1]=pt(a1),[x2,y2]=pt(a2);const [px,py]=pt((a1+a2)/2,r0+13);const neg=nd.p<0;
-    g+=`<path class="arco${RUN?' activa':''}" d="M${x1.toFixed(1)} ${y1.toFixed(1)} A${r0} ${r0} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" marker-end="url(#ahb)"/><text class="pol${neg?' neg':''}" x="${px.toFixed(1)}" y="${py.toFixed(1)}">${neg?'−':'+'}</text>`;});
-  N.forEach(nd=>{const [x,y]=pt(nd.th);const tot=nd.lines.length+1;nd.lines.forEach((l,j)=>{g+=`<text class="nodo" x="${x.toFixed(1)}" y="${(y+(j-(tot-1)/2)*13).toFixed(1)}">${esc(l)}</text>`;});g+=`<text class="nodo val" x="${x.toFixed(1)}" y="${(y+(nd.lines.length-(tot-1)/2)*13).toFixed(1)}">${nd.v}</text>`;});
-  const rr=22,a0=-Math.PI*0.35,b0=Math.PI*1.15;
-  g+=`<path class="giro" d="M${(cx0+rr*Math.cos(a0)).toFixed(1)} ${(cy+rr*Math.sin(a0)).toFixed(1)} A${rr} ${rr} 0 1 1 ${(cx0+rr*Math.cos(b0)).toFixed(1)} ${(cy+rr*Math.sin(b0)).toFixed(1)}" marker-end="url(#ahb)"/><text class="centro" x="${cx0}" y="${cy}">${b.tipo}</text>`;
-  return `<svg viewBox="0 0 ${W} ${Hh}" class="vuelta ${b.tipo==='R'?'ref':'bal'}" role="img"><defs><marker id="ahb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>${g}</svg>`;
+
+/* ---------- diagrama causal: cajas, válvulas, dependencias y bucles ---------- */
+let LAY={key:'',pos:{},T:null},SEL_LOOP='',DRAG=null,DRAG_RAF=0;
+const NW=150,NH=54;
+function refsDe(f){try{return compile(f.formula).vars;}catch(e){return [];}}
+function causal(ME,r){
+  const st=ME.stocks.map(s=>s.k);const out=[];
+  const sc0={...r,H:ME.horizonte};for(const p of ME.params)sc0[p.k]=p.valor||0;
+  for(const f of ME.flujos){
+    let c,vars;try{const cc=compile(f.formula);c=cc.fn;vars=cc.vars;}catch(e){continue;}
+    const ev=sc=>{try{const v=c(sc);return isFinite(v)?v:0;}catch(e){return 0;}};
+    const v0=ev(sc0);
+    for(const S of st){if(!vars.includes(S))continue;
+      let sign=0;
+      for(const fr of [0.01,-0.01,0.2,-0.2]){const s0=sc0[S]||0;const h=(Math.abs(s0)*Math.abs(fr)||1e-3)*Math.sign(fr);const d=(ev({...sc0,[S]:s0+h})-v0)/h;if(Math.abs(d)>1e-12){sign=d>0?1:-1;break;}}
+      out.push({from:S,to:f.k,sign});
+    }
+  }
+  return out;
 }
-function renderBucles(list,sim,tc){
-  if(!list.length){$('bucles').innerHTML='<p class="muted">En este momento el motor no encuentra circuitos: ningún flujo depende de un stock al que a su vez mueve. Aparecen cuando una fórmula usa el stock que alimenta o vacía, y pueden prenderse al cruzar un umbral.</p>';return;}
-  const r=sim[tc];const u=M.unidad||'paso';
-  $('bucles').innerHTML=list.slice(0,6).map(b=>{
-    const stocks=[...new Set(b.edges.map(e=>e.from))].map(nombreDe);
-    const vuelta=b.edges.map(e=>`${nombreDe(e.from)} ${e.s1>0?'sube':'baja'} → ${e.via.nombre||e.via.k} ${e.s1>0?'sube':'baja'} → ${nombreDe(e.to)} ${e.s1*e.s2>0?'sube':'baja'}`).join('; ');
-    const gpct=b.g<10?nf1.format(b.g*100)+' % por '+u+(b.edges.length>1?' en la vuelta':''):'muy fuerte';
-    const estado=b.tipo==='R'?(b.g>=0.005?'gira':'casi quieto'):(b.g>=0.005?'corrige':'corrige poco');
-    const que=b.tipo==='R'?'Se refuerza: cuanto más hay, más entra o más sale. Virtuoso o vicioso según el stock.':'Corrige: cuando el stock se mueve, el flujo lo empuja de vuelta.';
-    return `<div class="bucle ${b.tipo==='R'?'ref':'bal'}"><div class="bucle-t"><b>${esc(stocks.join(' · '))}</b><span class="chip">${b.tipo==='R'?'refuerzo':'balance'} · ${estado} · ${gpct}</span><p>${que}</p><em>${esc(vuelta)}</em></div>${vueltaSvg(b,r)}</div>`;
-  }).join('')+(list.length>6?`<p class="muted">Y ${list.length-6} más, más débiles.</p>`:'');
+function layoutCausal(){
+  const S=M.stocks,F=M.flujos.filter(f=>S.some(s=>s.k===f.desde||s.k===f.hacia));
+  const key=M.id+'|'+S.map(s=>s.k).join(',')+'|'+F.map(f=>f.k+':'+f.desde+'>'+f.hacia+':'+refsDe(f).filter(v=>S.some(s=>s.k===v)).join('+')).join(',');
+  if(LAY.key===key&&LAY.T)return;
+  if(M.lay&&M.lay.key===key&&M.lay.T){LAY={key,pos:structuredClone(M.lay.pos),T:{...M.lay.T}};return;}
+  const P={},n=S.length;
+  const lanes=[];for(const s of S){const c=(s.carril||'').trim();if(!lanes.includes(c))lanes.push(c);}
+  const ord=lanes.flatMap(c=>S.filter(s=>(s.carril||'').trim()===c));
+  const R0=n<=1?0:Math.max(170,n*62);
+  ord.forEach((s,i)=>{const a=Math.PI+2*Math.PI*i/Math.max(1,n);P[s.k]={x:R0*Math.cos(a),y:R0*Math.sin(a)*0.8,st:1};});
+  const cnt={};
+  for(const f of F){const A=P[f.desde],B=P[f.hacia];
+    if(A&&B){P[f.k]={x:(A.x+B.x)/2+(B.y-A.y)*0.15,y:(A.y+B.y)/2-(B.x-A.x)*0.15};}
+    else{const k=A?f.desde:f.hacia,s=P[k];const i=(cnt[k]=(cnt[k]||0)+1)-1;let ang=n<=1?(A?0:Math.PI):Math.atan2(s.y,s.x);ang+=(i%2?1:-1)*Math.ceil(i/2)*0.6;P[f.k]={x:s.x+120*Math.cos(ang),y:s.y+120*Math.sin(ang)};}
+  }
+  const E=[];
+  for(const f of F){const rf=refsDe(f);if(P[f.desde])E.push([f.desde,f.k,rf.includes(f.desde)?160:110,0.06]);if(P[f.hacia])E.push([f.k,f.hacia,rf.includes(f.hacia)?160:110,0.06]);
+    for(const v of refsDe(f))if(P[v]&&P[v].st&&v!==f.desde&&v!==f.hacia)E.push([v,f.k,150,0.015]);}
+  const ids=Object.keys(P);
+  for(let it=0;it<360;it++){
+    const cool=1-it/360;const D={};for(const i of ids)D[i]={x:0,y:0};
+    for(let a=0;a<ids.length;a++)for(let b=a+1;b<ids.length;b++){const A=P[ids[a]],B=P[ids[b]];let dx=A.x-B.x,dy=A.y-B.y;let d2=dx*dx+dy*dy;if(d2<1){dx=(a-b)*0.7;dy=(b-a)*0.4;d2=1;}
+      const d=Math.sqrt(d2);const k=(A.st&&B.st)?80000:(A.st||B.st)?22000:11000;const f=k/d2;D[ids[a]].x+=dx/d*f;D[ids[a]].y+=dy/d*f;D[ids[b]].x-=dx/d*f;D[ids[b]].y-=dy/d*f;}
+    for(const [a,b,L,k] of E){const A=P[a],B=P[b];const dx=B.x-A.x,dy=B.y-A.y;const d=Math.max(1,Math.hypot(dx,dy));const f=(d-L)*k;D[a].x+=dx/d*f;D[a].y+=dy/d*f;D[b].x-=dx/d*f;D[b].y-=dy/d*f;}
+    for(const i of ids){D[i].x-=P[i].x*0.004;D[i].y-=P[i].y*0.006;const m=Math.hypot(D[i].x,D[i].y),cap=24*cool+1;const q=m>cap?cap/m:1;P[i].x+=D[i].x*q;P[i].y+=D[i].y*q;}
+  }
+  let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+  for(const i of ids){const p=P[i];const hw=p.st?NW/2+8:62,ht=p.st?NH/2+8:16,hb=p.st?NH/2+8:58;x0=Math.min(x0,p.x-hw);x1=Math.max(x1,p.x+hw);y0=Math.min(y0,p.y-ht);y1=Math.max(y1,p.y+hb);}
+  const W=860,m=24;const s=Math.min(1,(W-2*m)/Math.max(1,x1-x0));
+  const H=Math.max(280,(y1-y0)*s+2*m+10);const ox=m-x0*s+((W-2*m)-(x1-x0)*s)/2,oy=m+10-y0*s;
+  LAY={key,pos:P,T:{s,ox,oy,W,H}};
 }
+function renderDiagram(sim,tc,loops){
+  const r=sim[tc];
+  if(!M.stocks.length){$('loopchips').innerHTML='';$('diagram').innerHTML='<p class="muted">Agregá stocks en Describir para ver el sistema.</p>';return;}
+  layoutCausal();
+  const {s,ox,oy,W,H}=LAY.T;const P=LAY.pos;const X=k=>ox+s*P[k].x,Y=k=>oy+s*P[k].y;
+  const F=M.flujos.filter(f=>P[f.k]);
+  const links=causal(lastME||M,r);
+  const lk=b=>b.edges.map(e=>e.via.k+'@'+e.from).join('|');
+  const L=loops.slice(0,6);const sel=L.find(b=>lk(b)===SEL_LOOP)||null;
+  const nodeOn=k=>sel&&sel.edges.some(e=>e.from===k||e.via.k===k||e.to===k);
+  const dim=k=>sel&&!nodeOn(k)?' dim':'';
+  const cut=(t,mx)=>{t=String(t);return t.length>mx?t.slice(0,mx-1)+'…':t;};
+  const maxF=Math.max(1e-9,...sim.flatMap(q=>F.map(f=>Math.abs(q[f.k]||0))));
+  const ptS=(k,tx,ty)=>{const cx=X(k),cy=Y(k),dx=tx-cx,dy=ty-cy;const q=Math.min((NW/2+3)/Math.max(1e-6,Math.abs(dx)),(NH/2+3)/Math.max(1e-6,Math.abs(dy)));return [cx+dx*q,cy+dy*q];};
+  const ptV=(k,tx,ty,rr)=>{const cx=X(k),cy=Y(k),dx=tx-cx,dy=ty-cy,d=Math.max(1e-6,Math.hypot(dx,dy));return [cx+dx/d*rr,cy+dy/d*rr];};
+  const sg=(x,y,t,cls)=>`<g class="sg${cls}"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7.5"/><text x="${x.toFixed(1)}" y="${(y+3.6).toFixed(1)}">${t}</text></g>`;
+  let pipes='',infos='',nodes='',marks='';
+  const bendOf=(from,to)=>{const f=M.flujos.find(x=>x.k===to);return f&&(f.desde===from||f.hacia===from)?70:26;};
+  for(const f of F){
+    const v=r[f.k]||0,vx=X(f.k),vy=Y(f.k);const w=(2.5+6*Math.abs(v)/maxF).toFixed(1);const a=RUN&&Math.abs(v)>maxF*0.01?' activa':'';const dd=dim(f.k);
+    const A=P[f.desde]?f.desde:null,B=P[f.hacia]?f.hacia:null;
+    let sx,sy,ex,ey;
+    if(A)[sx,sy]=ptS(A,vx,vy);else{const dx=vx-X(B),dy=vy-Y(B),d=Math.max(1,Math.hypot(dx,dy));sx=vx+dx/d*46;sy=vy+dy/d*46;marks+=`<circle class="cloud${dd}" cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="8"/>`;}
+    if(B)[ex,ey]=ptS(B,vx,vy);else{const dx=vx-X(A),dy=vy-Y(A),d=Math.max(1,Math.hypot(dx,dy));ex=vx+dx/d*46;ey=vy+dy/d*46;marks+=`<circle class="cloud${dd}" cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="8"/>`;}
+    const [p1x,p1y]=ptV(f.k,sx,sy,12),[p2x,p2y]=ptV(f.k,ex,ey,12);
+    const hlA=A&&sel&&sel.edges.some(e=>e.via.k===f.k&&e.to===A),hlB=B&&sel&&sel.edges.some(e=>e.via.k===f.k&&e.to===B);
+    pipes+=`<line class="pipe${a}${dd}${hlA?' hl':''}" style="stroke-width:${w}" x1="${sx.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${p1x.toFixed(1)}" y2="${p1y.toFixed(1)}"/><line class="pipe${a}${dd}${hlB?' hl':''}" style="stroke-width:${w}" x1="${p2x.toFixed(1)}" y1="${p2y.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" marker-end="url(#ahp)"/>`;
+    const nrm=(x1,y1,x2,y2)=>{const dx=x2-x1,dy=y2-y1,d=Math.max(1,Math.hypot(dx,dy));return [dx/d,dy/d];};
+    nodes+=`<g class="vnode${dd}${nodeOn(f.k)?' hl':''}" data-node="${esc(f.k)}"><title>${esc((f.nombre||f.k)+': '+fmtV(v,f.k)+'\n= '+f.formula)}</title><circle cx="${vx.toFixed(1)}" cy="${vy.toFixed(1)}" r="11"/><path d="M${(vx-6).toFixed(1)} ${(vy-6).toFixed(1)} L${(vx+6).toFixed(1)} ${(vy+6).toFixed(1)} L${(vx+6).toFixed(1)} ${(vy-6).toFixed(1)} L${(vx-6).toFixed(1)} ${(vy+6).toFixed(1)}Z"/>${(()=>{let ls=wrapTxt(f.nombre||f.k,18);if(ls.length>2)ls=[ls[0],cut(ls.slice(1).join(' '),18)];return ls.map((l,j)=>`<text class="vn" x="${vx.toFixed(1)}" y="${(vy+25+j*12).toFixed(1)}">${esc(l)}</text>`).join('')+`<text class="vv" x="${vx.toFixed(1)}" y="${(vy+26+ls.length*12).toFixed(1)}">${fmtV(v,f.k)}</text>`;})()}</g>`;
+  }
+  for(const l of links){if(!P[l.from]||!P[l.to]||l.sign===0)continue;
+    const sx0=X(l.from),sy0=Y(l.from),tx=X(l.to),ty=Y(l.to),dx=tx-sx0,dy=ty-sy0,d=Math.max(1,Math.hypot(dx,dy)),nx=-dy/d,ny=dx/d,bend=bendOf(l.from,l.to);
+    const cx=(sx0+tx)/2+nx*bend,cy=(sy0+ty)/2+ny*bend;
+    const [a1x,a1y]=ptS(l.from,cx,cy),[a2x,a2y]=ptV(l.to,cx,cy,15);
+    const t=.7,qx=(1-t)**2*a1x+2*(1-t)*t*cx+t*t*a2x,qy=(1-t)**2*a1y+2*(1-t)*t*cy+t*t*a2y;
+    const on=sel&&sel.edges.some(e=>e.from===l.from&&e.via.k===l.to);const dd=sel&&!on?' dim':'';
+    infos+=`<path class="info${l.sign===0?' cero':''}${on?' hl':''}${dd}" d="M${a1x.toFixed(1)} ${a1y.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${a2x.toFixed(1)} ${a2y.toFixed(1)}" marker-end="url(#ahi)"/>`+sg(qx,qy,l.sign>0?'+':l.sign<0?'−':'?',(l.sign<0?' neg':l.sign===0?' cero':'')+dd);
+  }
+  for(const st of M.stocks){if(!P[st.k])continue;
+    const cx=X(st.k),cy=Y(st.k),x=cx-NW/2,y=cy-NH/2,v=r[st.k];
+    const vals=sim.map(q=>q[st.k]);const mx=Math.max(1e-9,...vals.map(Math.abs));const lvl=Math.max(0,Math.min(1,Math.abs(v)/mx))*(NH-4);
+    const vacio=st.min0&&Math.abs(v)<1e-9&&vals.some(q=>Math.abs(q)>1e-9);
+    nodes+=`<g class="snode${vacio?' vacio':''}${dim(st.k)}${nodeOn(st.k)?' hl':''}" data-node="${esc(st.k)}"><title>${esc(st.nombre||st.k)}</title><rect class="box" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${NW}" height="${NH}" rx="6"/><rect class="fill" x="${(x+2).toFixed(1)}" y="${(y+NH-2-lvl).toFixed(1)}" width="${NW-4}" height="${lvl.toFixed(1)}" rx="4"/><text class="nm" x="${cx.toFixed(1)}" y="${(y+22).toFixed(1)}">${esc(cut(st.nombre||st.k,20))}</text><text class="vl" x="${cx.toFixed(1)}" y="${(y+42).toFixed(1)}">${fmtV(v,st.k)}</text>`;
+    const inf=M.info.find(i=>i.senal===st.k);
+    if(inf){const ex=x+NW-2,ey=y+2;nodes+=`<g class="eye"><title>${esc('lo ve '+(inf.quien||'?')+(inf.cada?' · '+inf.cada:'')+(inf.retardo>0?' · con '+inf.retardo+' de retardo':''))}</title><circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="8"/><path d="M${(ex-5).toFixed(1)} ${ey.toFixed(1)} Q${ex.toFixed(1)} ${(ey-4.5).toFixed(1)} ${(ex+5).toFixed(1)} ${ey.toFixed(1)} Q${ex.toFixed(1)} ${(ey+4.5).toFixed(1)} ${(ex-5).toFixed(1)} ${ey.toFixed(1)}Z"/><circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="1.6" class="pupila"/></g>`;
+      if(inf.retardo>0){const c2=ex-20;nodes+=`<g class="clock"><circle cx="${c2.toFixed(1)}" cy="${ey.toFixed(1)}" r="8"/><path d="M${c2.toFixed(1)} ${(ey-4.5).toFixed(1)} L${c2.toFixed(1)} ${ey.toFixed(1)} L${(c2+3).toFixed(1)} ${(ey+2.2).toFixed(1)}" fill="none"/></g>`;}}
+    nodes+='</g>';
+  }
+  for(const b of L){
+    const ks=[...new Set(b.edges.flatMap(e=>[e.from,e.via.k]))].filter(k=>P[k]);if(!ks.length)continue;
+    let mx_=ks.reduce((a,k)=>a+X(k),0)/ks.length,my_=ks.reduce((a,k)=>a+Y(k),0)/ks.length;
+    if(b.edges.length===1){const e=b.edges[0];const sx0=X(e.from),sy0=Y(e.from),tx=X(e.via.k),ty=Y(e.via.k);const dx=tx-sx0,dy=ty-sy0,d=Math.max(1,Math.hypot(dx,dy));const bd=bendOf(e.from,e.via.k);const cx=(sx0+tx)/2-dy/d*bd,cy=(sy0+ty)/2+dx/d*bd;const [a1x,a1y]=ptS(e.from,cx,cy);const qx=(a1x+2*cx+tx)/4,qy=(a1y+2*cy+ty)/4;const [px,py]=ptS(e.from,tx,ty);mx_=(qx+(px+tx)/2)/2;my_=(qy+(py+ty)/2)/2;}
+    const c=b.tipo==='R'?'ref':'bal',on=!sel||lk(b)===SEL_LOOP,rr=12,a0=-Math.PI*0.3,b0=Math.PI*1.2;
+    marks+=`<g class="lmark ${c}${on?'':' dim'}" data-loop="${esc(lk(b))}"><title>${esc((b.tipo==='R'?'Refuerzo':'Balance')+' · '+nf1.format(b.g*100)+' % por '+(M.unidad||'paso'))}</title><circle class="bg" cx="${mx_.toFixed(1)}" cy="${my_.toFixed(1)}" r="16"/><path d="M${(mx_+rr*Math.cos(a0)).toFixed(1)} ${(my_+rr*Math.sin(a0)).toFixed(1)} A${rr} ${rr} 0 1 1 ${(mx_+rr*Math.cos(b0)).toFixed(1)} ${(my_+rr*Math.sin(b0)).toFixed(1)}" marker-end="url(#ahl-${c})"/><text x="${mx_.toFixed(1)}" y="${(my_+4.5).toFixed(1)}">${b.tipo}</text></g>`;
+  }
+  $('loopchips').innerHTML=L.length?`<button class="lc${sel?'':' on'}" data-loop="">Todo el sistema</button>`+L.map(b=>`<button class="lc ${b.tipo==='R'?'ref':'bal'}${sel&&lk(b)===SEL_LOOP?' on':''}" data-loop="${esc(lk(b))}"><b>${b.tipo}</b> ${esc(b.edges.map(e=>nombreDe(e.from)+' → '+(e.via.nombre||e.via.k)).join(' → '))} · ${nf1.format(b.g*100)} %</button>`).join(''):'<span class="hint-p">En este momento no hay bucles: ninguna válvula depende de la caja que llena o vacía.</span>';
+  $('diagram').innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;margin:0 auto" role="img" aria-label="El sistema y sus bucles"><defs>
+    <marker id="ahp" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--accent)"/></marker>
+    <marker id="ahi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fg2)"/></marker>
+    <marker id="ahl-ref" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--good)"/></marker>
+    <marker id="ahl-bal" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--accent)"/></marker>
+  </defs><text x="${W-12}" y="18" text-anchor="end" class="lab">${M.unidad||'paso'} ${(M.t0||0)+tc}</text>${pipes}${infos}${nodes}${marks}</svg>`;
+}
+document.addEventListener('pointerdown',e=>{const n=e.target.closest('#diagram [data-node]');if(!n||!LAY.pos[n.dataset.node])return;DRAG={k:n.dataset.node,moved:false};e.preventDefault();});
+document.addEventListener('pointermove',e=>{if(!DRAG)return;const svg=$('diagram').querySelector('svg');if(!svg)return;const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const p=pt.matrixTransform(svg.getScreenCTM().inverse());const T=LAY.T;const x=Math.max(20,Math.min(T.W-20,p.x)),y=Math.max(20,Math.min(T.H-20,p.y));LAY.pos[DRAG.k].x=(x-T.ox)/T.s;LAY.pos[DRAG.k].y=(y-T.oy)/T.s;DRAG.moved=true;if(!DRAG_RAF)DRAG_RAF=requestAnimationFrame(()=>{DRAG_RAF=0;if(lastSim.length)renderDiagram(lastSim,TCUR,lastLoops);});});
+document.addEventListener('pointerup',()=>{if(DRAG&&DRAG.moved){M.lay={key:LAY.key,pos:structuredClone(LAY.pos),T:{...LAY.T}};scheduleSave();}DRAG=null;});
+document.addEventListener('click',e=>{const g=e.target.closest('#diagram .lmark[data-loop]');if(!g)return;SEL_LOOP=SEL_LOOP===g.dataset.loop?'':g.dataset.loop;renderVivo();});
+function renderKpis(base,sim,tc){
+  const o=M.objetivo;if(!o){$('tiles').innerHTML='';return;}
+  const r=sim[tc],b=base[tc],rH=sim[sim.length-1],bH=base[base.length-1],u=M.unidad||'paso';
+  const t=(k,v,d,cls)=>`<div class="tile ${cls||''}"><span class="k">${esc(k)}</span><span class="v">${v}</span><span class="d">${esc(d)}</span></div>`;
+  const dif=(x,y)=>{const d=x-y;const good=M.maximizar?d>=0:d<=0;return Math.abs(d)>1e-9?[`${d>=0?'+':''}${fmtV(d,o)} contra la base`,good?'pos':'neg']:['igual que la base',''];};
+  const [d1,c1]=dif(r[o],b[o]),[d2,c2]=dif(rH[o],bH[o]);
+  $('tiles').innerHTML=t(`${nombreDe(o)} · ${u} ${(M.t0||0)+tc}`,fmtV(r[o],o),d1,c1)+t(`${nombreDe(o)} · al final (${u} ${(M.t0||0)+M.horizonte})`,fmtV(rH[o],o),d2,c2);
+}
+
+function renderSens(list){
+  const H=M.horizonte,o=M.objetivo;const actS=new Set(M.activas||[]);
+  $('esc-lede').textContent=!M.palancas.length?'Todavía no hay acciones. Creá una con "+ nueva acción".':!o?'Elegí un objetivo en Describir para medir cada acción.':`${actS.size?actS.size+(actS.size===1?' activa':' activas'):'Ninguna activa'}. La barra es el efecto en ${nombreDe(o)} a ${H} ${plural(M.unidad)}.`;
+  const by={};for(const x of list)by[x.pl.k]=x;
+  const maxAbs=Math.max(1e-9,...list.map(x=>Math.abs(x.delta)));
+  const best=list.filter(x=>!x.on&&x.delta>0).sort((a,b)=>b.delta-a.delta)[0];
+  $('pal-rows').innerHTML=M.palancas.map((pl,i)=>{
+    const x=by[pl.k]||{on:actS.has(pl.k),delta:0,raw:0};const pos=x.delta>=0;
+    const cambio=String(pl.valor||'').includes('=')?pl.valor:nombreDe(pl.campo)+' → '+pl.valor;
+    return `<div class="pal acc${x.on?' on':''}" title="${esc(cambio)}"><label class="sw" title="${x.on?'apagar':'activar'}"><input type="checkbox" data-toggle="${esc(pl.k)}" ${x.on?'checked':''}><i></i></label>
+      <div class="pal-t"><b>${esc(pl.nombre||pl.k)} <span class="pal-n ${CAPA(pl.fuerza||12)}" title="${FUERZA[pl.fuerza]||''}">${pl.fuerza||12} · ${FUERZA[pl.fuerza]||'parámetros'}</span>${best&&best.pl.k===pl.k?'<span class="mejor">la que más mueve</span>':''}${x.on?`<button class="small inline" data-adopt="${esc(pl.k)}">Adoptar</button>`:''}</b><span>${esc(pl.descripcion||cambio)}</span>${o?`<div class="pal-bar"><i style="width:${(100*Math.abs(x.delta)/maxAbs).toFixed(1)}%;background:${pos?'var(--good)':'var(--crit)'}"></i></div>`:''}</div>
+      <div class="pal-v ${pos?'pos':'neg'}">${o?(pos?'+':'−')+fmtV(Math.abs(x.raw),o):'—'}<small>${x.on?'aporta':'si la activás'}</small></div>
+      <div class="pal-ed"><button data-pal-up="${esc(pl.k)}" title="subir" aria-label="subir" ${i===0?'disabled':''}>↑</button><button data-pal-down="${esc(pl.k)}" title="bajar" aria-label="bajar" ${i===M.palancas.length-1?'disabled':''}>↓</button><button data-pal-edit="${esc(pl.k)}" title="editar" aria-label="editar">✎</button><button data-pal-del="${esc(pl.k)}" title="borrar" aria-label="borrar" class="x">×</button></div></div>`;
+  }).join('');
+}
+const ES_ASG=src=>/(^|;)\s*[A-Za-z_][A-Za-z0-9_]*\s*=(?!=)/.test(String(src||''));
+function abrirPalForm(k){
+  const f=$('pal-form');f.hidden=false;const pl=k?M.palancas.find(p=>p.k===k):null;
+  $('np-id').value=pl?pl.k:'';
+  $('np-campo').innerHTML=[...M.params.filter(p=>!p.externo||(pl&&pl.campo===p.k)).map(p=>[p.k,'parámetro: '+(p.nombre||p.k)]),...M.stocks.map(s=>[s.k,'stock inicial: '+(s.nombre||s.k)])].map(([kk,n])=>`<option value="${esc(kk)}">${esc(n)}</option>`).join('');
+  $('np-fuerza').innerHTML=Object.keys(FUERZA).sort((a,b)=>b-a).map(n=>`<option value="${n}">${n} · ${FUERZA[n]}</option>`).join('');
+  $('np-fuerza').value=String(pl?pl.fuerza||12:12);
+  if(pl&&pl.campo)$('np-campo').value=pl.campo;
+  $('np-nombre').value=pl?pl.nombre||'':'';$('np-valor').value=pl?pl.valor||'':'';$('np-desc').value=pl?pl.descripcion||'':'';
+  $('np-valor').classList.remove('err');
+  $('np-submit').textContent=pl?'Guardar cambios':'Agregar y activar';$('pal-form-t').textContent=pl?'Editar acción':'Nueva acción';
+  f.scrollIntoView({block:'nearest'});$('np-nombre').focus();
+}
+function crearPalanca(){
+  const id=$('np-id').value,campo=$('np-campo').value,valor=$('np-valor').value.trim(),nombre=$('np-nombre').value.trim();
+  if(!nombre||!valor)return;
+  try{if(ES_ASG(valor)){for(const s of valor.split(';').map(x=>x.trim()).filter(Boolean)){const i=s.indexOf('=');compile(s.slice(i+1));}}else compile(valor);}
+  catch(e){$('np-valor').classList.add('err');$('np-valor').title=e.message;return;}
+  const datos={nombre,fuerza:+$('np-fuerza').value,tipo:M.stocks.some(s=>s.k===campo)?'stock':'param',campo,valor,descripcion:$('np-desc').value.trim()};
+  if(id){const pl=M.palancas.find(p=>p.k===id);if(pl)Object.assign(pl,datos);}
+  else{const pl={id:uid(),k:'pl_'+uid(),...datos};M.palancas.push(pl);M.activas=(M.activas||[]).concat(pl.k);}
+  renderList('palancas');$('pal-form').hidden=true;dirty=true;compute();scheduleSave();
+}
+function borrarPalanca(k){M.palancas=M.palancas.filter(p=>p.k!==k);M.activas=(M.activas||[]).filter(x=>x!==k);for(const p of M.plan||[])if(p.palanca===k)p.palanca=null;renderList('palancas');dirty=true;compute();scheduleSave();}
+function moverPalanca(k,d){const L=M.palancas;const i=L.findIndex(p=>p.k===k),j=i+d;if(i<0||j<0||j>=L.length)return;[L[i],L[j]]=[L[j],L[i]];renderList('palancas');dirty=true;compute();scheduleSave();}
+
+/* ---------- ayudante de fórmulas: tocar para armar ---------- */
+let FXEL=null,FXT=0;
+function fxEs(el){return el&&el.tagName==='INPUT'&&(el.id==='np-valor'||['formula','valor','cuando'].includes(el.dataset.field));}
+function fxTipo(k){if(M.stocks.some(s=>s.k===k))return 'st';if(M.params.some(p=>p.k===k))return 'pa';if(M.flujos.some(f=>f.k===k))return 'fl';if(M.indicadores.some(x=>x.k===k))return 'in';return '';}
+function fxScope(){const sc={t:M.t0||0,H:M.horizonte};const r0=(lastBase&&lastBase[0])||{};for(const s of M.stocks)sc[s.k]=s.inicial||0;for(const f of M.flujos)sc[f.k]=r0[f.k]??0;for(const x of M.indicadores)sc[x.k]=r0[x.k]??0;for(const p of M.params)sc[p.k]=p.valor||0;return sc;}
+function fxLeer(src){return esc(String(src).replace(/\*/g,' × ').replace(/\//g,' ÷ ')).replace(/[A-Za-z_][A-Za-z0-9_]*/g,w=>{if(FN[w])return `<i>${w==='if'?'si':w}</i>`;if(w==='t')return '<b class="fx-t">el paso</b>';const tp=fxTipo(w);return tp?`<b class="fx-${tp}">${esc(nombreDe(w))}</b>`:w;}).replace(/\s+/g,' ');}
+function fxUnidad(){const el=FXEL;if(!el)return null;if(el.id==='np-valor')return $('np-campo').value;const L=el.dataset.list,r=L&&M[L]?M[L].find(x=>x.id===el.dataset.id):null;if(!r)return null;return L==='palancas'?r.campo:r.k;}
+function fxPrev(){
+  if(!FXEL)return;const src=FXEL.value.trim();const box=$('fx-prev');
+  if(!src){box.innerHTML='<span class="muted">Tocá los elementos de abajo para armar la fórmula, o escribila.</span>';return;}
+  const sc=fxScope();
+  try{
+    if(ES_ASG(src)&&FXEL.dataset.field!=='cuando'){box.innerHTML=src.split(';').map(s=>s.trim()).filter(Boolean).map(s=>{const i=s.indexOf('=');const k=s.slice(0,i).trim(),e=s.slice(i+1).trim();const v=compile(e).fn(sc);return `<div><b class="fx-${fxTipo(k)}">${esc(nombreDe(k))}</b> pasa a ${fxLeer(e)} <span class="fx-v">= ${fmtV(v,k)}</span></div>`;}).join('');}
+    else{const v=compile(src).fn(sc);box.innerHTML=`<div>${fxLeer(src)}</div><div class="fx-v">${FXEL.dataset.field==='cuando'?(v?'hoy se cumple':'hoy no se cumple'):'= '+fmtV(v,fxUnidad())+' hoy'}</div>`;}
+    FXEL.classList.remove('err');
+  }catch(e){box.innerHTML=`<span class="fx-err">${esc(e.message)}</span>`;}
+}
+function fxChips(){
+  const sc=fxScope();
+  const g=(t,cls,items)=>items.length?`<div class="fx-g"><span>${t}</span>${items.map(([k,n,tt])=>`<button type="button" class="fxc ${cls}" data-ins="${esc(k)}" title="${esc(tt)}">${esc(n)}</button>`).join('')}</div>`:'';
+  $('fx-chips').innerHTML=g('Stocks','fx-st',M.stocks.map(s=>[s.k,s.nombre||s.k,s.k+' · hoy '+fmtV(sc[s.k],s.k)]))
+    +g('Parámetros','fx-pa',M.params.map(p=>[p.k,p.nombre||p.k,p.k+' · '+fmtV(p.valor,p.k)]))
+    +g('Flujos','fx-fl',M.flujos.map(f=>[f.k,f.nombre||f.k,f.k+' · hoy '+fmtV(sc[f.k],f.k)]))
+    +g('Indicadores','fx-in',M.indicadores.map(x=>[x.k,x.nombre||x.k,x.k+' · hoy '+fmtV(sc[x.k],x.k)]))
+    +`<div class="fx-g"><span>Armar</span>${[[' + ','+'],[' - ','−'],[' * ','×'],[' / ','÷'],[' ^ ','potencia'],['(','('],[')',')'],[', ',','],[' > ','>'],[' < ','<'],['t','el paso']].map(([o,n])=>`<button type="button" class="fxc fx-op" data-ins="${o}">${n}</button>`).join('')}${[['min(','el menor'],['max(','el mayor'],['if(','si…'],['abs(','sin signo']].map(([f,n])=>`<button type="button" class="fxc fx-op" data-ins="${f}">${n}</button>`).join('')}</div>`;
+}
+function fxShow(el){if(!fxEs(el))return;clearTimeout(FXT);if(FXEL===el&&!$('fx').hidden)return;FXEL=el;const fx=$('fx');const anchor=el.closest('.row')||el.closest('.field')||el;anchor.after(fx);fx.hidden=false;fxChips();fxPrev();}
+document.addEventListener('focusin',e=>fxShow(e.target));
+document.addEventListener('pointerdown',e=>{if(fxEs(e.target))fxShow(e.target);});
+document.addEventListener('focusout',e=>{if(e.target!==FXEL)return;FXT=setTimeout(()=>{const fx=$('fx');if(document.activeElement!==FXEL&&!fx.contains(document.activeElement)){fx.hidden=true;FXEL=null;}},200);});
+document.addEventListener('mousedown',e=>{if(e.target.closest('#fx'))e.preventDefault();});
+document.addEventListener('click',e=>{const b=e.target.closest('#fx [data-ins]');if(!b||!FXEL)return;const s0=FXEL.selectionStart??FXEL.value.length,s1=FXEL.selectionEnd??s0;FXEL.setRangeText(b.dataset.ins,s0,s1,'end');FXEL.focus();FXEL.dispatchEvent(new Event('input',{bubbles:true}));});
+document.addEventListener('input',e=>{if(fxEs(e.target)&&e.target!==FXEL)fxShow(e.target);if(e.target===FXEL)setTimeout(fxPrev,0);if(e.target.id==='np-campo')fxPrev();});
 
 /* ---------- eventos ---------- */
 document.addEventListener('input',e=>{
@@ -1331,6 +1455,12 @@ document.addEventListener('click',e=>{
   else if(b.dataset.delm){const i=LIB.findIndex(x=>x.id===b.dataset.delm);if(i<0)return;const gone=LIB[i];if(!b.dataset.sure){b.dataset.sure='1';b.textContent='¿Seguro? Borrar';e.stopPropagation();return;}LIB.splice(i,1);deleteRemote(gone.id);if(!LIB.length)LIB.push(normalize(tplFinanzas()));if(gone.id===M.id)setCurrent(LIB[0]);else renderLib();saveLocal();e.stopPropagation();return;}
   else if(b.dataset.toggleBtn){toggleLever(b.dataset.toggleBtn,true);return;}
   else if(b.dataset.adopt){adoptar(b.dataset.adopt);return;}
+  else if(b.dataset.palUp){moverPalanca(b.dataset.palUp,-1);return;}
+  else if(b.dataset.palDown){moverPalanca(b.dataset.palDown,1);return;}
+  else if(b.dataset.palEdit){abrirPalForm(b.dataset.palEdit);return;}
+  else if(b.dataset.palDel){if(!b.dataset.sure){b.dataset.sure='1';b.textContent='¿borrar?';b.classList.add('sure');setTimeout(()=>{if(b.isConnected){delete b.dataset.sure;b.textContent='×';b.classList.remove('sure');}},2500);return;}borrarPalanca(b.dataset.palDel);return;}
+  else if(b.dataset.loop!==undefined){SEL_LOOP=b.dataset.loop;renderVivo();return;}
+  else if(b.id==='btn-relayout'){LAY.key='';delete M.lay;renderVivo();scheduleSave();return;}
   else if(b.id==='btn-adopt-all'){for(const k of [...(M.activas||[])])adoptar(k);return;}
   else if(b.dataset.undo){deshacer(b.dataset.undo);return;}
   else if(b.dataset.avanzar){avanzar(+b.dataset.avanzar);return;}
