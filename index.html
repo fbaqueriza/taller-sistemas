@@ -217,6 +217,33 @@ details.sub>summary{cursor:pointer;font-weight:600;font-size:14px}
 .fxc:hover{border-color:var(--accent)}
 .fx-st,b.fx-st{color:var(--s1)}.fx-pa,b.fx-pa{color:var(--c-dis-ink)}.fx-fl,b.fx-fl{color:var(--accent-ink)}.fx-in,b.fx-in{color:var(--c-int-ink)}
 .fx-op{font-family:var(--mono)}
+.mapwrap{position:relative}
+.pop{position:absolute;z-index:6;background:var(--surface);border:1px solid var(--accent);border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:12px;display:grid;gap:10px;font-size:13px}
+.pop-h{display:flex;justify-content:space-between;align-items:center}
+.pop-k{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.pop-k small{text-transform:none;letter-spacing:0}
+.pop-x{border:none;background:none;font-size:18px;line-height:1;color:var(--muted);padding:0 4px}
+.pop input,.pop select{padding:5px 7px;font-size:13px}
+.pop input.big{font-size:15px;font-weight:600;padding:6px 8px}
+.pop-g2,.pop-g3{display:grid;gap:8px}
+.pop-g2{grid-template-columns:1fr 1fr}.pop-g3{grid-template-columns:1fr 1fr 1fr}
+.pop label{display:grid;gap:3px;font-size:11.5px;color:var(--fg2)}
+.pop label.check{display:flex;gap:8px;align-items:center;color:var(--fg);font-size:13px}
+.pop label.check input{width:auto}
+.pop-s{display:grid;gap:6px;padding-top:8px;border-top:1px solid var(--line)}
+.pop .fl{text-align:left;padding:5px 8px;border-radius:6px;background:var(--surface-2);border-color:transparent}
+.pop .fl:hover{border-color:var(--accent)}
+.pop .fl small{display:block;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.pop-op{display:grid;gap:3px}
+.pop-op>span{font-size:11.5px;color:var(--fg2)}
+.op{display:grid;gap:4px}
+.opnew{display:grid;grid-template-columns:1fr 90px auto;gap:4px}
+.pop-read{font-size:13px;color:var(--fg2);padding:6px 8px;border-radius:6px;background:var(--surface-2)}
+.pop-read b{font-family:var(--mono);font-weight:500;color:var(--fg)}
+.pop-par{display:grid;grid-template-columns:minmax(0,1fr) 110px auto;gap:6px;align-items:center;font-size:12.5px}
+.pop-foot{display:flex;justify-content:flex-end;padding-top:6px;border-top:1px solid var(--line)}
+.pop .btns{gap:6px}
+.pop .btns select{width:auto;font-size:12.5px;padding:4px 6px}
 .diagram .conv{font-family:var(--mono);font-size:10px;fill:var(--accent-ink);text-anchor:middle}
 .ext-tag{font-style:normal;font-family:var(--mono);font-size:10px;color:var(--c-dis-ink);background:var(--c-dis-soft);padding:0 5px;border-radius:3px}
 .bucle{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;gap:8px;min-width:0;border-top-width:4px}
@@ -514,10 +541,10 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 
   <div class="panel">
     <div class="loopchips" id="loopchips"></div>
-    <div class="diagram" id="diagram"></div>
+    <div class="mapwrap" id="mapwrap"><div class="diagram" id="diagram"></div><div class="pop" id="pop" hidden></div></div>
     <div class="btns" style="justify-content:space-between;margin-top:6px">
-      <p class="hint-p">Caja: lo que se acumula. Válvula: lo que la llena o la vacía. Línea fina: de qué depende cada válvula ahora, con + si se mueven juntos y − si al revés. Tocá una R o una B para ver ese bucle solo. Arrastrá para acomodar.</p>
-      <button id="btn-relayout" class="small" style="margin:0">Reacomodar</button>
+      <p class="hint-p">Caja: lo que se acumula. Válvula: lo que la llena o la vacía. Línea fina: de qué depende cada válvula ahora, con + si se mueven juntos y − si al revés. Tocá una caja o una válvula para editarla; una R o una B, para ver ese bucle solo. Arrastrá para acomodar.</p>
+      <div class="btns"><button id="btn-nueva-caja" class="primary" style="margin:0;font-size:13px;padding:4px 10px">+ caja</button><button id="btn-relayout" class="small" style="margin:0">Reacomodar</button></div>
     </div>
   </div>
 
@@ -613,7 +640,9 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
       <li><b>Paradigma.</b> La idea desde la que surge el sistema.</li>
       <li><b>Trascender el paradigma.</b> Saber que ningún paradigma es la verdad.</li>
     </ol>
-    <h3>Bucles</h3>
+    <h3>Editar desde el mapa</h3>
+    <p>En Jugar, tocá una caja para cambiarle el nombre, el valor de hoy, la unidad o el carril, y para agregarle algo que entra, algo que sale o un pase a otra caja. Tocá una válvula para elegir cuánto mueve por paso con un patrón: un monto fijo, una parte de un stock, un monto que crece, lo que sobra de una resta o el menor de dos. Cada opción se elige de una lista con los nombres del modelo; un número suelto se puede convertir en parámetro nuevo ahí mismo. Debajo aparecen los números que usa la fórmula, editables, y un botón para crear una acción que cambie cualquiera de ellos. "+ caja" agrega una caja nueva.</p>
+<h3>Bucles</h3>
     <p>En Jugar, el dibujo muestra cada caja, cada válvula y de qué depende cada una. Los bucles aparecen marcados con R o B; tocá uno, en el dibujo o en la fila de arriba, para verlo solo.</p>
     <p>El motor busca circuitos en tus fórmulas: un flujo que depende de un stock y a la vez lo mueve. Mide, sobre el estado actual, cómo cambia cada flujo cuando el stock sube un 1 %, y arma las vueltas de hasta tres stocks. <b>R</b> es un bucle de refuerzo: el producto de los signos es positivo y el stock se alimenta a sí mismo. <b>B</b> es un bucle de balance: el producto es negativo y el flujo lo empuja de vuelta. El porcentaje es la ganancia por paso: cuánto del stock vuelve a entrar o salir en una vuelta. Un flujo con umbral, como "si hay plata, comprá", no aparece hasta que el estado está cerca del umbral.</p>
     <h3>Plan de mejora</h3>
@@ -1173,38 +1202,6 @@ function causal(ME,r){
   }
   return out;
 }
-function layoutCausal(){
-  const S=M.stocks,F=M.flujos.filter(f=>S.some(s=>s.k===f.desde||s.k===f.hacia));
-  const key=M.id+'|'+S.map(s=>s.k).join(',')+'|'+F.map(f=>f.k+':'+f.desde+'>'+f.hacia+':'+refsDe(f).filter(v=>S.some(s=>s.k===v)).join('+')).join(',');
-  if(LAY.key===key&&LAY.T)return;
-  if(M.lay&&M.lay.key===key&&M.lay.T){LAY={key,pos:structuredClone(M.lay.pos),T:{...M.lay.T}};return;}
-  const P={},n=S.length;
-  const lanes=[];for(const s of S){const c=(s.carril||'').trim();if(!lanes.includes(c))lanes.push(c);}
-  const ord=lanes.flatMap(c=>S.filter(s=>(s.carril||'').trim()===c));
-  const R0=n<=1?0:Math.max(170,n*62);
-  ord.forEach((s,i)=>{const a=Math.PI+2*Math.PI*i/Math.max(1,n);P[s.k]={x:R0*Math.cos(a),y:R0*Math.sin(a)*0.8,st:1};});
-  const cnt={};
-  for(const f of F){const A=P[f.desde],B=P[f.hacia];
-    if(A&&B){P[f.k]={x:(A.x+B.x)/2+(B.y-A.y)*0.15,y:(A.y+B.y)/2-(B.x-A.x)*0.15};}
-    else{const k=A?f.desde:f.hacia,s=P[k];const i=(cnt[k]=(cnt[k]||0)+1)-1;let ang=n<=1?(A?0:Math.PI):Math.atan2(s.y,s.x);ang+=(i%2?1:-1)*Math.ceil(i/2)*0.6;P[f.k]={x:s.x+120*Math.cos(ang),y:s.y+120*Math.sin(ang)};}
-  }
-  const E=[];
-  for(const f of F){const rf=refsDe(f);if(P[f.desde])E.push([f.desde,f.k,rf.includes(f.desde)?160:110,0.06]);if(P[f.hacia])E.push([f.k,f.hacia,rf.includes(f.hacia)?160:110,0.06]);
-    for(const v of refsDe(f))if(P[v]&&P[v].st&&v!==f.desde&&v!==f.hacia)E.push([v,f.k,150,0.015]);}
-  const ids=Object.keys(P);
-  for(let it=0;it<360;it++){
-    const cool=1-it/360;const D={};for(const i of ids)D[i]={x:0,y:0};
-    for(let a=0;a<ids.length;a++)for(let b=a+1;b<ids.length;b++){const A=P[ids[a]],B=P[ids[b]];let dx=A.x-B.x,dy=A.y-B.y;let d2=dx*dx+dy*dy;if(d2<1){dx=(a-b)*0.7;dy=(b-a)*0.4;d2=1;}
-      const d=Math.sqrt(d2);const k=(A.st&&B.st)?80000:(A.st||B.st)?22000:11000;const f=k/d2;D[ids[a]].x+=dx/d*f;D[ids[a]].y+=dy/d*f;D[ids[b]].x-=dx/d*f;D[ids[b]].y-=dy/d*f;}
-    for(const [a,b,L,k] of E){const A=P[a],B=P[b];const dx=B.x-A.x,dy=B.y-A.y;const d=Math.max(1,Math.hypot(dx,dy));const f=(d-L)*k;D[a].x+=dx/d*f;D[a].y+=dy/d*f;D[b].x-=dx/d*f;D[b].y-=dy/d*f;}
-    for(const i of ids){D[i].x-=P[i].x*0.004;D[i].y-=P[i].y*0.006;const m=Math.hypot(D[i].x,D[i].y),cap=24*cool+1;const q=m>cap?cap/m:1;P[i].x+=D[i].x*q;P[i].y+=D[i].y*q;}
-  }
-  let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
-  for(const i of ids){const p=P[i];const hw=p.st?NW/2+8:62,ht=p.st?NH/2+8:16,hb=p.st?NH/2+8:58;x0=Math.min(x0,p.x-hw);x1=Math.max(x1,p.x+hw);y0=Math.min(y0,p.y-ht);y1=Math.max(y1,p.y+hb);}
-  const W=860,m=24;const s=Math.min(1,(W-2*m)/Math.max(1,x1-x0));
-  const H=Math.max(280,(y1-y0)*s+2*m+10);const ox=m-x0*s+((W-2*m)-(x1-x0)*s)/2,oy=m+10-y0*s;
-  LAY={key,pos:P,T:{s,ox,oy,W,H}};
-}
 function renderDiagram(sim,tc,loops){
   const r=sim[tc];
   if(!M.stocks.length){$('loopchips').innerHTML='';$('diagram').innerHTML='<p class="muted">Agregá stocks en Describir para ver el sistema.</p>';return;}
@@ -1262,16 +1259,18 @@ function renderDiagram(sim,tc,loops){
     marks+=`<g class="lmark ${c}${on?'':' dim'}" data-loop="${esc(lk(b))}"><title>${esc((b.tipo==='R'?'Refuerzo':'Balance')+' · '+nf1.format(b.g*100)+' % por '+(M.unidad||'paso'))}</title><circle class="bg" cx="${mx_.toFixed(1)}" cy="${my_.toFixed(1)}" r="16"/><path d="M${(mx_+rr*Math.cos(a0)).toFixed(1)} ${(my_+rr*Math.sin(a0)).toFixed(1)} A${rr} ${rr} 0 1 1 ${(mx_+rr*Math.cos(b0)).toFixed(1)} ${(my_+rr*Math.sin(b0)).toFixed(1)}" marker-end="url(#ahl-${c})"/><text x="${mx_.toFixed(1)}" y="${(my_+4.5).toFixed(1)}">${b.tipo}</text></g>`;
   }
   $('loopchips').innerHTML=L.length?`<button class="lc${sel?'':' on'}" data-loop="">Todo el sistema</button>`+L.map(b=>`<button class="lc ${b.tipo==='R'?'ref':'bal'}${sel&&lk(b)===SEL_LOOP?' on':''}" data-loop="${esc(lk(b))}"><b>${b.tipo}</b> ${esc(b.edges.map(e=>nombreDe(e.from)+' → '+(e.via.nombre||e.via.k)).join(' → '))} · ${nf1.format(b.g*100)} %</button>`).join(''):'<span class="hint-p">En este momento no hay bucles: ninguna válvula depende de la caja que llena o vacía.</span>';
+  if(POP&&!LAY.pos[POP.k])popClose();
   $('diagram').innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;margin:0 auto" role="img" aria-label="El sistema y sus bucles"><defs>
     <marker id="ahp" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--accent)"/></marker>
     <marker id="ahi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fg2)"/></marker>
     <marker id="ahl-ref" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--good)"/></marker>
     <marker id="ahl-bal" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--accent)"/></marker>
   </defs><text x="${W-12}" y="18" text-anchor="end" class="lab">${M.unidad||'paso'} ${(M.t0||0)+tc}</text>${pipes}${infos}${nodes}${marks}</svg>`;
+  if(POP)popPos(POP.k);
 }
 document.addEventListener('pointerdown',e=>{const n=e.target.closest('#diagram [data-node]');if(!n||!LAY.pos[n.dataset.node])return;DRAG={k:n.dataset.node,moved:false};e.preventDefault();});
 document.addEventListener('pointermove',e=>{if(!DRAG)return;const svg=$('diagram').querySelector('svg');if(!svg)return;const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const p=pt.matrixTransform(svg.getScreenCTM().inverse());const T=LAY.T;const x=Math.max(20,Math.min(T.W-20,p.x)),y=Math.max(20,Math.min(T.H-20,p.y));LAY.pos[DRAG.k].x=(x-T.ox)/T.s;LAY.pos[DRAG.k].y=(y-T.oy)/T.s;DRAG.moved=true;if(!DRAG_RAF)DRAG_RAF=requestAnimationFrame(()=>{DRAG_RAF=0;if(lastSim.length)renderDiagram(lastSim,TCUR,lastLoops);});});
-document.addEventListener('pointerup',()=>{if(DRAG&&DRAG.moved){M.lay={key:LAY.key,pos:structuredClone(LAY.pos),T:{...LAY.T}};scheduleSave();}DRAG=null;});
+document.addEventListener('pointerup',()=>{if(DRAG&&DRAG.moved){M.lay={key:LAY.key,pos:structuredClone(LAY.pos),T:{...LAY.T}};scheduleSave();}else if(DRAG){popOpen(DRAG.k);}DRAG=null;});
 document.addEventListener('click',e=>{const g=e.target.closest('#diagram .lmark[data-loop]');if(!g)return;SEL_LOOP=SEL_LOOP===g.dataset.loop?'':g.dataset.loop;renderVivo();});
 function renderKpis(base,sim,tc){
   const o=M.objetivo;if(!o){$('tiles').innerHTML='';return;}
@@ -1325,7 +1324,7 @@ function moverPalanca(k,d){const L=M.palancas;const i=L.findIndex(p=>p.k===k),j=
 
 /* ---------- ayudante de fórmulas: tocar para armar ---------- */
 let FXEL=null,FXT=0;
-function fxEs(el){return el&&el.tagName==='INPUT'&&(el.id==='np-valor'||['formula','valor','cuando','factor'].includes(el.dataset.field));}
+function fxEs(el){return el&&el.tagName==='INPUT'&&el.type!=='hidden'&&(el.id==='np-valor'||['formula','valor','cuando','factor'].includes(el.dataset.field));}
 function fxTipo(k){if(M.stocks.some(s=>s.k===k))return 'st';if(M.params.some(p=>p.k===k))return 'pa';if(M.flujos.some(f=>f.k===k))return 'fl';if(M.indicadores.some(x=>x.k===k))return 'in';return '';}
 function fxScope(){const sc={t:M.t0||0,H:M.horizonte};const r0=(lastBase&&lastBase[0])||{};for(const s of M.stocks)sc[s.k]=s.inicial||0;for(const f of M.flujos)sc[f.k]=r0[f.k]??0;for(const x of M.indicadores)sc[x.k]=r0[x.k]??0;for(const p of M.params)sc[p.k]=p.valor||0;return sc;}
 function fxLeer(src){return esc(String(src).replace(/\*/g,' × ').replace(/\//g,' ÷ ')).replace(/[A-Za-z_][A-Za-z0-9_]*/g,w=>{if(FN[w])return `<i>${w==='if'?'si':w}</i>`;if(w==='t')return '<b class="fx-t">el paso</b>';const tp=fxTipo(w);return tp?`<b class="fx-${tp}">${esc(nombreDe(w))}</b>`:w;}).replace(/\s+/g,' ');}
@@ -1356,6 +1355,216 @@ document.addEventListener('focusout',e=>{if(e.target!==FXEL)return;FXT=setTimeou
 document.addEventListener('mousedown',e=>{if(e.target.closest('#fx'))e.preventDefault();});
 document.addEventListener('click',e=>{const b=e.target.closest('#fx [data-ins]');if(!b||!FXEL)return;const s0=FXEL.selectionStart??FXEL.value.length,s1=FXEL.selectionEnd??s0;FXEL.setRangeText(b.dataset.ins,s0,s1,'end');FXEL.focus();FXEL.dispatchEvent(new Event('input',{bubbles:true}));});
 document.addEventListener('input',e=>{if(fxEs(e.target)&&e.target!==FXEL)fxShow(e.target);if(e.target===FXEL)setTimeout(fxPrev,0);if(e.target.id==='np-campo')fxPrev();});
+
+/* ---------- layout: automático la primera vez, incremental después ---------- */
+function layKey(){const S=M.stocks,F=M.flujos.filter(f=>S.some(s=>s.k===f.desde||s.k===f.hacia));return M.id+'|'+S.map(s=>s.k).join(',')+'|'+F.map(f=>f.k+':'+f.desde+'>'+f.hacia+':'+refsDe(f).filter(v=>S.some(s=>s.k===v)).join('+')).join(',');}
+function fitT(P){
+  const ids=Object.keys(P);let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+  for(const i of ids){const p=P[i];const hw=p.st?NW/2+8:62,ht=p.st?NH/2+8:16,hb=p.st?NH/2+8:58;x0=Math.min(x0,p.x-hw);x1=Math.max(x1,p.x+hw);y0=Math.min(y0,p.y-ht);y1=Math.max(y1,p.y+hb);}
+  if(!ids.length){x0=-100;x1=100;y0=-60;y1=60;}
+  const W=860,m=24;const s=Math.min(1,(W-2*m)/Math.max(1,x1-x0));
+  const H=Math.max(280,(y1-y0)*s+2*m+10);const ox=m-x0*s+((W-2*m)-(x1-x0)*s)/2,oy=m+10-y0*s;
+  return {s,ox,oy,W,H};
+}
+function fuerzas(P,F,iters){
+  const E=[];
+  for(const f of F){const rf=refsDe(f);if(P[f.desde])E.push([f.desde,f.k,rf.includes(f.desde)?160:110,0.06]);if(P[f.hacia])E.push([f.k,f.hacia,rf.includes(f.hacia)?160:110,0.06]);
+    for(const v of rf)if(P[v]&&P[v].st&&v!==f.desde&&v!==f.hacia)E.push([v,f.k,150,0.015]);}
+  const ids=Object.keys(P);
+  for(let it=0;it<iters;it++){
+    const cool=1-it/iters;const D={};for(const i of ids)D[i]={x:0,y:0};
+    for(let a=0;a<ids.length;a++)for(let b=a+1;b<ids.length;b++){const A=P[ids[a]],B=P[ids[b]];let dx=A.x-B.x,dy=A.y-B.y;let d2=dx*dx+dy*dy;if(d2<1){dx=(a-b)*0.7;dy=(b-a)*0.4;d2=1;}
+      const d=Math.sqrt(d2);const k=(A.st&&B.st)?80000:(A.st||B.st)?22000:11000;const f=k/d2;D[ids[a]].x+=dx/d*f;D[ids[a]].y+=dy/d*f;D[ids[b]].x-=dx/d*f;D[ids[b]].y-=dy/d*f;}
+    for(const [a,b,L,k] of E){const A=P[a],B=P[b];const dx=B.x-A.x,dy=B.y-A.y;const d=Math.max(1,Math.hypot(dx,dy));const f=(d-L)*k;D[a].x+=dx/d*f;D[a].y+=dy/d*f;D[b].x-=dx/d*f;D[b].y-=dy/d*f;}
+    for(const i of ids){if(P[i].fix)continue;D[i].x-=P[i].x*0.004;D[i].y-=P[i].y*0.006;const m=Math.hypot(D[i].x,D[i].y),cap=24*cool+1;const q=m>cap?cap/m:1;P[i].x+=D[i].x*q;P[i].y+=D[i].y*q;}
+  }
+}
+function layoutCausal(){
+  const S=M.stocks,F=M.flujos.filter(f=>S.some(s=>s.k===f.desde||s.k===f.hacia));
+  const key=layKey();
+  if(LAY.key===key&&LAY.T)return;
+  if(M.lay&&M.lay.key===key&&M.lay.T){LAY={key,pos:structuredClone(M.lay.pos),T:{...M.lay.T}};return;}
+  const prev=LAY.pos&&Object.keys(LAY.pos).length?LAY.pos:(M.lay&&M.lay.pos)||null;
+  const P={};
+  if(prev){
+    // incremental: lo conocido se queda, lo nuevo se ubica cerca de lo suyo
+    for(const s of S)if(prev[s.k])P[s.k]={...prev[s.k],st:1,fix:1};
+    for(const f of F)if(prev[f.k])P[f.k]={...prev[f.k],fix:1};
+    let maxY=Math.max(0,...Object.values(P).map(p=>p.y));
+    for(const s of S)if(!P[s.k]){P[s.k]={x:0,y:maxY+150,st:1};maxY+=150;}
+    const cnt={};
+    for(const f of F)if(!P[f.k]){const A=P[f.desde],B=P[f.hacia];
+      if(A&&B)P[f.k]={x:(A.x+B.x)/2+(B.y-A.y)*0.15,y:(A.y+B.y)/2-(B.x-A.x)*0.15};
+      else{const k=A?f.desde:f.hacia,s=P[k];const i=(cnt[k]=(cnt[k]||0)+1)-1;const ang=(A?0.3:Math.PI-0.3)+i*0.7;P[f.k]={x:s.x+120*Math.cos(ang),y:s.y+120*Math.sin(ang)};}}
+    fuerzas(P,F,40);for(const p of Object.values(P))delete p.fix;
+  }else{
+    const n=S.length;const lanes=[];for(const s of S){const c=(s.carril||'').trim();if(!lanes.includes(c))lanes.push(c);}
+    const ord=lanes.flatMap(c=>S.filter(s=>(s.carril||'').trim()===c));
+    const R0=n<=1?0:Math.max(170,n*62);
+    ord.forEach((s,i)=>{const a=Math.PI+2*Math.PI*i/Math.max(1,n);P[s.k]={x:R0*Math.cos(a),y:R0*Math.sin(a)*0.8,st:1};});
+    const cnt={};
+    for(const f of F){const A=P[f.desde],B=P[f.hacia];
+      if(A&&B){P[f.k]={x:(A.x+B.x)/2+(B.y-A.y)*0.15,y:(A.y+B.y)/2-(B.x-A.x)*0.15};}
+      else{const k=A?f.desde:f.hacia,s=P[k];const i=(cnt[k]=(cnt[k]||0)+1)-1;let ang=n<=1?(A?0:Math.PI):Math.atan2(s.y,s.x);ang+=(i%2?1:-1)*Math.ceil(i/2)*0.6;P[f.k]={x:s.x+120*Math.cos(ang),y:s.y+120*Math.sin(ang)};}}
+    fuerzas(P,F,360);
+  }
+  LAY={key,pos:P,T:fitT(P)};
+  M.lay={key,pos:structuredClone(P),T:{...LAY.T}};
+}
+
+/* ---------- editar desde el mapa ---------- */
+let POP=null;
+const TIPOS_F=[['fijo','un monto fijo'],['parte','una parte de un stock'],['crece','un monto que crece con el tiempo'],['sobra','lo que sobra de una resta'],['tope','el menor de dos'],['formula','escribir la fórmula']];
+const esNum=s=>/^-?\d+(\.\d+)?$/.test(String(s||'').trim());
+function keyLibre(base){let k=slug(base)||'x';const usados=new Set([...M.stocks,...M.params,...M.flujos,...M.indicadores].map(x=>x.k));let i=2,kk=k;while(usados.has(kk)||kk==='t'||kk==='H')kk=k+'_'+(i++);return kk;}
+function nodoDe(k){return M.stocks.find(s=>s.k===k)?{kind:'stock',it:M.stocks.find(s=>s.k===k)}:M.flujos.find(f=>f.k===k)?{kind:'flujo',it:M.flujos.find(f=>f.k===k)}:null;}
+function renombrarClave(viejo,nuevo){
+  if(viejo===nuevo)return;const re=new RegExp('\\b'+viejo+'\\b','g');
+  for(const f of M.flujos){if(f.desde===viejo)f.desde=nuevo;if(f.hacia===viejo)f.hacia=nuevo;f.formula=String(f.formula||'').replace(re,nuevo);if(f.factor)f.factor=String(f.factor).replace(re,nuevo);}
+  for(const x of M.indicadores)x.formula=String(x.formula||'').replace(re,nuevo);
+  for(const r of M.reglas){r.cuando=String(r.cuando||'').replace(re,nuevo);r.texto=String(r.texto||'').replace(new RegExp('\\{'+viejo+'(_fin|_min|_max)?\\}','g'),'{'+nuevo+'$1}');}
+  for(const p of M.palancas){if(p.campo===viejo)p.campo=nuevo;p.valor=String(p.valor||'').replace(re,nuevo);}
+  for(const i of M.info)if(i.senal===viejo)i.senal=nuevo;for(const n of M.normas)if(n.afecta===viejo)n.afecta=nuevo;
+  if(M.objetivo===viejo)M.objetivo=nuevo;
+  if(LAY.pos[viejo]){LAY.pos[nuevo]=LAY.pos[viejo];delete LAY.pos[viejo];LAY.key='';}
+  if(M.lay&&M.lay.pos&&M.lay.pos[viejo]){M.lay.pos[nuevo]=M.lay.pos[viejo];delete M.lay.pos[viejo];}
+}
+function opSel(id,val,extra){
+  const sc=fxScope();const v=String(val??'').trim();const num=esNum(v);
+  const opt=(k,n,tt)=>`<option value="${esc(k)}"${k===v?' selected':''}>${esc(n)}</option>`;
+  return `<span class="op"><select data-op="${id}"><option value="">(elegí)</option><option value="#num"${num?' selected':''}>un número…</option><option value="#new">nuevo parámetro…</option>`+
+    (M.params.length?`<optgroup label="Parámetros">${M.params.map(p=>opt(p.k,(p.nombre||p.k)+' · '+fmtV(sc[p.k],p.k))).join('')}</optgroup>`:'')+
+    (extra!=='sinstock'&&M.stocks.length?`<optgroup label="Stocks">${M.stocks.map(s=>opt(s.k,(s.nombre||s.k)+' · '+fmtV(sc[s.k],s.k))).join('')}</optgroup>`:'')+
+    (M.flujos.length?`<optgroup label="Flujos">${M.flujos.map(f=>opt(f.k,f.nombre||f.k)).join('')}</optgroup>`:'')+
+    (M.indicadores.length?`<optgroup label="Indicadores">${M.indicadores.map(x=>opt(x.k,x.nombre||x.k)).join('')}</optgroup>`:'')+
+    `</select><input type="number" step="any" class="opnum" data-opnum="${id}" value="${num?v:''}" ${num?'':'hidden'} placeholder="número"><span class="opnew" data-opnew="${id}" hidden><input type="text" placeholder="nombre del parámetro" data-opnew-n><input type="number" step="any" placeholder="valor" data-opnew-v><button type="button" class="small" style="margin:0" data-opnew-ok="${id}">Crear</button></span></span>`;
+}
+function opVal(id){const root=$('pop');const s=root.querySelector(`[data-op="${id}"]`);if(!s)return null;const v=s.value;if(v==='#num'){const n=root.querySelector(`[data-opnum="${id}"]`).value;return esNum(n)?String(+n):null;}if(v==='#new'||!v)return null;return v;}
+function detectar(formula){
+  const f=String(formula||'').trim();const tok='([A-Za-z_][A-Za-z0-9_]*|-?\\d+(?:\\.\\d+)?)';let m;
+  if((m=new RegExp('^'+tok+'$').exec(f)))return {tipo:'fijo',a:m[1]};
+  if((m=new RegExp('^'+tok+'\\s*\\*\\s*\\(\\s*1\\s*\\+\\s*'+tok+'\\s*\\)\\s*\\^\\s*t$').exec(f)))return {tipo:'crece',a:m[1],b:m[2]};
+  if((m=new RegExp('^'+tok+'\\s*\\*\\s*'+tok+'$').exec(f))){const st=M.stocks.some(s=>s.k===m[1])?[m[1],m[2]]:M.stocks.some(s=>s.k===m[2])?[m[2],m[1]]:null;if(st)return {tipo:'parte',a:st[0],b:st[1]};}
+  if((m=new RegExp('^max\\(\\s*0\\s*,\\s*'+tok+'\\s*-\\s*'+tok+'\\s*\\)$').exec(f)))return {tipo:'sobra',a:m[1],b:m[2]};
+  if((m=new RegExp('^min\\(\\s*'+tok+'\\s*,\\s*'+tok+'\\s*\\)$').exec(f)))return {tipo:'tope',a:m[1],b:m[2]};
+  return {tipo:'formula'};
+}
+function componer(tipo,a,b){
+  if(tipo==='fijo')return a?a:null;
+  if(tipo==='parte')return a&&b?`${a} * ${b}`:null;
+  if(tipo==='crece')return a&&b?`${a} * (1 + ${b}) ^ t`:null;
+  if(tipo==='sobra')return a&&b?`max(0, ${a} - ${b})`:null;
+  if(tipo==='tope')return a&&b?`min(${a}, ${b})`:null;
+  return null;
+}
+function popPos(k){
+  const pop=$('pop'),wrap=$('mapwrap'),svg=$('diagram').querySelector('svg');if(!svg||!LAY.pos[k])return;
+  const pt=svg.createSVGPoint();pt.x=LAY.T.ox+LAY.T.s*LAY.pos[k].x;pt.y=LAY.T.oy+LAY.T.s*LAY.pos[k].y;const sp=pt.matrixTransform(svg.getScreenCTM());const wr=wrap.getBoundingClientRect();
+  const pw=Math.min(380,wr.width-16);pop.style.width=pw+'px';
+  let left=sp.x-wr.left-pw/2,top=sp.y-wr.top+(LAY.pos[k].st?NH/2*LAY.T.s:14)+12;
+  left=Math.max(8,Math.min(wr.width-pw-8,left));
+  pop.style.left=left+'px';pop.style.top=top+'px';
+}
+function popOpen(k){const n=nodoDe(k);if(!n)return;POP={k,kind:n.kind};renderPop();}
+function popClose(){POP=null;const p=$('pop');p.hidden=true;p.innerHTML='';}
+function renderPop(){
+  if(!POP)return;const n=nodoDe(POP.k);if(!n){popClose();return;}
+  const pop=$('pop');pop.hidden=false;const sc=fxScope();
+  if(n.kind==='stock'){
+    const s=n.it;const ins=M.flujos.filter(f=>f.hacia===s.k),outs=M.flujos.filter(f=>f.desde===s.k);
+    const li=(f,dir)=>{const otro=dir==='in'?f.desde:f.hacia;return `<button type="button" class="fl" data-pop-go="${esc(f.k)}">${esc(f.nombre||f.k)} <small>${fmtV(sc[f.k],f.k)}${otro?(dir==='in'?' ← ':' → ')+esc(nombreDe(otro)):''}</small></button>`;};
+    const otros=M.stocks.filter(x=>x.k!==s.k);
+    pop.innerHTML=`<div class="pop-h"><span class="pop-k">Caja</span><button type="button" class="pop-x" data-pop-close aria-label="cerrar">×</button></div>
+      <div class="pop-f"><input type="text" class="big" data-list="stocks" data-id="${s.id}" data-field="nombre" value="${esc(s.nombre||'')}" placeholder="nombre de la caja"></div>
+      <div class="pop-g3"><label>Hoy<input type="number" step="any" data-list="stocks" data-id="${s.id}" data-field="inicial" value="${s.inicial??''}"></label><label>Unidad<input type="text" data-list="stocks" data-id="${s.id}" data-field="unidad" value="${esc(s.unidad||'')}" placeholder="$"></label><label>Carril<input type="text" list="dl-carril" data-list="stocks" data-id="${s.id}" data-field="carril" value="${esc(s.carril||'')}" placeholder="opcional"></label></div>
+      <label class="check"><input type="checkbox" data-list="stocks" data-id="${s.id}" data-field="min0" ${s.min0?'checked':''}> No puede bajar de cero</label>
+      <div class="pop-s"><span class="pop-k">Entra</span>${ins.map(f=>li(f,'in')).join('')||'<span class="muted">nada</span>'}<button type="button" class="small" style="margin:0" data-pop-new="in">+ algo que entra</button></div>
+      <div class="pop-s"><span class="pop-k">Sale</span>${outs.map(f=>li(f,'out')).join('')||'<span class="muted">nada</span>'}<div class="btns"><button type="button" class="small" style="margin:0" data-pop-new="out">+ algo que sale</button>${otros.length?`<select data-pop-new-to><option value="">+ pasa a otra caja…</option>${otros.map(x=>`<option value="${esc(x.k)}">${esc(x.nombre||x.k)}</option>`).join('')}</select>`:''}</div></div>
+      <div class="pop-foot"><button type="button" class="del" data-pop-del="stock" style="font-size:13px">Borrar caja</button></div>`;
+  }else{
+    const f=n.it;const det=detectar(f.formula);const tipo=POP.tipo||det.tipo;const a=POP.a??det.a??'',b=POP.b??det.b??'';
+    const sel=(id,val)=>`<select data-list="flujos" data-id="${f.id}" data-field="${id}"><option value="">(afuera)</option>${M.stocks.map(s=>`<option value="${esc(s.k)}"${s.k===val?' selected':''}>${esc(s.nombre||s.k)}</option>`).join('')}</select>`;
+    const lab={fijo:['Cuánto'],parte:['De qué stock','Qué parte (0 a 1)'],crece:['Cuánto hoy','A qué ritmo por paso'],sobra:['Lo que hay','Menos lo que se guarda'],tope:['Una cosa','La otra']}[tipo]||[];
+    let cuerpo='';
+    if(tipo==='formula')cuerpo=`<input type="text" class="f" data-list="flujos" data-id="${f.id}" data-field="formula" value="${esc(f.formula||'')}" placeholder="tocá los elementos que aparecen abajo" spellcheck="false">`;
+    else cuerpo=`<div class="pop-op"><span>${lab[0]}</span>${opSel('a',a,tipo==='parte'?'':'')}</div>`+(lab[1]?`<div class="pop-op"><span>${lab[1]}</span>${opSel('b',b,'sinstock')}</div>`:'')+`<input type="hidden" data-list="flujos" data-id="${f.id}" data-field="formula" value="${esc(f.formula||'')}">`;
+    let lectura='';try{const v=compile(f.formula||'0').fn(sc);lectura=`<div class="pop-read">${fxLeer(f.formula||'')||'<span class="muted">sin fórmula</span>'} <b>= ${fmtV(v,f.hacia||f.desde)} hoy</b></div>`;}catch(e){lectura=`<div class="pop-read fx-err">${esc(e.message)}</div>`;}
+    const usados=[...new Set((()=>{try{return compile(f.formula||'').vars;}catch(e){return [];}})())].filter(k=>M.params.some(p=>p.k===k));
+    const pars=usados.map(k=>{const p=M.params.find(x=>x.k===k);return `<div class="pop-par"><span>${esc(p.nombre||p.k)}</span><input type="number" step="any" data-list="params" data-id="${p.id}" data-field="valor" value="${p.valor??''}"><button type="button" class="small" style="margin:0" data-pop-acc="${esc(p.k)}" title="crear una acción que cambie este número">acción</button></div>`;}).join('');
+    const uA=(M.stocks.find(s=>s.k===f.desde)||{}).unidad||'',uB=(M.stocks.find(s=>s.k===f.hacia)||{}).unidad||'';
+    const factorHint=f.desde&&f.hacia?(uA&&uB&&uA!==uB?`convierte ${uA} en ${uB}; por ejemplo 1 / tipo_cambio`:'−1 si al salir de una baja la otra, como pagar una deuda'):'';
+    pop.innerHTML=`<div class="pop-h"><span class="pop-k">Válvula</span><button type="button" class="pop-x" data-pop-close aria-label="cerrar">×</button></div>
+      <div class="pop-f"><input type="text" class="big" data-list="flujos" data-id="${f.id}" data-field="nombre" value="${esc(f.nombre||'')}" placeholder="nombre del flujo"></div>
+      <div class="pop-g2"><label>Desde${sel('desde',f.desde)}</label><label>Hacia${sel('hacia',f.hacia)}</label></div>
+      <div class="pop-s"><span class="pop-k">Cuánto por ${esc(M.unidad||'paso')}</span><select data-pop-tipo>${TIPOS_F.map(([k,t])=>`<option value="${k}"${k===tipo?' selected':''}>${t}</option>`).join('')}</select>${cuerpo}${lectura}</div>
+      ${pars?`<div class="pop-s"><span class="pop-k">Números que usa</span>${pars}</div>`:''}
+      ${f.desde&&f.hacia?`<div class="pop-s"><span class="pop-k">Factor <small>opcional</small></span><input type="text" class="f" data-list="flujos" data-id="${f.id}" data-field="factor" value="${esc(f.factor||'')}" placeholder="${esc(factorHint)}" spellcheck="false"></div>`:''}
+      <div class="pop-foot"><button type="button" class="del" data-pop-del="flujo" style="font-size:13px">Borrar válvula</button></div>`;
+  }
+  popPos(POP.k);
+}
+function popSetFormula(src){const inp=$('pop').querySelector('[data-field="formula"]');if(!inp)return;inp.value=src;inp.dispatchEvent(new Event('input',{bubbles:true}));}
+function popNuevoFlujo(dir,to){
+  const s=M.stocks.find(x=>x.k===POP.k);if(!s)return;
+  const f={id:uid(),k:keyLibre(dir==='in'?'entra_'+s.k:'sale_'+s.k),nombre:dir==='in'?'Entra a '+(s.nombre||s.k):to?'De '+(s.nombre||s.k)+' a '+nombreDe(to):'Sale de '+(s.nombre||s.k),desde:dir==='in'?'':s.k,hacia:dir==='in'?s.k:(to||''),formula:'0'};
+  M.flujos.push(f);renderList('flujos');renderList('palancas');dirty=true;compute();scheduleSave();
+  POP={k:f.k,kind:'flujo',tipo:'fijo'};renderPop();const i=$('pop').querySelector('.big');if(i){i.focus();i.select();}
+}
+function nuevaCaja(){
+  const s={id:uid(),k:keyLibre('caja'),nombre:'',inicial:0,unidad:'',min0:true,_fresh:1};
+  M.stocks.push(s);renderList('stocks');renderList('flujos');renderList('palancas');renderObjetivo();dirty=true;compute();scheduleSave();
+  POP={k:s.k,kind:'stock'};renderPop();const i=$('pop').querySelector('.big');if(i)i.focus();
+}
+document.addEventListener('click',e=>{
+  const t=e.target;const inPop=t.closest('#pop');
+  if(t.closest('[data-pop-close]')){popClose();return;}
+  if(t.id==='btn-nueva-caja'){nuevaCaja();return;}
+  if(inPop){
+    const b=t.closest('button');
+    if(b&&b.dataset.popGo){POP={k:b.dataset.popGo,kind:'flujo'};renderPop();return;}
+    if(b&&b.dataset.popNew){popNuevoFlujo(b.dataset.popNew);return;}
+    if(b&&b.dataset.popDel){
+      if(!b.dataset.sure){b.dataset.sure='1';b.textContent='¿Seguro? Borrar';return;}
+      const k=POP.k;
+      if(b.dataset.popDel==='stock'){M.stocks=M.stocks.filter(s=>s.k!==k);for(const f of M.flujos){if(f.desde===k)f.desde='';if(f.hacia===k)f.hacia='';}M.flujos=M.flujos.filter(f=>f.desde||f.hacia);if(M.objetivo===k)M.objetivo='';renderList('stocks');renderObjetivo();}
+      else M.flujos=M.flujos.filter(f=>f.k!==k);
+      M.palancas=M.palancas.filter(p=>p.campo!==k);delete LAY.pos[k];LAY.key='';
+      renderList('flujos');renderList('palancas');popClose();dirty=true;compute();scheduleSave();return;
+    }
+    if(b&&b.dataset.opnewOk){const id=b.dataset.opnewOk;const box=$('pop').querySelector(`[data-opnew="${id}"]`);const n=box.querySelector('[data-opnew-n]').value.trim(),v=+box.querySelector('[data-opnew-v]').value;if(!n||isNaN(v))return;const p={id:uid(),k:keyLibre(n),nombre:n,valor:v,nota:''};M.params.push(p);renderList('params');renderList('palancas');POP[id]=p.k;renderPop();popRecompose();return;}
+    if(b&&b.dataset.popAcc){const k=b.dataset.popAcc;const p=M.params.find(x=>x.k===k);if(!p)return;const pl={id:uid(),k:'pl_'+uid(),nombre:'Cambiar '+(p.nombre||p.k),fuerza:12,tipo:'param',campo:k,valor:String(p.valor||0),descripcion:''};M.palancas.push(pl);renderList('palancas');dirty=true;compute();scheduleSave();popClose();document.querySelector('[data-tab="jugar"]').click();abrirPalForm(pl.k);return;}
+    return;
+  }
+  if(t.closest('#diagram')||t.closest('#loopchips'))return;
+  if(POP&&!t.closest('#fx'))popClose();
+});
+document.addEventListener('change',e=>{
+  const el=e.target;if(!el.closest('#pop'))return;
+  if(el.dataset.popNewTo!==undefined){if(el.value)popNuevoFlujo('out',el.value);return;}
+  if(el.dataset.popTipo!==undefined){POP.tipo=el.value;POP.a=POP.b=undefined;renderPop();if(el.value==='formula'){const i=$('pop').querySelector('[data-field="formula"]');if(i)i.focus();}return;}
+  if(el.dataset.op){const id=el.dataset.op;const box=el.closest('.op');box.querySelector('.opnum').hidden=el.value!=='#num';box.querySelector('.opnew').hidden=el.value!=='#new';if(el.value==='#num')box.querySelector('.opnum').focus();else if(el.value==='#new')box.querySelector('[data-opnew-n]').focus();else{POP[id]=el.value;popRecompose();}return;}
+  if(el.dataset.field==='desde'||el.dataset.field==='hacia'){renderPop();return;}
+  if(el.dataset.field==='nombre'&&el.dataset.list==='stocks'){const s=M.stocks.find(x=>x.id===el.dataset.id);if(s&&s._fresh&&s.nombre){const nk=keyLibre(s.nombre);renombrarClave(s.k,nk);s.k=nk;delete s._fresh;POP.k=nk;renderList('stocks');renderList('flujos');renderList('palancas');renderObjetivo();dirty=true;compute();scheduleSave();renderPop();}return;}
+});
+document.addEventListener('input',e=>{
+  const el=e.target;if(!el.closest('#pop'))return;
+  if(el.dataset.opnum!==undefined){POP[el.dataset.opnum]=esNum(el.value)?String(+el.value):undefined;popRecompose(true);return;}
+  if(el.dataset.field==='nombre'||el.dataset.field==='formula'||el.dataset.field==='valor'||el.dataset.field==='inicial')setTimeout(popRefrescarLectura,0);
+});
+function popRecompose(sinRender){
+  if(!POP||POP.kind!=='flujo')return;const tipo=POP.tipo||detectar((M.flujos.find(f=>f.k===POP.k)||{}).formula).tipo;
+  const a=opVal('a'),b=opVal('b');const src=componer(tipo,a,b);
+  if(src!=null){popSetFormula(src);}
+  if(!sinRender){POP.a=a||undefined;POP.b=b||undefined;setTimeout(renderPop,0);}
+  else setTimeout(popRefrescarLectura,0);
+}
+function popRefrescarLectura(){
+  if(!POP)return;const n=nodoDe(POP.k);if(!n)return;
+  if(n.kind==='stock'){if(lastSim.length)renderDiagram(lastSim,TCUR,lastLoops);return;}
+  const f=n.it;const box=$('pop').querySelector('.pop-read');if(!box)return;const sc=fxScope();
+  try{const v=compile(f.formula||'0').fn(sc);box.className='pop-read';box.innerHTML=`${fxLeer(f.formula||'')||'<span class="muted">sin fórmula</span>'} <b>= ${fmtV(v,f.hacia||f.desde)} hoy</b>`;}catch(e){box.className='pop-read fx-err';box.textContent=e.message;}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&POP)popClose();});
 
 /* ---------- eventos ---------- */
 document.addEventListener('input',e=>{
