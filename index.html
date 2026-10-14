@@ -217,6 +217,8 @@ details.sub>summary{cursor:pointer;font-weight:600;font-size:14px}
 .fxc:hover{border-color:var(--accent)}
 .fx-st,b.fx-st{color:var(--s1)}.fx-pa,b.fx-pa{color:var(--c-dis-ink)}.fx-fl,b.fx-fl{color:var(--accent-ink)}.fx-in,b.fx-in{color:var(--c-int-ink)}
 .fx-op{font-family:var(--mono)}
+.diagram .conv{font-family:var(--mono);font-size:10px;fill:var(--accent-ink);text-anchor:middle}
+.ext-tag{font-style:normal;font-family:var(--mono);font-size:10px;color:var(--c-dis-ink);background:var(--c-dis-soft);padding:0 5px;border-radius:3px}
 .bucle{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;gap:8px;min-width:0;border-top-width:4px}
 .bucle.ref{border-top-color:var(--good)}.bucle.bal{border-top-color:var(--accent)}
 .bucle-t b{font-weight:600;display:block}
@@ -419,8 +421,8 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
   <details class="grp" open>
     <summary><span>Flujos <small>lo que mueve los stocks por paso</small></span><b id="n-flujos"></b></summary>
     <div class="grp-body">
-      <p class="hint-p">Un flujo sale de un stock (o de afuera) y entra a otro stock (o se va afuera). La fórmula puede usar claves de stocks, parámetros y <code>t</code>, el paso actual.</p>
-      <div class="row row-head" style="grid-template-columns:minmax(0,1fr) minmax(100px,.7fr) minmax(100px,.7fr) minmax(0,1.6fr) 28px"><span>Nombre</span><span>Desde</span><span>Hacia</span><span>Fórmula</span><span></span></div>
+      <p class="hint-p">Un flujo sale de un stock (o de afuera) y entra a otro stock (o se va afuera). La fórmula puede usar claves de stocks, parámetros y <code>t</code>, el paso actual. <b>Factor</b> (opcional) es cuánto cambia el destino por cada unidad que sale: vacío es 1; <code>-1</code> para pagar una deuda, porque bajan las dos; <code>1 / tipo_cambio</code> para pasar pesos a dólares.</p>
+      <div class="row row-head" style="grid-template-columns:minmax(0,1fr) minmax(100px,.7fr) minmax(100px,.7fr) minmax(0,1.6fr) minmax(64px,.45fr) 28px"><span>Nombre</span><span>Desde</span><span>Hacia</span><span>Fórmula</span><span title="cuánto cambia el destino por cada unidad que sale">Factor</span><span></span></div>
       <div class="rows" id="flujos"></div>
       <button class="add" data-add="flujos">+ agregar flujo</button>
     </div>
@@ -546,7 +548,7 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
       <div class="btns" style="margin-top:10px"><button type="submit" id="np-submit" class="primary">Agregar y activar</button><button type="button" id="np-cancel">Cancelar</button></div>
     </form>
     <details class="sub"><summary>Mover un número</summary>
-      <p class="hint-p" style="margin:8px 0">Cada parámetro que controlás, con "hoy" al lado. Lo que muevas corre hasta que lo adoptes o vuelvas a hoy.</p>
+      <p class="hint-p" style="margin:8px 0">Cada parámetro con "hoy" al lado. Los marcados como externos, como la inflación o el dólar, sirven para probar otro contexto. Lo que muevas corre hasta que lo adoptes o vuelvas a hoy.</p>
       <div class="probar" id="probar"></div>
       <div class="btns" id="probar-btns" style="margin-top:8px" hidden><button id="btn-ovr-adopt" class="primary">Adoptar estos valores</button><button id="btn-ovr-reset">Volver a hoy</button></div>
     </details>
@@ -585,6 +587,7 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
       <li><b>Escribí reglas de lectura.</b> Condiciones que te importan: "si la caja mínima baja de cero", "si la deuda supera la liquidez". El motor las evalúa y las convierte en alertas y pasos del camino.</li>
     </ol>
     <h3>Fórmulas</h3>
+    <p>Un flujo puede tener un <b>factor</b>: cuánto cambia el destino por cada unidad que sale del origen. Con <code>-1</code>, pagar una deuda baja los pesos y la deuda en un solo flujo. Con <code>1 / tipo_cambio</code>, comprar dólares saca pesos y suma dólares.</p>
     <p>No hace falta escribirlas de memoria: al tocar cualquier campo de fórmula aparece debajo un ayudante con todos los stocks, parámetros, flujos e indicadores del modelo. Tocás uno y entra en la fórmula; arriba la ves leída en palabras y con su valor de hoy, o el error si algo no cierra.</p>
     <p>Operadores: <code>+ - * / ^</code>, comparaciones <code>&lt; &gt; &lt;= &gt;= == !=</code>, lógica <code>&amp;&amp; ||</code>, paréntesis. Funciones: <code>min max abs sqrt log exp round floor ceil pow if(cond, a, b)</code>. <code>t</code> es el paso actual, de 0 en adelante.</p>
     <ul>
@@ -632,7 +635,7 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 <script>
 (function(){
 'use strict';
-const KEY='taller-sistemas-v1';
+const KEY='taller-sistemas-v2';
 const FUERZA={12:'parámetros',11:'buffers',10:'estructura',9:'retardos',8:'bucles de balance',7:'bucles de refuerzo',6:'información',5:'reglas',4:'auto-organización',3:'metas',2:'paradigma',1:'trascender'};
 const CAPA=f=>f<=3?'int':f<=6?'dis':'ret';
 const $=id=>document.getElementById(id);
@@ -702,18 +705,54 @@ function compile(src){
 /* ---------- plantillas ---------- */
 function tplVacio(){return {id:uid(),nombre:'Nuevo sistema',horizonte:24,unidad:'mes',objetivo:'',maximizar:1,formato:'num',contexto:'',stocks:[],flujos:[],params:[],indicadores:[],palancas:[],reglas:[],activas:[]};}
 function tplFinanzas(){return {id:uid(),nombre:'Finanzas personales',horizonte:24,unidad:'mes',objetivo:'neto_real',maximizar:1,formato:'ars',
-  contexto:'Una persona con ingreso mensual, gastos que siguen la inflación, un colchón en pesos y dólares, inversiones y una deuda de tarjeta. Todo en pesos nominales; el indicador neto_real deflacta. Los indicadores se evalúan en orden, así que uno puede usar al anterior.',
+  contexto:'Una persona con ingreso mensual y gastos que siguen la inflación. Lo que pasa el colchón se ahorra según el método elegido: queda en pesos líquidos, va a un fondo o se pasa a dólares. Todo en pesos nominales; el patrimonio real descuenta la inflación.',
+  stocks:[{k:'pesos',nombre:'Pesos líquidos',inicial:400000,unidad:'$',min0:true,carril:'Lo que tengo'},{k:'fondo',nombre:'Fondo de inversión',inicial:0,unidad:'$',min0:true,carril:'Lo que tengo'},{k:'dolares',nombre:'Dólares',inicial:5000,unidad:'USD',min0:true,carril:'Lo que tengo'},{k:'deuda',nombre:'Deuda de tarjeta',inicial:300000,unidad:'$',min0:true,carril:'Lo que debo'}],
+  params:[
+    {k:'ingreso',nombre:'Ingreso mensual',valor:3000000,nota:'típico'},
+    {k:'gastos',nombre:'Gastos mensuales',valor:1135000,nota:'fijos + variables'},
+    {k:'ajuste_anual',nombre:'Crecimiento anual del ingreso',valor:0.21,unidad:'%',nota:'10 % cada 6 meses'},
+    {k:'colchon_meses',nombre:'Colchón en pesos',valor:3,unidad:'meses',nota:'meses de gasto que quedan líquidos antes de ahorrar'},
+    {k:'a_fondo',nombre:'Parte del ahorro al fondo',valor:0,unidad:'%',nota:'de lo que pasa el colchón'},
+    {k:'a_dolares',nombre:'Parte del ahorro a dólares',valor:0,unidad:'%',nota:'lo que no va a ninguno queda en pesos'},
+    {k:'tasa_liquida',nombre:'Rendimiento de los pesos líquidos',valor:0.015,unidad:'%',nota:'mensual · cuenta remunerada o fondo de liquidez · supuesto, ajustalo'},
+    {k:'tasa_fondo',nombre:'Rendimiento del fondo',valor:0.024,unidad:'%',nota:'mensual · plazo fijo o fondo a plazo · supuesto, ajustalo'},
+    {k:'pago_deuda',nombre:'Cuota de la deuda',valor:50000,nota:'por mes'},
+    {k:'tasa_deuda',nombre:'Interés de la tarjeta',valor:0.08,unidad:'%',nota:'mensual'},
+    {k:'inflacion',nombre:'Inflación mensual',valor:0.019,unidad:'%',nota:'INDEC sep-2026',externo:true},
+    {k:'tipo_cambio',nombre:'Tipo de cambio hoy',valor:1535,unidad:'$',nota:'oficial venta 13-oct-2026',externo:true},
+    {k:'deval_extra',nombre:'Suba del dólar por encima de la inflación',valor:0,unidad:'%',nota:'mensual · 0 = el dólar sigue a la inflación',externo:true}],
+  flujos:[
+    {k:'ingresa',nombre:'Ingreso',desde:'',hacia:'pesos',formula:'ingreso * (1 + ajuste_anual) ^ (t / 12)'},
+    {k:'gasta',nombre:'Gastos',desde:'pesos',hacia:'',formula:'gastos * (1 + inflacion) ^ t'},
+    {k:'rinde_pesos',nombre:'Rendimiento de los pesos',desde:'',hacia:'pesos',formula:'pesos * tasa_liquida'},
+    {k:'al_fondo',nombre:'Ahorro al fondo',desde:'pesos',hacia:'fondo',formula:'max(0, pesos - colchon_meses * gastos * (1 + inflacion) ^ t) * a_fondo'},
+    {k:'rinde_fondo',nombre:'Rendimiento del fondo',desde:'',hacia:'fondo',formula:'fondo * tasa_fondo'},
+    {k:'a_usd',nombre:'Compra de dólares',desde:'pesos',hacia:'dolares',formula:'max(0, pesos - colchon_meses * gastos * (1 + inflacion) ^ t) * a_dolares',factor:'1 / (tipo_cambio * ((1 + inflacion) * (1 + deval_extra)) ^ t)'},
+    {k:'interes',nombre:'Interés de la deuda',desde:'',hacia:'deuda',formula:'deuda * tasa_deuda'},
+    {k:'paga',nombre:'Pago de la deuda',desde:'pesos',hacia:'deuda',formula:'min(deuda * (1 + tasa_deuda), pago_deuda, pesos)',factor:'-1'}],
+  indicadores:[
+    {k:'dolares_en_pesos',nombre:'Dólares en pesos',formula:'dolares * tipo_cambio * ((1 + inflacion) * (1 + deval_extra)) ^ t',unidad:'$'},
+    {k:'neto',nombre:'Patrimonio neto',formula:'pesos + fondo + dolares_en_pesos - deuda',unidad:'$'},
+    {k:'neto_real',nombre:'Patrimonio neto real',formula:'neto / (1 + inflacion) ^ t',unidad:'$'},
+    {k:'colchon',nombre:'Colchón',formula:'pesos / (gastos * (1 + inflacion) ^ t)',unidad:'meses'}],
+  palancas:[
+    {k:'m_fondo',nombre:'Ahorrar en un fondo',fuerza:10,tipo:'param',campo:'a_fondo',valor:'a_fondo = 1; a_dolares = 0',descripcion:'Lo que pasa el colchón va al fondo, que rinde la tasa del fondo.'},
+    {k:'m_usd',nombre:'Ahorrar en dólares',fuerza:10,tipo:'param',campo:'a_dolares',valor:'a_fondo = 0; a_dolares = 1',descripcion:'Lo que pasa el colchón se pasa a dólares todos los meses.'},
+    {k:'m_mix',nombre:'Mitad fondo, mitad dólares',fuerza:10,tipo:'param',campo:'a_fondo',valor:'a_fondo = 0.5; a_dolares = 0.5',descripcion:'Reparte el ahorro entre las dos.'},
+    {k:'p_deuda',nombre:'Pagar la deuda hoy',fuerza:5,tipo:'stock',campo:'deuda',valor:'deuda = deuda - min(deuda, pesos); pesos = pesos - min(deuda, pesos)',descripcion:'Corta el interés de la tarjeta de una vez.'},
+    {k:'p_index',nombre:'Indexar el ingreso a la inflación',fuerza:9,tipo:'param',campo:'ajuste_anual',valor:'(1 + inflacion) ^ 12 - 1',descripcion:'Acorta el retardo del ajuste.'},
+    {k:'p_gastos',nombre:'Recortar 5 % de gastos',fuerza:12,tipo:'param',campo:'gastos',valor:'gastos * 0.95',descripcion:'Un recorte sostenido.'},
+    {k:'p_colchon',nombre:'Colchón de 6 meses',fuerza:11,tipo:'param',campo:'colchon_meses',valor:'6',descripcion:'Más resiliencia: se ahorra recién después de juntar 6 meses de gasto.'}],
+  reglas:[
+    {k:'r1',cuando:'deuda > 0 && pesos >= deuda',nivel:'atencion',fuerza:5,titulo:'Deuda cubierta: cortá el bucle',texto:'Debés {deuda} y tenés {pesos} en pesos. Cada mes cuesta {interes} de interés.'},
+    {k:'r2',cuando:'colchon < colchon_meses',nivel:'atencion',fuerza:11,titulo:'Colchón por debajo del objetivo',texto:'Tenés {colchon} de gasto en pesos; el objetivo es {colchon_meses}.'},
+    {k:'r3',cuando:'a_fondo + a_dolares == 0 && tasa_liquida < inflacion',nivel:'atencion',fuerza:10,titulo:'El ahorro se queda en pesos que pierden',texto:'Lo que pasa el colchón queda en pesos líquidos que rinden {tasa_liquida} por mes contra {inflacion} de inflación. Elegí un método de ahorro.'},
+    {k:'r4',cuando:'neto_real_fin < neto_real',nivel:'critico',fuerza:7,titulo:'El sistema se descapitaliza',texto:'El patrimonio real pasa de {neto_real} a {neto_real_fin} en {H} meses.'}],
   info:[{k:'i1',senal:'pesos',quien:'yo',cada:'cuando llega el resumen',retardo:1},{k:'i2',senal:'neto_real',quien:'yo',cada:'una vez por mes en esta página',retardo:0}],
-  normas:[{k:'n1',texto:'La tarjeta solo para cuotas sin interés',afecta:'deuda'},{k:'n2',texto:'Lo que excede el colchón se dolariza',afecta:'compra_d'}],
+  normas:[{k:'n1',texto:'La tarjeta solo para cuotas sin interés',afecta:'deuda'},{k:'n2',texto:'Primero el colchón, después el ahorro',afecta:'colchon_meses'}],
   auto:'Puedo abrir una fuente de ingreso nueva, o cerrar el stock de deuda para siempre con una regla.',
   meta:'Un año de libertad para elegir proyectos',metaValor:40000000,metaPlazo:24,
-  paradigma:'La plata es tiempo libre comprado por adelantado.',trascender:'Medir meses de libertad en vez de pesos cambiaría qué palancas importan.',
-  stocks:[{k:'pesos',nombre:'Pesos líquidos',inicial:400000,unidad:'$',min0:true,carril:'Lo que tengo'},{k:'dolares',nombre:'Dólares ahorrados',inicial:5000,unidad:'USD',min0:true,carril:'Lo que tengo'},{k:'inversiones',nombre:'Inversiones',inicial:0,unidad:'$',min0:true,carril:'Lo que tengo'},{k:'deuda',nombre:'Deuda de tarjeta',inicial:300000,unidad:'$',min0:true,carril:'Lo que debo'}],
-  params:[{k:'ingreso',nombre:'Ingreso mensual',valor:3000000,nota:'típico'},{k:'tipo_cambio',nombre:'Tipo de cambio hoy',valor:1535,unidad:'$',nota:'oficial venta 13-oct-2026; el dólar sigue la inflación',externo:true},{k:'gastos',nombre:'Gastos mensuales',valor:1135000,nota:'fijos + variables'},{k:'inflacion',nombre:'Inflación mensual',valor:0.019,unidad:'%',nota:'INDEC sep-2026',externo:true},{k:'ajuste_anual',nombre:'Crecimiento anual del ingreso',valor:0.21,unidad:'%',nota:'10 % cada 6 meses'},{k:'tasa_inv',nombre:'Rendimiento inversión (mensual)',valor:0.03,unidad:'%',nota:''},{k:'tasa_deuda',nombre:'Interés de la tarjeta (mensual)',valor:0.08,unidad:'%',nota:''},{k:'pago_deuda',nombre:'Pago mensual de la deuda',valor:50000,nota:'la cuota que pagás por mes'},{k:'ahorro_auto',nombre:'Ahorro automático (fracción del sobrante)',valor:0,unidad:'%',nota:'0 a 1'},{k:'compra_usd',nombre:'Compra mensual de dólares',valor:0,unidad:'USD',nota:'0 = no comprás'}],
-  flujos:[{k:'entra_ingreso',nombre:'Ingreso',desde:'',hacia:'pesos',formula:'ingreso * (1 + ajuste_anual) ^ (t / 12)'},{k:'salen_gastos',nombre:'Gastos',desde:'pesos',hacia:'',formula:'gastos * (1 + inflacion) ^ t'},{k:'ahorro',nombre:'Ahorro automático',desde:'pesos',hacia:'inversiones',formula:'max(0, ingreso * (1 + ajuste_anual) ^ (t / 12) - gastos * (1 + inflacion) ^ t) * ahorro_auto'},{k:'rendimiento',nombre:'Rendimiento',desde:'',hacia:'inversiones',formula:'inversiones * tasa_inv'},{k:'interes',nombre:'Interés de la deuda',desde:'',hacia:'deuda',formula:'deuda * tasa_deuda'},{k:'pago_p',nombre:'Pago de deuda (sale de pesos)',desde:'pesos',hacia:'',formula:'min(deuda, min(pesos, pago_deuda))'},{k:'pago_d',nombre:'Pago de deuda (baja la deuda)',desde:'deuda',hacia:'',formula:'min(deuda, min(pesos, pago_deuda))'},{k:'compra_p',nombre:'Compra de dólares (sale de pesos)',desde:'pesos',hacia:'',formula:'if(pesos >= compra_usd * tipo_cambio * (1 + inflacion) ^ t, compra_usd * tipo_cambio * (1 + inflacion) ^ t, 0)'},{k:'compra_d',nombre:'Compra de dólares (entran USD)',desde:'',hacia:'dolares',formula:'if(pesos >= compra_usd * tipo_cambio * (1 + inflacion) ^ t, compra_usd, 0)'}],
-  indicadores:[{k:'dolares_en_pesos',nombre:'Dólares en pesos',formula:'dolares * tipo_cambio * (1 + inflacion) ^ t',unidad:'$'},{k:'neto',nombre:'Patrimonio neto',formula:'pesos + dolares_en_pesos + inversiones - deuda',unidad:'$'},{k:'neto_real',nombre:'Patrimonio neto real',formula:'neto / (1 + inflacion) ^ t',unidad:'$'},{k:'colchon',nombre:'Colchón',formula:'(pesos + dolares_en_pesos) / (gastos * (1 + inflacion) ^ t)',unidad:'meses'}],
-  palancas:[{k:'p0',nombre:'Pagar la deuda hoy con los pesos',fuerza:5,tipo:'stock',campo:'deuda',valor:'deuda = deuda - min(deuda, pesos); pesos = pesos - min(deuda, pesos)',descripcion:'Regla: la deuda se cancela de una vez en lugar de ir pagando la cuota.'},{k:'p6',nombre:'Comprar 200 USD por mes',fuerza:10,tipo:'param',campo:'compra_usd',valor:'200',descripcion:'Estructura: una compra fija que saca pesos de la inflación todos los meses.'},{k:'p1',nombre:'Recortar 5 % de gastos',fuerza:12,tipo:'param',campo:'gastos',valor:'gastos * 0.95',descripcion:'Un recorte sostenido con voluntad.'},{k:'p5',nombre:'Dolarizar lo que excede 3 meses de gasto',fuerza:10,tipo:'stock',campo:'pesos',valor:'pesos = min(pesos, 3 * gastos); dolares = dolares + max(0, pesos - 3 * gastos) / tipo_cambio',descripcion:'Estructura: los pesos de más dejan de perder contra la inflación.'},{k:'p2',nombre:'Ahorro automático al 50 %',fuerza:10,tipo:'param',campo:'ahorro_auto',valor:'0.5',descripcion:'Cambia la estructura: el sobrante se invierte solo.'},{k:'p3',nombre:'Indexar el ingreso a la inflación',fuerza:9,tipo:'param',campo:'ajuste_anual',valor:'(1 + inflacion) ^ 12 - 1',descripcion:'Acorta el retardo del ajuste.'},{k:'p4',nombre:'Colchón inicial de 3 meses',fuerza:11,tipo:'stock',campo:'pesos',valor:'max(pesos, 3 * gastos)',descripcion:'Buffer: tener 3 meses de gasto en pesos desde hoy.'}],
-  reglas:[{k:'r1',cuando:'deuda > 0 && pesos >= deuda',nivel:'atencion',fuerza:5,titulo:'Deuda cubierta: cortá el bucle hoy',texto:'Debés {deuda} y tenés {pesos}. Cada mes de espera cuesta {interes} de interés. Activá "Pagar la deuda hoy" y el bucle vicioso se apaga.'},{k:'r2',cuando:'deuda > 0 && pesos < deuda',nivel:'critico',fuerza:5,titulo:'Desplazar la carga',texto:'La deuda ({deuda}) supera la liquidez ({pesos}). El sobrante tiene que ir entero a la deuda antes que a cualquier inversión.'},{k:'r3',cuando:'colchon < 3',nivel:'atencion',fuerza:11,titulo:'Colchón corto',texto:'Tenés {colchon} de gasto en pesos. Un buffer de 3 a 6 meses absorbe shocks sin activar la deuda.'},{k:'r4',cuando:'ahorro_auto == 0 && ingreso > gastos',nivel:'atencion',fuerza:10,titulo:'El ahorro depende de la voluntad',texto:'Sobran {entra_ingreso} menos {salen_gastos} por mes y nada va solo a inversión. La inflación se come lo que queda en pesos.'},{k:'r5',cuando:'neto_real_fin < neto_real',nivel:'critico',fuerza:7,titulo:'El sistema se descapitaliza',texto:'El patrimonio real pasa de {neto_real} a {neto_real_fin} en {H} meses. Algún bucle vicioso domina.'}]};}
+  paradigma:'La plata es tiempo libre comprado por adelantado.',trascender:'Medir meses de libertad en vez de pesos cambiaría qué palancas importan.'};}
 function tplNegocio(){return {id:uid(),nombre:'Caja de un local',horizonte:12,unidad:'mes',objetivo:'caja',maximizar:1,formato:'ars',
   contexto:'Un local gastronómico: ventas diarias, insumos comprados a proveedores con plazo, costos fijos, y el retiro del dueño. El stock crítico es la caja.',
   info:[{k:'i1',senal:'caja',quien:'el dueño',cada:'todos los días',retardo:0},{k:'i2',senal:'margen',quien:'el contador',cada:'cada mes',retardo:1}],
@@ -722,11 +761,11 @@ function tplNegocio(){return {id:uid(),nombre:'Caja de un local',horizonte:12,un
   paradigma:'El local es una máquina de caja, no un hobby.',trascender:'',
   stocks:[{k:'caja',nombre:'Caja',inicial:2000000,unidad:'$',min0:false,carril:'Plata'},{k:'proveedores',nombre:'Deuda con proveedores',inicial:1500000,unidad:'$',min0:true,carril:'Lo que se debe'}],
   params:[{k:'ventas_dia',nombre:'Ventas por día',valor:400000,nota:''},{k:'dias',nombre:'Días abiertos por mes',valor:26,unidad:'días',nota:''},{k:'insumos',nombre:'Costo de insumos (fracción de ventas)',valor:0.35,unidad:'%',nota:''},{k:'fijos',nombre:'Costos fijos mensuales',valor:5000000,nota:'alquiler, sueldos, servicios'},{k:'retiro',nombre:'Retiro del dueño',valor:3000000,nota:''},{k:'inflacion',nombre:'Inflación mensual',valor:0.019,unidad:'%',nota:'',externo:true},{k:'crecimiento',nombre:'Crecimiento mensual de ventas',valor:0.02,unidad:'%',nota:'precio + volumen',externo:true},{k:'plazo',nombre:'Plazo de pago a proveedores',valor:1,unidad:'meses',nota:'1 = se paga al mes siguiente'}],
-  flujos:[{k:'ventas',nombre:'Ventas',desde:'',hacia:'caja',formula:'ventas_dia * dias * (1 + crecimiento) ^ t'},{k:'compras',nombre:'Compras de insumos',desde:'',hacia:'proveedores',formula:'ventas_dia * dias * (1 + crecimiento) ^ t * insumos'},{k:'pago_prov_c',nombre:'Pago a proveedores (sale de caja)',desde:'caja',hacia:'',formula:'proveedores / plazo'},{k:'pago_prov_p',nombre:'Pago a proveedores (baja la deuda)',desde:'proveedores',hacia:'',formula:'proveedores / plazo'},{k:'costos_fijos',nombre:'Costos fijos',desde:'caja',hacia:'',formula:'fijos * (1 + inflacion) ^ t'},{k:'retiros',nombre:'Retiro del dueño',desde:'caja',hacia:'',formula:'retiro'}],
+  flujos:[{k:'ventas',nombre:'Ventas',desde:'',hacia:'caja',formula:'ventas_dia * dias * (1 + crecimiento) ^ t'},{k:'compras',nombre:'Compras de insumos',desde:'',hacia:'proveedores',formula:'ventas_dia * dias * (1 + crecimiento) ^ t * insumos'},{k:'pago_prov',nombre:'Pago a proveedores',desde:'caja',hacia:'proveedores',formula:'proveedores / plazo',factor:'-1'},{k:'costos_fijos',nombre:'Costos fijos',desde:'caja',hacia:'',formula:'fijos * (1 + inflacion) ^ t'},{k:'retiros',nombre:'Retiro del dueño',desde:'caja',hacia:'',formula:'retiro'}],
   indicadores:[{k:'margen',nombre:'Margen del mes',formula:'ventas - compras - costos_fijos',unidad:'$'},{k:'dias_caja',nombre:'Días de caja',formula:'caja / ((fijos * (1 + inflacion) ^ t + proveedores / plazo) / dias)',unidad:'días'}],
   palancas:[{k:'p1',nombre:'Subir precios 5 %',fuerza:12,tipo:'param',campo:'ventas_dia',valor:'ventas_dia * 1.05',descripcion:'Parámetro: rápido, con riesgo de volumen.'},{k:'p2',nombre:'Bajar insumos a 30 %',fuerza:12,tipo:'param',campo:'insumos',valor:'0.30',descripcion:'Negociar o cambiar proveedores.'},{k:'p3',nombre:'Estirar el plazo a 2 meses',fuerza:9,tipo:'param',campo:'plazo',valor:'2',descripcion:'Retardo: mejora la caja, no el margen.'},{k:'p4',nombre:'Bajar el retiro a 2,5 M',fuerza:3,tipo:'param',campo:'retiro',valor:'2500000',descripcion:'Meta: cuánto le pedís al negocio.'}],
   reglas:[{k:'r1',cuando:'caja_min < 0',nivel:'critico',fuerza:11,titulo:'La caja se agota',texto:'En el horizonte la caja llega a {caja_min}. Falta buffer o sobra retiro.'},{k:'r2',cuando:'margen < retiro',nivel:'atencion',fuerza:3,titulo:'El retiro supera el margen',texto:'El negocio deja {margen} y retirás {retiro}: la diferencia sale de la caja o de los proveedores.'},{k:'r3',cuando:'dias_caja < 15',nivel:'atencion',fuerza:11,titulo:'Pocos días de caja',texto:'Tenés {dias_caja} de caja. Un mes malo activa la deuda con proveedores.'}]};}
-const TPL=[{n:'Vacío',f:tplVacio,d:'Empezá de cero.'},{n:'Finanzas personales',f:tplFinanzas,d:'Pesos, inversiones, deuda, inflación.'},{n:'Caja de un local',f:tplNegocio,d:'Ventas, proveedores, fijos, retiro.'}];
+const TPL=[{n:'Vacío',f:tplVacio,d:'Empezá de cero.'},{n:'Finanzas personales',f:tplFinanzas,d:'Pesos, fondo, dólares, deuda; el método de ahorro como palanca.'},{n:'Caja de un local',f:tplNegocio,d:'Ventas, proveedores, fijos, retiro.'}];
 
 /* ---------- estado ---------- */
 let LIB=[],M=null,DB=null,dirty=false,saveT=null,saving=false,pending=false,errs=[];
@@ -742,7 +781,7 @@ function normalize(m){
 function simular(m){
   const H=m.horizonte;
   const comp=(src,who)=>{try{return compile(src);}catch(e){errs.push(who+': '+e.message);return {fn:()=>0,vars:[]};}};
-  const fl=m.flujos.map(f=>({...f,c:comp(f.formula,'flujo "'+(f.nombre||f.k)+'"')}));
+  const fl=m.flujos.map(f=>({...f,c:comp(f.formula,'flujo "'+(f.nombre||f.k)+'"'),fc:f.factor&&String(f.factor).trim()?comp(f.factor,'factor de "'+(f.nombre||f.k)+'"'):null}));
   const ind=m.indicadores.map(x=>({...x,c:comp(x.formula,'indicador "'+(x.nombre||x.k)+'"')}));
   const st={};for(const s of m.stocks)st[s.k]=s.inicial||0;
   const base={};for(const p of m.params)base[p.k]=p.valor||0;
@@ -759,7 +798,7 @@ function simular(m){
     const row={t,i,...st,...fv,...iv,_clamp:[]};rows.push(row);
     if(i===H)break;
     const inn={},out={};for(const s of m.stocks){inn[s.k]=0;out[s.k]=0;}
-    for(const f of fl){const v=fv[f.k];if(f.desde&&out[f.desde]!==undefined)out[f.desde]+=v;if(f.hacia&&inn[f.hacia]!==undefined)inn[f.hacia]+=v;}
+    for(const f of fl){const v=fv[f.k];if(f.desde&&out[f.desde]!==undefined)out[f.desde]+=v;if(f.hacia&&inn[f.hacia]!==undefined)inn[f.hacia]+=v*(f.fc?safe(f.fc,sc,'factor de "'+(f.nombre||f.k)+'"'):1);}
     for(const s of m.stocks){let nv=st[s.k]+inn[s.k]-out[s.k];if(s.min0&&nv<-1e-9){nv=0;row._clamp.push(s.k);}st[s.k]=nv;}
   }
   return rows;
@@ -790,7 +829,7 @@ function aplicarPalanca(m,pl){
 /* ---------- render: editor ---------- */
 const COLS={
   stocks:{grid:'minmax(0,1.3fr) minmax(90px,.8fr) minmax(110px,.9fr) minmax(70px,.5fr) minmax(90px,.8fr) 90px 28px',cols:[['nombre','text','nombre'],['k','key','clave'],['inicial','number','0'],['unidad','text','unidad'],['carril','carril','opcional'],['min0','check','']]},
-  flujos:{grid:'minmax(0,1fr) minmax(100px,.7fr) minmax(100px,.7fr) minmax(0,1.6fr) 28px',cols:[['nombre','text','nombre'],['desde','stocksel',''],['hacia','stocksel',''],['formula','formula','fórmula']]},
+  flujos:{grid:'minmax(0,1fr) minmax(100px,.7fr) minmax(100px,.7fr) minmax(0,1.6fr) minmax(64px,.45fr) 28px',cols:[['nombre','text','nombre'],['desde','stocksel',''],['hacia','stocksel',''],['formula','formula','fórmula'],['factor','formula','1']]},
   params:{grid:'minmax(0,1.3fr) minmax(90px,.8fr) minmax(110px,.9fr) minmax(60px,.4fr) minmax(0,1fr) 70px 28px',cols:[['nombre','text','nombre'],['k','key','clave'],['valor','number','0'],['unidad','text','unidad'],['nota','text','nota'],['externo','check','']]},
   indicadores:{grid:'minmax(0,1fr) minmax(90px,.7fr) minmax(0,1.8fr) minmax(60px,.4fr) 28px',cols:[['nombre','text','nombre'],['k','key','clave'],['formula','formula','fórmula'],['unidad','text','unidad']]},
   palancas:{grid:'minmax(0,1.2fr) 60px minmax(90px,.7fr) minmax(90px,.8fr) minmax(90px,.8fr) minmax(0,1.3fr) 28px',cols:[['nombre','text','nombre'],['fuerza','fuerza',''],['tipo','tiposel',''],['campo','camposel',''],['valor','formula','nuevo valor'],['descripcion','text','por qué']]},
@@ -1004,11 +1043,11 @@ function quedarme(){
 
 /* ---------- deslizadores ---------- */
 function renderProbar(){
-  const ps=M.params.filter(p=>!p.externo&&typeof p.valor==='number');
+  const ps=[...M.params.filter(p=>!p.externo&&typeof p.valor==='number'),...M.params.filter(p=>p.externo&&typeof p.valor==='number')];
   const box=$('probar');const keys=ps.map(p=>p.k).join('|');
   if(box.dataset.keys!==keys){
     box.dataset.keys=keys;
-    box.innerHTML=ps.length?ps.map(p=>{const hoy=p.valor||0;const cur=OVR[p.k]??hoy;const max=hoy>0&&hoy<=1?1:Math.abs(hoy)*2||10;const step=nice((max)/100);return `<label class="pb" data-k="${esc(p.k)}"><span class="pb-top"><span>${esc(p.nombre||p.k)}</span><b>${fmtV(cur,p.k)}</b></span><input type="range" data-ovr="${esc(p.k)}" min="0" max="${max}" step="${step}" value="${cur}"><small>hoy <span class="pb-hoy">${fmtV(hoy,p.k)}</span>${p.nota?' · '+esc(p.nota):''}</small></label>`;}).join(''):'<p class="muted">No hay parámetros propios para mover. Marcá en Describir cuáles controlás.</p>';
+    box.innerHTML=ps.length?ps.map(p=>{const hoy=p.valor||0;const cur=OVR[p.k]??hoy;const max=p.unidad==='%'?Math.min(1,Math.max(0.05,Math.abs(hoy)*3)):hoy>0&&hoy<=1?1:Math.abs(hoy)*2||10;const step=nice((max)/100);return `<label class="pb" data-k="${esc(p.k)}"><span class="pb-top"><span>${esc(p.nombre||p.k)}${p.externo?' <i class="ext-tag">externo</i>':''}</span><b>${fmtV(cur,p.k)}</b></span><input type="range" data-ovr="${esc(p.k)}" min="0" max="${max}" step="${step}" value="${cur}"><small>hoy <span class="pb-hoy">${fmtV(hoy,p.k)}</span>${p.nota?' · '+esc(p.nota):''}</small></label>`;}).join(''):'<p class="muted">No hay parámetros propios para mover. Marcá en Describir cuáles controlás.</p>';
   }
   for(const p of ps){const el=box.querySelector(`.pb[data-k="${p.k}"]`);if(!el)continue;const hoy=p.valor||0;const cur=OVR[p.k]??hoy;el.classList.toggle('distinto',cur!==hoy);el.querySelector('b').textContent=fmtV(cur,p.k);el.querySelector('.pb-hoy').textContent=fmtV(hoy,p.k);const inp=el.querySelector('input');if(document.activeElement!==inp)inp.value=cur;}
   $('probar-btns').hidden=!Object.keys(OVR).length;
@@ -1082,7 +1121,7 @@ function bucles(ME,r0){
   const st=ME.stocks.map(s=>s.k);if(!st.length||!r0)return [];
   const base={};for(const p of ME.params)base[p.k]=p.valor||0;
   const sc0={...base,H:ME.horizonte,t:r0.t};for(const k of st)sc0[k]=r0[k];
-  const fl=ME.flujos.map(f=>{let c;try{c=compile(f.formula).fn;}catch(e){c=()=>0;}return {...f,c};});
+  const fl=ME.flujos.map(f=>{let c,fc=null;try{c=compile(f.formula).fn;}catch(e){c=()=>0;}try{if(f.factor&&String(f.factor).trim())fc=compile(f.factor).fn;}catch(e){}return {...f,c,fc};});
   const ev=(c,sc)=>{try{const v=c(sc);return isFinite(v)?v:0;}catch(e){return 0;}};
   const edges=[];
   for(const f of fl){
@@ -1093,9 +1132,10 @@ function bucles(ME,r0){
       const rel=Math.abs(d*h)/(Math.abs(v0)+Math.abs(d*h)+1e-9);
       if(rel<1e-6)continue;
       const sign1=d>0?1:-1;
-      for(const [T,sign2] of [[f.hacia,1],[f.desde,-1]]){
+      const fk=f.fc?ev(f.fc,sc0):1;
+      for(const [T,sign2,mul] of [[f.hacia,fk<0?-1:1,Math.abs(fk)],[f.desde,-1,1]]){
         if(!T||!st.includes(T))continue;
-        edges.push({from:S,via:f,to:T,s1:sign1,s2:sign2,sign:sign1*sign2,g:Math.abs(d)});
+        edges.push({from:S,via:f,to:T,s1:sign1,s2:sign2,sign:sign1*sign2,g:Math.abs(d)*mul});
       }
     }
   }
@@ -1109,7 +1149,7 @@ function bucles(ME,r0){
     }
   }
   for(const S of st)dfs(S,S,[],1);
-  for(const b of out)b.peso=b.g*Math.max(...b.edges.map(e=>Math.abs(r0[e.via.k]||0)));
+  for(const b of out)b.peso=b.g*Math.max(...b.edges.map(e=>Math.abs(r0[e.from]||0)));
   return out.sort((a,b)=>b.peso-a.peso);
 }
 function wrapTxt(t,max){const L=[];let cur='';for(const w of String(t).split(' ')){if(cur&&(cur+' '+w).length>max){L.push(cur);cur=w;}else cur=cur?cur+' '+w:w;}if(cur)L.push(cur);return L;}
@@ -1193,6 +1233,7 @@ function renderDiagram(sim,tc,loops){
     const hlA=A&&sel&&sel.edges.some(e=>e.via.k===f.k&&e.to===A),hlB=B&&sel&&sel.edges.some(e=>e.via.k===f.k&&e.to===B);
     pipes+=`<line class="pipe${a}${dd}${hlA?' hl':''}" style="stroke-width:${w}" x1="${sx.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${p1x.toFixed(1)}" y2="${p1y.toFixed(1)}"/><line class="pipe${a}${dd}${hlB?' hl':''}" style="stroke-width:${w}" x1="${p2x.toFixed(1)}" y1="${p2y.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" marker-end="url(#ahp)"/>`;
     const nrm=(x1,y1,x2,y2)=>{const dx=x2-x1,dy=y2-y1,d=Math.max(1,Math.hypot(dx,dy));return [dx/d,dy/d];};
+    if(B&&f.factor&&String(f.factor).trim()){let fk=1;try{const sc2={...r,H:M.horizonte};for(const p of (lastME||M).params)sc2[p.k]=p.valor||0;fk=compile(f.factor).fn(sc2);}catch(e){}const [ux,uy]=nrm(vx,vy,ex,ey);const ua=(M.stocks.find(q=>q.k===f.desde)||{}).unidad||'',ub=(M.stocks.find(q=>q.k===f.hacia)||{}).unidad||'';if(fk<0)marks+=sg(ex-ux*20-uy*11,ey-uy*20+ux*11,'−',' neg'+dd);else if(ua&&ub&&ua!==ub)marks+=`<text class="conv${dd}" x="${(ex-ux*26-uy*12).toFixed(1)}" y="${(ey-uy*26+ux*12+3).toFixed(1)}">${esc(ua+'→'+ub)}</text>`;}
     nodes+=`<g class="vnode${dd}${nodeOn(f.k)?' hl':''}" data-node="${esc(f.k)}"><title>${esc((f.nombre||f.k)+': '+fmtV(v,f.k)+'\n= '+f.formula)}</title><circle cx="${vx.toFixed(1)}" cy="${vy.toFixed(1)}" r="11"/><path d="M${(vx-6).toFixed(1)} ${(vy-6).toFixed(1)} L${(vx+6).toFixed(1)} ${(vy+6).toFixed(1)} L${(vx+6).toFixed(1)} ${(vy-6).toFixed(1)} L${(vx-6).toFixed(1)} ${(vy+6).toFixed(1)}Z"/>${(()=>{let ls=wrapTxt(f.nombre||f.k,18);if(ls.length>2)ls=[ls[0],cut(ls.slice(1).join(' '),18)];return ls.map((l,j)=>`<text class="vn" x="${vx.toFixed(1)}" y="${(vy+25+j*12).toFixed(1)}">${esc(l)}</text>`).join('')+`<text class="vv" x="${vx.toFixed(1)}" y="${(vy+26+ls.length*12).toFixed(1)}">${fmtV(v,f.k)}</text>`;})()}</g>`;
   }
   for(const l of links){if(!P[l.from]||!P[l.to]||l.sign===0)continue;
@@ -1284,7 +1325,7 @@ function moverPalanca(k,d){const L=M.palancas;const i=L.findIndex(p=>p.k===k),j=
 
 /* ---------- ayudante de fórmulas: tocar para armar ---------- */
 let FXEL=null,FXT=0;
-function fxEs(el){return el&&el.tagName==='INPUT'&&(el.id==='np-valor'||['formula','valor','cuando'].includes(el.dataset.field));}
+function fxEs(el){return el&&el.tagName==='INPUT'&&(el.id==='np-valor'||['formula','valor','cuando','factor'].includes(el.dataset.field));}
 function fxTipo(k){if(M.stocks.some(s=>s.k===k))return 'st';if(M.params.some(p=>p.k===k))return 'pa';if(M.flujos.some(f=>f.k===k))return 'fl';if(M.indicadores.some(x=>x.k===k))return 'in';return '';}
 function fxScope(){const sc={t:M.t0||0,H:M.horizonte};const r0=(lastBase&&lastBase[0])||{};for(const s of M.stocks)sc[s.k]=s.inicial||0;for(const f of M.flujos)sc[f.k]=r0[f.k]??0;for(const x of M.indicadores)sc[x.k]=r0[x.k]??0;for(const p of M.params)sc[p.k]=p.valor||0;return sc;}
 function fxLeer(src){return esc(String(src).replace(/\*/g,' × ').replace(/\//g,' ÷ ')).replace(/[A-Za-z_][A-Za-z0-9_]*/g,w=>{if(FN[w])return `<i>${w==='if'?'si':w}</i>`;if(w==='t')return '<b class="fx-t">el paso</b>';const tp=fxTipo(w);return tp?`<b class="fx-${tp}">${esc(nombreDe(w))}</b>`:w;}).replace(/\s+/g,' ');}
@@ -1295,7 +1336,7 @@ function fxPrev(){
   const sc=fxScope();
   try{
     if(ES_ASG(src)&&FXEL.dataset.field!=='cuando'){box.innerHTML=src.split(';').map(s=>s.trim()).filter(Boolean).map(s=>{const i=s.indexOf('=');const k=s.slice(0,i).trim(),e=s.slice(i+1).trim();const v=compile(e).fn(sc);return `<div><b class="fx-${fxTipo(k)}">${esc(nombreDe(k))}</b> pasa a ${fxLeer(e)} <span class="fx-v">= ${fmtV(v,k)}</span></div>`;}).join('');}
-    else{const v=compile(src).fn(sc);box.innerHTML=`<div>${fxLeer(src)}</div><div class="fx-v">${FXEL.dataset.field==='cuando'?(v?'hoy se cumple':'hoy no se cumple'):'= '+fmtV(v,fxUnidad())+' hoy'}</div>`;}
+    else{const v=compile(src).fn(sc);const fd=FXEL.dataset.field;box.innerHTML=`<div>${fxLeer(src)}</div><div class="fx-v">${fd==='cuando'?(v?'hoy se cumple':'hoy no se cumple'):fd==='factor'?'× '+(Math.abs(v)<0.01&&v!==0?v.toPrecision(3):nf2.format(v))+' hoy':'= '+fmtV(v,fxUnidad())+' hoy'}</div>`;}
     FXEL.classList.remove('err');
   }catch(e){box.innerHTML=`<span class="fx-err">${esc(e.message)}</span>`;}
 }
@@ -1514,16 +1555,16 @@ async function save(){
   saveLocal();
   if(!DB){setStatus('Guardado en este navegador');return;}
   if(saving){pending=true;return;}saving=true;
-  try{await DB.collection('modelos').doc(M.id).set(M);setStatus('Guardado '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}));}
+  try{await DB.collection('modelos2').doc(M.id).set(M);setStatus('Guardado '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}));}
   catch(e){setStatus('No se pudo guardar en la nube; queda en este navegador');}
   finally{saving=false;if(pending){pending=false;save();}}
 }
-async function deleteRemote(id){if(DB){try{await DB.collection('modelos').doc(id).delete();}catch(e){}}}
+async function deleteRemote(id){if(DB){try{await DB.collection('modelos2').doc(id).delete();}catch(e){}}}
 function loadLocal(){try{const r=localStorage.getItem(KEY);if(r){const L=JSON.parse(r);if(Array.isArray(L)&&L.length)LIB=L.map(normalize);}}catch(e){}}
 async function initDb(){
   try{
     const db=await window.claude?.use?.('db');if(!db){setStatus('Guardado en este navegador');return;}
-    DB=db;const snap=await db.collection('modelos').get();
+    DB=db;const snap=await db.collection('modelos2').get();
     if(!snap.empty&&!dirty){LIB=snap.docs.map(d=>normalize(d.data()));let cur=null;try{cur=localStorage.getItem(KEY+'-cur');}catch(e){}M=LIB.find(x=>x.id===cur)||LIB[0];vis=null;renderLib();renderEditor();compute();}
     setStatus(snap.empty?'Los cambios se guardan solos':'Sincronizado');
   }catch(e){setStatus('Guardado en este navegador');}
