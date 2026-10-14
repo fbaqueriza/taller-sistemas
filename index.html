@@ -170,6 +170,9 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 .step.ahora i{background:var(--accent);color:#fff}
 .step.ahora em{color:var(--accent-ink)}
 .muted{color:var(--muted);margin:0}
+#tab-describir.basic .adv{display:none}
+#btn-adv{white-space:nowrap}
+#btn-adv.on{background:var(--accent-soft);color:var(--accent-ink);border-color:var(--accent)}
 .capas{display:grid;gap:8px}
 .capa{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;padding:14px 16px;border-radius:6px;border:1px solid var(--line);background:var(--surface);border-left-width:5px}
 .capa.intencion{border-left-color:var(--c-int)}.capa.diseno{border-left-color:var(--c-dis)}.capa.retro{border-left-color:var(--c-ret)}
@@ -242,18 +245,21 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
   </div>
 </section>
 
-<section class="tab" id="tab-describir" hidden>
-  <p class="note">Tres cosas definen un sistema: qué se acumula (stocks), qué lo mueve (flujos) y los números que usan (parámetros). Las palancas son lo que podés cambiar. Indicadores y reglas son opcionales.</p>
+<section class="tab basic" id="tab-describir" hidden>
+  <div class="btns" style="justify-content:space-between;align-items:flex-start">
+    <p class="note">Tres cosas definen un sistema: qué se acumula (stocks), qué lo mueve (flujos) y los números que usan (parámetros). Las palancas son lo que podés cambiar.</p>
+    <button id="btn-adv" title="indicadores, diseño, intención, reglas de lectura, formato">Mostrar avanzado</button>
+  </div>
   <div class="panel">
     <div class="fields">
       <div class="field"><label for="m-nombre">Nombre del sistema</label><input type="text" id="m-nombre" data-m="nombre"></div>
       <div class="field"><label for="m-horizonte">Horizonte (pasos)</label><input type="number" id="m-horizonte" data-m="horizonte" min="2" max="240" step="1"></div>
-      <div class="field"><label for="m-unidad">Unidad de tiempo</label><input type="text" id="m-unidad" data-m="unidad" placeholder="mes"></div>
-      <div class="field"><label for="m-objetivo">Indicador objetivo</label><select id="m-objetivo" data-m="objetivo"></select><span class="hint">lo que la sensibilidad intenta mejorar</span></div>
+      <div class="field adv"><label for="m-unidad">Unidad de tiempo</label><input type="text" id="m-unidad" data-m="unidad" placeholder="mes"></div>
+      <div class="field"><label for="m-objetivo">Indicador objetivo</label><select id="m-objetivo" data-m="objetivo"></select><span class="hint">lo que las palancas intentan mejorar</span></div>
       <div class="field"><label for="m-maximizar">Sentido</label><select id="m-maximizar" data-m="maximizar"><option value="1">Cuanto más, mejor</option><option value="0">Cuanto menos, mejor</option></select></div>
-      <div class="field"><label for="m-moneda">Formato de valores</label><select id="m-moneda" data-m="formato"><option value="num">Número</option><option value="ars">Pesos ($)</option><option value="pct">Porcentaje</option></select></div>
+      <div class="field adv"><label for="m-moneda">Formato de valores</label><select id="m-moneda" data-m="formato"><option value="num">Número</option><option value="ars">Pesos ($)</option><option value="pct">Porcentaje</option></select></div>
     </div>
-    <div class="field" style="margin-top:10px"><label for="m-contexto">Contexto <small>qué es este sistema, para quién, qué lo rodea</small></label><textarea id="m-contexto" data-m="contexto" rows="3" placeholder="Notas libres. No se simulan, pero quedan con el modelo."></textarea></div>
+    <div class="field adv" style="margin-top:10px"><label for="m-contexto">Contexto <small>qué es este sistema, para quién, qué lo rodea</small></label><textarea id="m-contexto" data-m="contexto" rows="3" placeholder="Notas libres. No se simulan, pero quedan con el modelo."></textarea></div>
   </div>
   <div id="errores" class="errbox" hidden></div>
 
@@ -287,8 +293,8 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
     </div>
   </details>
 
-  <details class="grp">
-    <summary><span>Indicadores <small>opcional · medidas derivadas</small></span><b id="n-indicadores"></b></summary>
+  <details class="grp adv">
+    <summary><span>Indicadores <small>medidas derivadas</small></span><b id="n-indicadores"></b></summary>
     <div class="grp-body">
       <p class="hint-p">Fórmulas sobre stocks, parámetros, flujos y <code>t</code>. Uno de ellos es el objetivo del sistema.</p>
       <div class="row row-head" style="grid-template-columns:minmax(0,1fr) minmax(90px,.7fr) minmax(0,1.8fr) minmax(60px,.4fr) 28px"><span>Nombre</span><span>Clave</span><span>Fórmula</span><span>Unidad</span><span></span></div>
@@ -307,7 +313,7 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
     </div>
   </details>
 
-  <details class="grp" open>
+  <details class="grp adv" open>
     <summary><span>Diseño <small>información · reglas · auto-organización</small></span><b id="n-diseno"></b></summary>
     <div class="grp-body">
       <p class="hint-p">La capa de diseño de Meadows: quién ve qué y cuándo, qué reglas gobiernan el sistema, y cómo puede cambiar su propia estructura. No se simula, pero se visualiza y entra en el camino.</p>
@@ -323,7 +329,7 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
     </div>
   </details>
 
-  <details class="grp" open>
+  <details class="grp adv" open>
     <summary><span>Intención <small>meta · paradigma · trascender</small></span><b id="n-intencion"></b></summary>
     <div class="grp-body">
       <p class="hint-p">Las capas más fuertes. La meta le da referencia al bucle de balance; el paradigma decide qué meta vale la pena; trascender es saber que ese paradigma es uno entre varios.</p>
@@ -337,8 +343,8 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
     </div>
   </details>
 
-  <details class="grp">
-    <summary><span>Reglas de lectura <small>opcional · cuándo avisar</small></span><b id="n-reglas"></b></summary>
+  <details class="grp adv">
+    <summary><span>Reglas de lectura <small>cuándo avisar</small></span><b id="n-reglas"></b></summary>
     <div class="grp-body">
       <p class="hint-p">Una condición sobre el estado inicial o final. Además de las claves normales, podés usar <code>clave_fin</code>, <code>clave_min</code> y <code>clave_max</code> (valor al final, mínimo y máximo en el horizonte) y <code>H</code>. En el texto, <code>{clave}</code> se reemplaza por el valor.</p>
       <div class="row row-head" style="grid-template-columns:minmax(0,1.4fr) 100px 60px minmax(0,1fr) minmax(0,1.6fr) 28px"><span>Condición</span><span>Nivel</span><span>Fuerza</span><span>Título</span><span>Texto</span><span></span></div>
@@ -814,6 +820,7 @@ function compute(){
   renderCards(C);renderCamino(C,sens);renderCapas(C,sim);
   const box=$('errores');const u=[...new Set(errs)];box.hidden=!u.length;box.innerHTML=u.map(e=>'• '+esc(e)).join('<br>');
   document.querySelectorAll('.tabs [data-tab="describir"]').forEach(b=>b.textContent=u.length?`Describir (${u.length} ${u.length===1?'error':'errores'})`:'Describir');
+  if(u.length&&$('tab-describir').classList.contains('basic')&&u.some(e=>/^(indicador|regla)/.test(e)))setAdv(true);
 }
 
 /* ---------- eventos ---------- */
@@ -957,6 +964,7 @@ document.addEventListener('click',e=>{
   else if(b.dataset.undo){deshacer(b.dataset.undo);return;}
   else if(b.dataset.avanzar){avanzar(+b.dataset.avanzar);return;}
   else if(b.id==='camino-more'){caminoAll=!caminoAll;compute();return;}
+  else if(b.id==='btn-adv'){setAdv(!$('tab-describir').classList.contains('basic')?false:true);return;}
   else if(b.dataset.addsug){const p=M.params.find(x=>x.k===b.dataset.addsug);if(!p)return;const f=b.dataset.f;M.palancas.push({id:uid(),k:'pl_'+uid(),nombre:`${p.nombre||p.k} ${f==='1.1'?'+10 %':'−10 %'}`,fuerza:12,tipo:'param',campo:p.k,valor:`${p.k} * ${f}`,descripcion:'Sugerida por el motor: parámetro sensible. Convertila en algo concreto o subila de fuerza si implica una regla o una estructura.'});renderList('palancas');dirty=true;compute();scheduleSave();return;}
   else if(b.id==='btn-reset'){M.activas=[];dirty=true;compute();scheduleSave();return;}
   else if(b.dataset.open){const m=LIB.find(x=>x.id===b.dataset.open);if(m&&m.id!==M.id)setCurrent(m);return;}
@@ -966,6 +974,11 @@ document.addEventListener('click',e=>{
   dirty=true;compute();scheduleSave();
 });
 document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)showTab(b.dataset.tab);});
+function setAdv(on){
+  const t=$('tab-describir'),b=$('btn-adv');
+  t.classList.toggle('basic',!on);b.classList.toggle('on',on);b.textContent=on?'Ocultar avanzado':'Mostrar avanzado';
+  try{localStorage.setItem(KEY+'-adv',on?'1':'0');}catch(e){}
+}
 function showTab(n){document.querySelectorAll('.tab').forEach(s=>{s.hidden=s.id!=='tab-'+n;});document.querySelectorAll('.tabs [role=tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===n)));try{localStorage.setItem(KEY+'-tab',n);}catch(e){}}
 function setCurrent(m){M=m;vis=null;try{localStorage.setItem(KEY+'-cur',m.id);}catch(e){}renderLib();renderEditor();compute();dirty=true;scheduleSave();}
 
@@ -999,6 +1012,7 @@ let cur=null;try{cur=localStorage.getItem(KEY+'-cur');}catch(e){}
 M=LIB.find(x=>x.id===cur)||LIB[0];
 let tab0='modelos';try{tab0=localStorage.getItem(KEY+'-tab')||'modelos';}catch(e){}
 if(!$('tab-'+tab0))tab0='modelos';showTab(tab0);
+let adv0=false;try{adv0=localStorage.getItem(KEY+'-adv')==='1';}catch(e){}setAdv(adv0);
 renderLib();renderEditor();compute();setStatus('Los cambios se guardan solos');initDb();
 })();
 </script>
