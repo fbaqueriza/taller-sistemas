@@ -130,6 +130,22 @@ button.del:hover{color:var(--crit)}
 .diagram .loopbadge.ref rect{stroke:var(--good)}.diagram .loopbadge.ref text{fill:var(--good)}
 .diagram .loopbadge.bal rect{stroke:var(--accent)}.diagram .loopbadge.bal text{fill:var(--accent)}
 .vuelta .nodo.val{font-family:var(--mono);font-size:10px;fill:var(--fg2)}
+.diagram .lane rect{fill:var(--surface-2);stroke:none}
+.diagram .lane text{font-family:var(--mono);font-size:11px;letter-spacing:.08em;fill:var(--muted)}
+.diagram .st .box{fill:var(--surface);stroke:var(--fg2);stroke-width:1.2}
+.diagram .st.vacio .box{stroke:var(--crit);stroke-dasharray:5 4}
+.diagram .st .fill{fill:var(--accent);opacity:.11}
+.diagram .st .nm{font-weight:600;font-size:13.5px;fill:var(--fg)}
+.diagram .st .vl{font-family:var(--mono);font-size:16px;font-weight:500;fill:var(--fg)}
+.diagram .st .tag{font-family:var(--mono);font-size:9px;letter-spacing:.06em;fill:var(--muted)}
+.diagram .st .sep{stroke:var(--line);stroke-width:1}
+.diagram .st .colh{font-family:var(--mono);font-size:9px;letter-spacing:.08em;fill:var(--muted)}
+.diagram .st .it{font-size:10.5px;fill:var(--fg2)}
+.diagram .st .it.v{font-family:var(--mono);font-size:10px}
+.diagram .st .it.in{fill:var(--good)}
+.diagram .st .it.out{fill:var(--crit)}
+.diagram .st .it.i{fill:var(--accent-ink)}
+.diagram .st .it.z{fill:var(--muted)}
 .probar{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
 .pb{display:grid;gap:4px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
 .pb.distinto{border-color:var(--accent);background:var(--accent-soft)}
@@ -331,8 +347,9 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
   <details class="grp" open>
     <summary><span>Stocks <small>lo que se acumula</small></span><b id="n-stocks"></b></summary>
     <div class="grp-body">
-      <p class="hint-p">Cada stock tiene una clave corta para usar en fórmulas. "No negativo" frena las salidas cuando llega a cero.</p>
-      <div class="row row-head" style="grid-template-columns:minmax(0,1.3fr) minmax(90px,.8fr) minmax(110px,.9fr) minmax(70px,.5fr) 90px 28px"><span>Nombre</span><span>Clave</span><span>Valor inicial</span><span>Unidad</span><span>No negativo</span><span></span></div>
+      <p class="hint-p">Cada stock tiene una clave corta para usar en fórmulas. "Carril" agrupa stocks en el dibujo: por ejemplo, lo que tengo y lo que debo. "No negativo" frena las salidas cuando llega a cero.</p>
+      <datalist id="dl-carril"></datalist>
+      <div class="row row-head" style="grid-template-columns:minmax(0,1.3fr) minmax(90px,.8fr) minmax(110px,.9fr) minmax(70px,.5fr) minmax(90px,.8fr) 90px 28px"><span>Nombre</span><span>Clave</span><span>Valor inicial</span><span>Unidad</span><span>Carril</span><span>No negativo</span><span></span></div>
       <div class="rows" id="stocks"></div>
       <button class="add" data-add="stocks">+ agregar stock</button>
     </div>
@@ -632,7 +649,7 @@ function tplFinanzas(){return {id:uid(),nombre:'Finanzas personales',horizonte:2
   auto:'Puedo abrir una fuente de ingreso nueva, o cerrar el stock de deuda para siempre con una regla.',
   meta:'Un año de libertad para elegir proyectos',metaValor:40000000,metaPlazo:24,
   paradigma:'La plata es tiempo libre comprado por adelantado.',trascender:'Medir meses de libertad en vez de pesos cambiaría qué palancas importan.',
-  stocks:[{k:'pesos',nombre:'Pesos líquidos',inicial:400000,unidad:'$',min0:true},{k:'dolares',nombre:'Dólares ahorrados',inicial:5000,unidad:'USD',min0:true},{k:'inversiones',nombre:'Inversiones',inicial:0,unidad:'$',min0:true},{k:'deuda',nombre:'Deuda de tarjeta',inicial:300000,unidad:'$',min0:true}],
+  stocks:[{k:'pesos',nombre:'Pesos líquidos',inicial:400000,unidad:'$',min0:true,carril:'Lo que tengo'},{k:'dolares',nombre:'Dólares ahorrados',inicial:5000,unidad:'USD',min0:true,carril:'Lo que tengo'},{k:'inversiones',nombre:'Inversiones',inicial:0,unidad:'$',min0:true,carril:'Lo que tengo'},{k:'deuda',nombre:'Deuda de tarjeta',inicial:300000,unidad:'$',min0:true,carril:'Lo que debo'}],
   params:[{k:'ingreso',nombre:'Ingreso mensual',valor:3000000,nota:'típico'},{k:'tipo_cambio',nombre:'Tipo de cambio hoy',valor:1535,unidad:'$',nota:'oficial venta 13-oct-2026; el dólar sigue la inflación',externo:true},{k:'gastos',nombre:'Gastos mensuales',valor:1135000,nota:'fijos + variables'},{k:'inflacion',nombre:'Inflación mensual',valor:0.019,unidad:'%',nota:'INDEC sep-2026',externo:true},{k:'ajuste_anual',nombre:'Crecimiento anual del ingreso',valor:0.21,unidad:'%',nota:'10 % cada 6 meses'},{k:'tasa_inv',nombre:'Rendimiento inversión (mensual)',valor:0.03,unidad:'%',nota:''},{k:'tasa_deuda',nombre:'Interés de la tarjeta (mensual)',valor:0.08,unidad:'%',nota:''},{k:'pago_deuda',nombre:'Pago mensual de la deuda',valor:50000,nota:'la cuota que pagás por mes'},{k:'ahorro_auto',nombre:'Ahorro automático (fracción del sobrante)',valor:0,unidad:'%',nota:'0 a 1'},{k:'compra_usd',nombre:'Compra mensual de dólares',valor:0,unidad:'USD',nota:'0 = no comprás'}],
   flujos:[{k:'entra_ingreso',nombre:'Ingreso',desde:'',hacia:'pesos',formula:'ingreso * (1 + ajuste_anual) ^ (t / 12)'},{k:'salen_gastos',nombre:'Gastos',desde:'pesos',hacia:'',formula:'gastos * (1 + inflacion) ^ t'},{k:'ahorro',nombre:'Ahorro automático',desde:'pesos',hacia:'inversiones',formula:'max(0, ingreso * (1 + ajuste_anual) ^ (t / 12) - gastos * (1 + inflacion) ^ t) * ahorro_auto'},{k:'rendimiento',nombre:'Rendimiento',desde:'',hacia:'inversiones',formula:'inversiones * tasa_inv'},{k:'interes',nombre:'Interés de la deuda',desde:'',hacia:'deuda',formula:'deuda * tasa_deuda'},{k:'pago_p',nombre:'Pago de deuda (sale de pesos)',desde:'pesos',hacia:'',formula:'min(deuda, min(pesos, pago_deuda))'},{k:'pago_d',nombre:'Pago de deuda (baja la deuda)',desde:'deuda',hacia:'',formula:'min(deuda, min(pesos, pago_deuda))'},{k:'compra_p',nombre:'Compra de dólares (sale de pesos)',desde:'pesos',hacia:'',formula:'if(pesos >= compra_usd * tipo_cambio * (1 + inflacion) ^ t, compra_usd * tipo_cambio * (1 + inflacion) ^ t, 0)'},{k:'compra_d',nombre:'Compra de dólares (entran USD)',desde:'',hacia:'dolares',formula:'if(pesos >= compra_usd * tipo_cambio * (1 + inflacion) ^ t, compra_usd, 0)'}],
   indicadores:[{k:'dolares_en_pesos',nombre:'Dólares en pesos',formula:'dolares * tipo_cambio * (1 + inflacion) ^ t',unidad:'$'},{k:'neto',nombre:'Patrimonio neto',formula:'pesos + dolares_en_pesos + inversiones - deuda',unidad:'$'},{k:'neto_real',nombre:'Patrimonio neto real',formula:'neto / (1 + inflacion) ^ t',unidad:'$'},{k:'colchon',nombre:'Colchón',formula:'(pesos + dolares_en_pesos) / (gastos * (1 + inflacion) ^ t)',unidad:'meses'}],
@@ -644,7 +661,7 @@ function tplNegocio(){return {id:uid(),nombre:'Caja de un local',horizonte:12,un
   normas:[{k:'n1',texto:'No se retira más que el margen del mes anterior',afecta:'retiros'}],
   auto:'',meta:'Un local que se sostiene sin el dueño adentro',metaValor:5000000,metaPlazo:12,
   paradigma:'El local es una máquina de caja, no un hobby.',trascender:'',
-  stocks:[{k:'caja',nombre:'Caja',inicial:2000000,unidad:'$',min0:false},{k:'proveedores',nombre:'Deuda con proveedores',inicial:1500000,unidad:'$',min0:true}],
+  stocks:[{k:'caja',nombre:'Caja',inicial:2000000,unidad:'$',min0:false,carril:'Plata'},{k:'proveedores',nombre:'Deuda con proveedores',inicial:1500000,unidad:'$',min0:true,carril:'Lo que se debe'}],
   params:[{k:'ventas_dia',nombre:'Ventas por día',valor:400000,nota:''},{k:'dias',nombre:'Días abiertos por mes',valor:26,unidad:'días',nota:''},{k:'insumos',nombre:'Costo de insumos (fracción de ventas)',valor:0.35,unidad:'%',nota:''},{k:'fijos',nombre:'Costos fijos mensuales',valor:5000000,nota:'alquiler, sueldos, servicios'},{k:'retiro',nombre:'Retiro del dueño',valor:3000000,nota:''},{k:'inflacion',nombre:'Inflación mensual',valor:0.019,unidad:'%',nota:'',externo:true},{k:'crecimiento',nombre:'Crecimiento mensual de ventas',valor:0.02,unidad:'%',nota:'precio + volumen',externo:true},{k:'plazo',nombre:'Plazo de pago a proveedores',valor:1,unidad:'meses',nota:'1 = se paga al mes siguiente'}],
   flujos:[{k:'ventas',nombre:'Ventas',desde:'',hacia:'caja',formula:'ventas_dia * dias * (1 + crecimiento) ^ t'},{k:'compras',nombre:'Compras de insumos',desde:'',hacia:'proveedores',formula:'ventas_dia * dias * (1 + crecimiento) ^ t * insumos'},{k:'pago_prov_c',nombre:'Pago a proveedores (sale de caja)',desde:'caja',hacia:'',formula:'proveedores / plazo'},{k:'pago_prov_p',nombre:'Pago a proveedores (baja la deuda)',desde:'proveedores',hacia:'',formula:'proveedores / plazo'},{k:'costos_fijos',nombre:'Costos fijos',desde:'caja',hacia:'',formula:'fijos * (1 + inflacion) ^ t'},{k:'retiros',nombre:'Retiro del dueño',desde:'caja',hacia:'',formula:'retiro'}],
   indicadores:[{k:'margen',nombre:'Margen del mes',formula:'ventas - compras - costos_fijos',unidad:'$'},{k:'dias_caja',nombre:'Días de caja',formula:'caja / ((fijos * (1 + inflacion) ^ t + proveedores / plazo) / dias)',unidad:'días'}],
@@ -713,7 +730,7 @@ function aplicarPalanca(m,pl){
 
 /* ---------- render: editor ---------- */
 const COLS={
-  stocks:{grid:'minmax(0,1.3fr) minmax(90px,.8fr) minmax(110px,.9fr) minmax(70px,.5fr) 90px 28px',cols:[['nombre','text','nombre'],['k','key','clave'],['inicial','number','0'],['unidad','text','unidad'],['min0','check','']]},
+  stocks:{grid:'minmax(0,1.3fr) minmax(90px,.8fr) minmax(110px,.9fr) minmax(70px,.5fr) minmax(90px,.8fr) 90px 28px',cols:[['nombre','text','nombre'],['k','key','clave'],['inicial','number','0'],['unidad','text','unidad'],['carril','carril','opcional'],['min0','check','']]},
   flujos:{grid:'minmax(0,1fr) minmax(100px,.7fr) minmax(100px,.7fr) minmax(0,1.6fr) 28px',cols:[['nombre','text','nombre'],['desde','stocksel',''],['hacia','stocksel',''],['formula','formula','fórmula']]},
   params:{grid:'minmax(0,1.3fr) minmax(90px,.8fr) minmax(110px,.9fr) minmax(60px,.4fr) minmax(0,1fr) 70px 28px',cols:[['nombre','text','nombre'],['k','key','clave'],['valor','number','0'],['unidad','text','unidad'],['nota','text','nota'],['externo','check','']]},
   indicadores:{grid:'minmax(0,1fr) minmax(90px,.7fr) minmax(0,1.8fr) minmax(60px,.4fr) 28px',cols:[['nombre','text','nombre'],['k','key','clave'],['formula','formula','fórmula'],['unidad','text','unidad']]},
@@ -726,6 +743,7 @@ function cell(list,r,[f,type,ph]){
   const a=`data-list="${list}" data-id="${r.id}" data-field="${f}"`;const v=r[f];
   switch(type){
     case 'text':return `<input type="text" ${a} value="${esc(v)}" placeholder="${ph}">`;
+    case 'carril':return `<input type="text" list="dl-carril" ${a} value="${esc(v)}" placeholder="${ph}">`;
     case 'key':return `<input type="text" class="f" ${a} value="${esc(v)}" placeholder="${ph}" pattern="[a-z_][a-z0-9_]*">`;
     case 'number':return `<input type="number" ${a} value="${v??''}" placeholder="${ph}" step="any">`;
     case 'formula':return `<input type="text" class="f" ${a} value="${esc(v)}" placeholder="${ph}" spellcheck="false">`;
@@ -744,6 +762,7 @@ function renderList(list){
   $(list).innerHTML=M[list].map(r=>`<div class="row" style="grid-template-columns:${C.grid}" data-id="${r.id}">${C.cols.map(c=>cell(list,r,c)).join('')}<button class="del" data-del="${list}" data-id="${r.id}" aria-label="quitar">×</button></div>`).join('');
   const n=$('n-'+list);if(n)n.textContent=M[list].length;
   if(list==='info'||list==='normas')$('n-diseno').textContent=`${M.info.length} señales · ${M.normas.length} reglas`;
+  if(list==='stocks')updCarriles();
 }
 function renderEditor(){
   for(const r of ['stocks','flujos','params','indicadores','palancas','reglas','info','normas']){for(const x of M[r])if(!x.id)x.id=uid();renderList(r);}
@@ -1030,48 +1049,85 @@ function renderChart(base,sim,tc){
 
 /* ---------- el dibujo vivo ---------- */
 function renderDiagram(sim,tc,loops){
-  const r=sim[tc];const S=M.stocks;const n=S.length;
-  if(!n){$('diagram').innerHTML='<p class="muted">Agregá stocks en Describir para ver el sistema.</p>';return;}
-  const W=800,bw=200,bh=72,bx=300,EW=200,EH=30,EG=36;
-  const nIn={},nOut={};for(const s of S){nIn[s.k]=0;nOut[s.k]=0;}
-  for(const f of M.flujos){if(f.hacia&&nIn[f.hacia]!==undefined&&!(f.desde&&nOut[f.desde]!==undefined))nIn[f.hacia]++;if(f.desde&&nOut[f.desde]!==undefined&&!(f.hacia&&nIn[f.hacia]!==undefined))nOut[f.desde]++;}
-  const pos={};let cy=34;
-  for(const s of S){const rows=Math.max(nIn[s.k],nOut[s.k]);const h=Math.max(bh,rows*EG);pos[s.k]={x:bx,y:cy+(h-bh)/2,top:cy,h};cy+=h+30;}
-  const H=cy+6;
-  const cut=(t,m)=>{t=String(t);return t.length>m?t.slice(0,m-1)+'…':t;};
-  let g='';
-  for(const s of S){
-    const p=pos[s.k];const inf=M.info.find(i=>i.senal===s.k);
-    const vals=sim.map(q=>q[s.k]);const mx=Math.max(1e-9,...vals.map(Math.abs));const lvl=Math.max(0,Math.min(1,Math.abs(r[s.k])/mx))*(bh-4);
-    g+=`<g class="tank"><rect class="stock" x="${p.x}" y="${p.y}" width="${bw}" height="${bh}" rx="4"/><rect class="nivel" x="${p.x+2}" y="${p.y+bh-2-lvl}" width="${bw-4}" height="${lvl}" rx="3"/>`;
-    g+=`<text x="${p.x+bw/2}" y="${p.y+27}" text-anchor="middle" class="title">${esc(cut(s.nombre||s.k,24))}</text><text x="${p.x+bw/2}" y="${p.y+48}" text-anchor="middle" class="val">${fmtV(r[s.k],s.k)}</text>`;
-    if(s.min0)g+=`<text x="${p.x+bw-6}" y="${p.y+bh-6}" text-anchor="end" class="lab" style="font-size:9px;letter-spacing:.06em">COLCHÓN</text>`;
-    const lp=loops.filter(b=>b.edges.some(e=>e.from===s.k)).slice(0,2);
-    lp.forEach((b,i)=>{g+=`<g class="loopbadge ${b.tipo==='R'?'ref':'bal'}"><rect x="${p.x+6+i*58}" y="${p.y+bh-20}" width="52" height="15" rx="7"/><text x="${p.x+32+i*58}" y="${p.y+bh-9}" text-anchor="middle">${b.tipo} ${nf1.format(b.g*100)} %</text></g>`;});
-    if(inf){
-      const ex=p.x+bw-14,ey=p.y+2;
-      g+=`<g class="eye"><title>${esc('ve '+(inf.quien||'?')+(inf.cada?' · '+inf.cada:''))}</title><circle cx="${ex}" cy="${ey}" r="9"/><path d="M${ex-5.5} ${ey} Q${ex} ${ey-5} ${ex+5.5} ${ey} Q${ex} ${ey+5} ${ex-5.5} ${ey}Z"/><circle cx="${ex}" cy="${ey}" r="1.8" class="pupila"/></g>`;
-      if(inf.retardo>0){const cx2=p.x+bw-38,cy2=p.y+2;g+=`<g class="clock"><title>${esc('retardo de '+inf.retardo)}</title><circle cx="${cx2}" cy="${cy2}" r="9"/><path d="M${cx2} ${cy2-5} L${cx2} ${cy2} L${cx2+3.5} ${cy2+2.5}" fill="none"/></g>`;}
+  const r=sim[tc];const S=M.stocks;
+  if(!S.length){$('diagram').innerHTML='<p class="muted">Agregá stocks en Describir para ver el sistema.</p>';return;}
+  const CW=260,GX=100,PAD=24,RG=44,LH=15;
+  const cw=$('diagram').clientWidth||800;
+  const cols=Math.max(1,Math.min(3,Math.floor((cw+GX+60)/(CW+GX))));
+  // carriles, en el orden en que aparecen
+  const lanes=[],li={};
+  for(const s of S){const c=(s.carril||'').trim();if(!(c in li)){li[c]=lanes.length;lanes.push({t:c,st:[]});}lanes[li[c]].st.push(s);}
+  const named=lanes.some(l=>l.t);
+  const used=Math.min(cols,Math.max(...lanes.map(l=>l.st.length)));
+  const W=PAD*2+used*CW+(used-1)*GX;
+  const ins=k=>M.flujos.filter(f=>f.hacia===k),outs=k=>M.flujos.filter(f=>f.desde===k);
+  const hOf=s=>84+(Math.max(ins(s.k).length,1)+Math.max(outs(s.k).length,1)+2)*LH+14;
+  // posiciones
+  const pos={},bands=[];let y=PAD+8;
+  for(const L of lanes){
+    const top=y;if(named)y+=30;
+    for(let i=0;i<L.st.length;i+=used){
+      const row=L.st.slice(i,i+used);const hs=row.map(hOf);const rh=Math.max(...hs);
+      const rowW=row.length*CW+(row.length-1)*GX;const x0=(W-rowW)/2;
+      row.forEach((s,j)=>{pos[s.k]={x:x0+j*(CW+GX),y,h:hs[j]};});
+      y+=rh+RG;
     }
+    y-=RG;if(named)y+=14;
+    bands.push({t:L.t,y0:top-8,y1:y+6});
+    y+=named?30:RG;
+  }
+  const H=y-(named?14:RG-10);
+  let g='';
+  if(named)for(const b of bands)g+=`<g class="lane"><rect x="6" y="${b.y0}" width="${W-12}" height="${b.y1-b.y0}" rx="8"/>${b.t?`<text x="18" y="${b.y0+18}">${esc(b.t.toUpperCase())}</text>`:''}</g>`;
+  const maxF=Math.max(1e-9,...sim.flatMap(q=>M.flujos.map(f=>Math.abs(q[f.k]||0))));
+  const w=v=>1.4+4.6*Math.abs(v)/maxF;
+  const act=v=>RUN&&Math.abs(v)>maxF*0.01?' activa':'';
+  const cut=(t,m)=>{t=String(t);return t.length>m?t.slice(0,Math.max(1,m-1))+'…':t;};
+  // tarjetas
+  for(const s of S){
+    const p=pos[s.k];const x=p.x,yy=p.y,h=p.h;const v=r[s.k];
+    const vals=sim.map(q=>q[s.k]);const mx=Math.max(1e-9,...vals.map(Math.abs));const lvl=Math.max(0,Math.min(1,Math.abs(v)/mx))*(h-4);
+    const vacio=s.min0&&Math.abs(v)<1e-9&&vals.some(q=>Math.abs(q)>1e-9);
+    g+=`<g class="st${vacio?' vacio':''}"><rect class="box" x="${x}" y="${yy}" width="${CW}" height="${h}" rx="6"/><rect class="fill" x="${x+2}" y="${yy+h-2-lvl}" width="${CW-4}" height="${lvl}" rx="4"/>`;
+    g+=`<text class="nm" x="${x+14}" y="${yy+24}">${esc(cut(s.nombre||s.k,26))}</text><text class="vl" x="${x+14}" y="${yy+46}">${fmtV(v,s.k)}</text>`;
+    let bx=x+14;
+    for(const b of loops.filter(b=>b.edges.some(e=>e.from===s.k)).slice(0,2)){g+=`<g class="loopbadge ${b.tipo==='R'?'ref':'bal'}"><rect x="${bx}" y="${yy+54}" width="56" height="16" rx="8"/><text x="${bx+28}" y="${yy+65.5}" text-anchor="middle">${b.tipo} ${nf1.format(b.g*100)} %</text></g>`;bx+=62;}
+    if(s.min0)g+=`<text class="tag" x="${x+CW-12}" y="${yy+66}" text-anchor="end">COLCHÓN</text>`;
+    const inf=M.info.find(i=>i.senal===s.k);
+    if(inf){const ex=x+CW-16,ey=yy+18;g+=`<g class="eye"><title>${esc('lo ve '+(inf.quien||'?')+(inf.cada?' · '+inf.cada:''))}</title><circle cx="${ex}" cy="${ey}" r="9"/><path d="M${ex-5.5} ${ey} Q${ex} ${ey-5} ${ex+5.5} ${ey} Q${ex} ${ey+5} ${ex-5.5} ${ey}Z"/><circle cx="${ex}" cy="${ey}" r="1.8" class="pupila"/></g>`;
+      if(inf.retardo>0){const cx2=x+CW-40;g+=`<g class="clock"><title>${esc('lo ve con '+inf.retardo+' de retardo')}</title><circle cx="${cx2}" cy="${ey}" r="9"/><path d="M${cx2} ${ey-5} L${cx2} ${ey} L${cx2+3.5} ${ey+2.5}" fill="none"/></g>`;}}
+    g+=`<line class="sep" x1="${x+10}" x2="${x+CW-10}" y1="${yy+76}" y2="${yy+76}"/>`;
+    let cy=yy+76;
+    const sec=(t,list,dir)=>{
+      cy+=LH+2;g+=`<text class="colh" x="${x+14}" y="${cy}">${t}</text>`;
+      if(!list.length){cy+=LH;g+=`<text class="it z" x="${x+14}" y="${cy}">nada</text>`;return;}
+      for(const f of list){
+        cy+=LH;const fv=r[f.k]||0;const val=fmtV(fv,f.k);const otro=dir==='in'?f.desde:f.hacia;const interno=otro&&pos[otro];
+        const cls=Math.abs(fv)<1e-9?'z':interno?'i':dir;
+        const room=CW-28;const nmMax=Math.max(6,Math.floor((room-val.length*6.1-10)/5.7));
+        const nm=(interno?(dir==='in'?'← ':'→ '):'')+(f.nombre||f.k);
+        g+=`<text class="it ${cls}" x="${x+14}" y="${cy}"><title>${esc((f.nombre||f.k)+(interno?(dir==='in'?' · desde ':' · hacia ')+nombreDe(otro):''))}</title>${esc(cut(nm,nmMax))}</text><text class="it v ${cls}" x="${x+CW-14}" y="${cy}" text-anchor="end">${val}</text>`;
+      }
+    };
+    sec('ENTRA',ins(s.k),'in');cy+=4;sec('SALE',outs(s.k),'out');
     g+='</g>';
   }
-  const maxF=Math.max(1e-9,...sim.flatMap(q=>M.flujos.map(f=>Math.abs(q[f.k]||0))));
-  const w=v=>1.2+4.5*Math.abs(v)/maxF;
-  const act=v=>RUN&&Math.abs(v)>maxF*0.01?' activa':'';
-  const ext=(x,y,f,v)=>`<rect class="ext" x="${x}" y="${y-EH/2}" width="${EW}" height="${EH}" rx="4"/><text x="${x+EW/2}" y="${y-3}" text-anchor="middle" class="lab">${esc(cut(f.nombre||f.k,30))}</text><text x="${x+EW/2}" y="${y+10}" text-anchor="middle" class="val" style="font-size:11px">${fmtV(v,f.k)}</text>`;
-  const cnt={};const slot=(k,side)=>{const key=k+side;cnt[key]=(cnt[key]||0);return cnt[key]++;};
-  const yFor=(p,side,i)=>{const rows=side==='L'?nIn[p.k]:nOut[p.k];const total=rows*EG;const y0=p.top+(p.h-total)/2+EG/2;return y0+i*EG;};
+  // flechas entre stocks
+  const pair={};
   for(const f of M.flujos){
-    const v=r[f.k]||0;
-    const from=pos[f.desde],to=pos[f.hacia];
-    if(!from&&!to)continue;
-    if(from&&to){const i=slot(f.desde+'>'+f.hacia,'X');const x1=from.x+bw-24-i*14,y1=from.y+(from.y<to.y?bh:0),x2=to.x+bw-24-i*14,y2=to.y+(from.y<to.y?0:bh);const xm=from.x+bw+40+i*18;
-      g+=`<path class="flow${act(v)}" style="stroke-width:${w(v)}" d="M${x1} ${y1} C${xm} ${y1} ${xm} ${y2} ${x2} ${y2}"/><text x="${xm+8}" y="${(y1+y2)/2+4}" class="lab">${esc(cut(f.nombre||f.k,22))} ${fmtV(v,f.k)}</text>`;}
-    else if(to){const i=slot(f.hacia,'L');const y=yFor({...to,k:f.hacia},'L',i);g+=ext(20,y,f,v)+`<line class="flow${act(v)}" style="stroke-width:${w(v)}" x1="${20+EW}" y1="${y}" x2="${to.x-2}" y2="${y}"/>`;}
-    else{const i=slot(f.desde,'R');const y=yFor({...from,k:f.desde},'R',i);g+=`<line class="flow${act(v)}" style="stroke-width:${w(v)}" x1="${from.x+bw}" y1="${y}" x2="${W-20-EW-2}" y2="${y}"/>`+ext(W-20-EW,y,f,v);}
+    const A=pos[f.desde],B=pos[f.hacia];if(!A||!B)continue;
+    const key=f.desde+'>'+f.hacia;const o=(pair[key]=(pair[key]||0)+1)-1;const v=r[f.k]||0;let d;
+    if(Math.abs(A.y-B.y)<1){
+      const yA=A.y+30+o*12;
+      if(B.x>A.x){const sx=A.x+CW,ex=B.x;d=B.x-A.x<=CW+GX+1?`M${sx} ${yA} L${ex-2} ${yA}`:`M${A.x+CW/2} ${A.y} C${A.x+CW/2} ${A.y-34} ${B.x+CW/2} ${B.y-34} ${B.x+CW/2} ${B.y-2}`;}
+      else{const sx=A.x,ex=B.x+CW;d=A.x-B.x<=CW+GX+1?`M${sx} ${yA} L${ex+2} ${yA}`:`M${A.x+CW/2} ${A.y} C${A.x+CW/2} ${A.y-34} ${B.x+CW/2} ${B.y-34} ${B.x+CW/2} ${B.y-2}`;}
+    }else if(B.y>A.y){const sx=A.x+CW/2+o*14,sy=A.y+A.h,ex=B.x+CW/2+o*14,ey=B.y;d=`M${sx} ${sy} C${sx} ${sy+36} ${ex} ${ey-36} ${ex} ${ey-2}`;}
+    else{const sx=A.x+CW/2+o*14,sy=A.y,ex=B.x+CW/2+o*14,ey=B.y+B.h;d=`M${sx} ${sy} C${sx} ${sy-36} ${ex} ${ey+36} ${ex} ${ey+2}`;}
+    g+=`<path class="flow${act(v)}" style="stroke-width:${w(v)}" d="${d}"><title>${esc((f.nombre||f.k)+': '+fmtV(v,f.k))}</title></path>`;
   }
-  $('diagram').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="El sistema"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--accent)"/></marker></defs><text x="${W-10}" y="16" text-anchor="end" class="lab">${M.unidad||'paso'} ${(M.t0||0)+tc}</text>${g}</svg>`;
+  $('diagram').innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;margin:0 auto" role="img" aria-label="El sistema"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--accent)"/></marker></defs><text x="${W-12}" y="18" text-anchor="end" class="lab">${M.unidad||'paso'} ${(M.t0||0)+tc}</text>${g}</svg>`;
 }
+window.addEventListener('resize',()=>{clearTimeout(window.__rz);window.__rz=setTimeout(()=>{if(!$('tab-jugar').hidden&&lastSim.length)renderVivo();},150);});
 
 /* ---------- bucles: detección por derivadas numéricas sobre el estado del momento ---------- */
 function bucles(ME,r0){
@@ -1145,6 +1201,7 @@ document.addEventListener('input',e=>{
     if(el.type==='checkbox')r[f]=el.checked;else if(el.type==='number')r[f]=num(el.value);else if(f==='k')r[f]=slug(el.value);else if(f==='fuerza')r[f]=+el.value;else r[f]=el.value;
     if(f==='nombre'&&(el.dataset.list==='stocks'||el.dataset.list==='params'||el.dataset.list==='indicadores')&&!r.kManual){const ki=el.parentElement.querySelector('[data-field="k"]');if(ki&&!ki.dataset.touched){r.k=slug(el.value);ki.value=r.k;}}
     if(f==='k')el.dataset.touched='1';
+    if(f==='carril')updCarriles();
     if(f==='tipo'){const row=el.closest('.row');row.querySelector('[data-field="campo"]').outerHTML=cell(el.dataset.list,r,['campo','camposel','']);r.campo=row.querySelector('[data-field="campo"]').value;}
     if(f==='k'||f==='nombre'){
       if(el.dataset.list==='stocks'){renderList('flujos');renderList('palancas');renderObjetivo();}
@@ -1315,7 +1372,8 @@ function setAdv(on){
   t.classList.toggle('basic',!on);b.classList.toggle('on',on);b.textContent=on?'Ocultar avanzado':'Mostrar avanzado';
   try{localStorage.setItem(KEY+'-adv',on?'1':'0');}catch(e){}
 }
-function showTab(n){document.querySelectorAll('.tab').forEach(s=>{s.hidden=s.id!=='tab-'+n;});document.querySelectorAll('.tabs [role=tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===n)));try{localStorage.setItem(KEY+'-tab',n);}catch(e){}}
+function showTab(n){document.querySelectorAll('.tab').forEach(s=>{s.hidden=s.id!=='tab-'+n;});document.querySelectorAll('.tabs [role=tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===n)));try{localStorage.setItem(KEY+'-tab',n);}catch(e){}if(n==='jugar'&&lastSim.length)renderVivo();}
+function updCarriles(){const dl=$('dl-carril');if(!dl||!M)return;const cs=[...new Set(M.stocks.map(s=>(s.carril||'').trim()).filter(Boolean))];dl.innerHTML=cs.map(c=>`<option value="${esc(c)}">`).join('');}
 function setCurrent(m){M=m;vis=null;try{localStorage.setItem(KEY+'-cur',m.id);}catch(e){}renderLib();renderEditor();compute();dirty=true;scheduleSave();}
 
 /* ---------- persistencia ---------- */
