@@ -119,7 +119,18 @@ table{border-collapse:collapse;font-family:var(--mono);font-size:12px;font-varia
 th,td{text-align:right;padding:4px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
 th{color:var(--muted);font-weight:500}
 td:first-child,th:first-child{text-align:left}
-.pal-head,.pal{display:grid;grid-template-columns:36px minmax(0,2fr) minmax(90px,1fr) 120px minmax(120px,.9fr);gap:12px;align-items:center}
+.pal-head,.pal{display:grid;grid-template-columns:46px minmax(0,2fr) minmax(90px,1fr) 120px minmax(120px,.9fr);gap:12px;align-items:center}
+.pal.on{background:var(--accent-soft);margin:0 -16px;padding-inline:16px}
+.pal-t b .pal-n{display:inline-grid;font-weight:400;margin-left:6px;vertical-align:middle;font-size:11px;padding:0 8px;height:20px}
+.sw{position:relative;display:inline-block;width:42px;height:24px;cursor:pointer}
+.sw input{position:absolute;opacity:0;width:0;height:0}
+.sw i{position:absolute;inset:0;background:var(--line);border-radius:12px;transition:background .15s}
+.sw i::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--surface);transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw input:checked+i{background:var(--accent)}
+.sw input:checked+i::after{transform:translateX(18px)}
+.sw input:focus-visible+i{outline:2px solid var(--accent);outline-offset:2px}
+button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-ink);border-color:var(--accent)}
+@media (prefers-reduced-motion:reduce){.sw i,.sw i::after{transition:none}}
 .pal-head{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding-bottom:8px;border-bottom:1px solid var(--line)}
 .pal{padding:12px 0;border-bottom:1px solid var(--line)}
 .pal:last-child{border-bottom:none}
@@ -135,8 +146,8 @@ td:first-child,th:first-child{text-align:left}
 .pal-v.pos{color:var(--good)}.pal-v.neg{color:var(--crit)}
 @media (max-width:760px){
   .pal-head{display:none}
-  .pal{grid-template-columns:36px minmax(0,1fr);grid-template-areas:"n t" "bar bar" "spark v"}
-  .pal-n{grid-area:n}.pal-t{grid-area:t}.pal-bar{grid-area:bar}.spark{grid-area:spark}.pal-v{grid-area:v}
+  .pal{grid-template-columns:46px minmax(0,1fr);grid-template-areas:"n t" "bar bar" "spark v"}
+  .pal>.sw{grid-area:n}.pal-t{grid-area:t}.pal-bar{grid-area:bar}.spark{grid-area:spark}.pal-v{grid-area:v}
 }
 .camino{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
 .step{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
@@ -175,8 +186,7 @@ td:first-child,th:first-child{text-align:left}
 <nav class="tabs" role="tablist" aria-label="Secciones">
   <button role="tab" data-tab="modelos" aria-selected="true">Modelos</button>
   <button role="tab" data-tab="describir" aria-selected="false">Describir</button>
-  <button role="tab" data-tab="sistema" aria-selected="false">Sistema</button>
-  <button role="tab" data-tab="diagnostico" aria-selected="false">Diagnóstico</button>
+  <button role="tab" data-tab="jugar" aria-selected="false">Jugar</button>
   <button role="tab" data-tab="guia" aria-selected="false">Guía</button>
   <span class="status" id="status">Cargando…</span>
 </nav>
@@ -196,6 +206,7 @@ td:first-child,th:first-child{text-align:left}
 </section>
 
 <section class="tab" id="tab-describir" hidden>
+  <p class="note">Acá definís el sistema y qué palancas existen. En Jugar las activás y ves cómo responde.</p>
   <div class="panel">
     <div class="fields">
       <div class="field"><label for="m-nombre">Nombre del sistema</label><input type="text" id="m-nombre" data-m="nombre"></div>
@@ -269,26 +280,24 @@ td:first-child,th:first-child{text-align:left}
   </details>
 </section>
 
-<section class="tab" id="tab-sistema" hidden>
+<section class="tab" id="tab-jugar" hidden>
+  <div class="panel">
+    <div class="btns" style="justify-content:space-between;align-items:flex-start"><div><h2 style="margin:0">Palancas</h2><p class="note" id="esc-lede"></p></div><button id="btn-reset">Apagar todas</button></div>
+    <div id="pal-rows" style="margin-top:10px"></div>
+  </div>
   <div class="tiles" id="tiles"></div>
-  <div class="sec-head"><h2>Mapa de stocks y flujos</h2><p>Cajas sólidas son stocks. Punteadas, lo que está fuera del sistema. Las flechas llevan el valor del flujo en el paso 0.</p></div>
-  <div class="panel diagram" id="diagram"></div>
-  <div class="sec-head"><h2>Simulación</h2><p id="sim-lede"></p></div>
   <div class="chart-wrap">
     <div class="legend" id="legend"></div>
     <div id="chart"></div>
     <div class="tip" id="tip"></div>
+    <p class="note" id="sim-lede" style="margin-top:8px"></p>
   </div>
-  <details class="plain"><summary>Tabla paso a paso</summary><div class="tbl" id="tbl"></div></details>
-</section>
-
-<section class="tab" id="tab-diagnostico" hidden>
   <div class="panel"><h2>Camino</h2><p class="note" id="camino-next"></p><ol class="camino" id="camino"></ol></div>
-  <div class="sec-head"><h2>Qué palanca mueve más</h2><p id="sens-lede"></p></div>
-  <div class="panel"><div class="pal-head"><span>Fuerza</span><span>Movimiento</span><span>Efecto</span><span>Respuesta</span><span></span></div><div id="pal-rows"></div></div>
-  <div class="sec-head"><h2>Patrones y alertas</h2><p>Lo que el motor detecta en la dinámica, más las reglas que escribiste.</p></div>
+  <div class="sec-head"><h2>Patrones y alertas <small>sobre el escenario actual</small></h2></div>
   <div class="cards" id="cards"></div>
   <details class="plain"><summary>Lo que está bien <span id="ok-count"></span></summary><div class="cards" id="cards-ok" style="margin-top:10px"></div></details>
+  <details class="plain" open><summary>Mapa de stocks y flujos</summary><p class="hint-p" style="margin:8px 0">Cajas sólidas son stocks. Punteadas, lo que está fuera del sistema. Las flechas llevan el valor del flujo en el paso 0 del escenario actual.</p><div class="diagram" id="diagram"></div></details>
+  <details class="plain"><summary>Tabla paso a paso</summary><div class="tbl" id="tbl"></div></details>
 </section>
 
 <section class="tab" id="tab-guia" hidden>
@@ -406,15 +415,15 @@ function compile(src){
 }
 
 /* ---------- plantillas ---------- */
-function tplVacio(){return {id:uid(),nombre:'Nuevo sistema',horizonte:24,unidad:'mes',objetivo:'',maximizar:1,formato:'num',contexto:'',stocks:[],flujos:[],params:[],indicadores:[],palancas:[],reglas:[]};}
+function tplVacio(){return {id:uid(),nombre:'Nuevo sistema',horizonte:24,unidad:'mes',objetivo:'',maximizar:1,formato:'num',contexto:'',stocks:[],flujos:[],params:[],indicadores:[],palancas:[],reglas:[],activas:[]};}
 function tplFinanzas(){return {id:uid(),nombre:'Finanzas personales',horizonte:24,unidad:'mes',objetivo:'neto_real',maximizar:1,formato:'ars',
   contexto:'Una persona con ingreso mensual, gastos que siguen la inflación, un colchón en pesos y dólares, inversiones y una deuda de tarjeta. Todo en pesos nominales; el indicador neto_real deflacta. Los indicadores se evalúan en orden, así que uno puede usar al anterior.',
   stocks:[{k:'pesos',nombre:'Pesos líquidos',inicial:400000,unidad:'$',min0:true},{k:'dolares',nombre:'Dólares ahorrados',inicial:5000,unidad:'USD',min0:true},{k:'inversiones',nombre:'Inversiones',inicial:0,unidad:'$',min0:true},{k:'deuda',nombre:'Deuda de tarjeta',inicial:300000,unidad:'$',min0:true}],
-  params:[{k:'ingreso',nombre:'Ingreso mensual',valor:3000000,nota:'típico'},{k:'tipo_cambio',nombre:'Tipo de cambio hoy',valor:1535,unidad:'$',nota:'oficial venta 13-oct-2026; el dólar sigue la inflación'},{k:'gastos',nombre:'Gastos mensuales',valor:1135000,nota:'fijos + variables'},{k:'inflacion',nombre:'Inflación mensual',valor:0.019,unidad:'%',nota:'INDEC sep-2026'},{k:'ajuste_anual',nombre:'Crecimiento anual del ingreso',valor:0.21,unidad:'%',nota:'10 % cada 6 meses'},{k:'tasa_inv',nombre:'Rendimiento inversión (mensual)',valor:0.03,unidad:'%',nota:''},{k:'tasa_deuda',nombre:'Interés de la tarjeta (mensual)',valor:0.08,unidad:'%',nota:''},{k:'ahorro_auto',nombre:'Ahorro automático (fracción del sobrante)',valor:0,unidad:'%',nota:'0 a 1'}],
-  flujos:[{k:'entra_ingreso',nombre:'Ingreso',desde:'',hacia:'pesos',formula:'ingreso * (1 + ajuste_anual) ^ (t / 12)'},{k:'salen_gastos',nombre:'Gastos',desde:'pesos',hacia:'',formula:'gastos * (1 + inflacion) ^ t'},{k:'ahorro',nombre:'Ahorro automático',desde:'pesos',hacia:'inversiones',formula:'max(0, ingreso * (1 + ajuste_anual) ^ (t / 12) - gastos * (1 + inflacion) ^ t) * ahorro_auto'},{k:'rendimiento',nombre:'Rendimiento',desde:'',hacia:'inversiones',formula:'inversiones * tasa_inv'},{k:'interes',nombre:'Interés de la deuda',desde:'',hacia:'deuda',formula:'deuda * tasa_deuda'},{k:'pago_deuda_p',nombre:'Pago de deuda (sale de pesos)',desde:'pesos',hacia:'',formula:'min(deuda, pesos)'},{k:'pago_deuda_d',nombre:'Pago de deuda (baja la deuda)',desde:'deuda',hacia:'',formula:'min(deuda, pesos)'}],
+  params:[{k:'ingreso',nombre:'Ingreso mensual',valor:3000000,nota:'típico'},{k:'tipo_cambio',nombre:'Tipo de cambio hoy',valor:1535,unidad:'$',nota:'oficial venta 13-oct-2026; el dólar sigue la inflación'},{k:'gastos',nombre:'Gastos mensuales',valor:1135000,nota:'fijos + variables'},{k:'inflacion',nombre:'Inflación mensual',valor:0.019,unidad:'%',nota:'INDEC sep-2026'},{k:'ajuste_anual',nombre:'Crecimiento anual del ingreso',valor:0.21,unidad:'%',nota:'10 % cada 6 meses'},{k:'tasa_inv',nombre:'Rendimiento inversión (mensual)',valor:0.03,unidad:'%',nota:''},{k:'tasa_deuda',nombre:'Interés de la tarjeta (mensual)',valor:0.08,unidad:'%',nota:''},{k:'pago_deuda',nombre:'Pago mensual de la deuda',valor:50000,nota:'la cuota que pagás por mes'},{k:'ahorro_auto',nombre:'Ahorro automático (fracción del sobrante)',valor:0,unidad:'%',nota:'0 a 1'},{k:'compra_usd',nombre:'Compra mensual de dólares',valor:0,unidad:'USD',nota:'0 = no comprás'}],
+  flujos:[{k:'entra_ingreso',nombre:'Ingreso',desde:'',hacia:'pesos',formula:'ingreso * (1 + ajuste_anual) ^ (t / 12)'},{k:'salen_gastos',nombre:'Gastos',desde:'pesos',hacia:'',formula:'gastos * (1 + inflacion) ^ t'},{k:'ahorro',nombre:'Ahorro automático',desde:'pesos',hacia:'inversiones',formula:'max(0, ingreso * (1 + ajuste_anual) ^ (t / 12) - gastos * (1 + inflacion) ^ t) * ahorro_auto'},{k:'rendimiento',nombre:'Rendimiento',desde:'',hacia:'inversiones',formula:'inversiones * tasa_inv'},{k:'interes',nombre:'Interés de la deuda',desde:'',hacia:'deuda',formula:'deuda * tasa_deuda'},{k:'pago_p',nombre:'Pago de deuda (sale de pesos)',desde:'pesos',hacia:'',formula:'min(deuda, min(pesos, pago_deuda))'},{k:'pago_d',nombre:'Pago de deuda (baja la deuda)',desde:'deuda',hacia:'',formula:'min(deuda, min(pesos, pago_deuda))'},{k:'compra_p',nombre:'Compra de dólares (sale de pesos)',desde:'pesos',hacia:'',formula:'if(pesos >= compra_usd * tipo_cambio * (1 + inflacion) ^ t, compra_usd * tipo_cambio * (1 + inflacion) ^ t, 0)'},{k:'compra_d',nombre:'Compra de dólares (entran USD)',desde:'',hacia:'dolares',formula:'if(pesos >= compra_usd * tipo_cambio * (1 + inflacion) ^ t, compra_usd, 0)'}],
   indicadores:[{k:'dolares_en_pesos',nombre:'Dólares en pesos',formula:'dolares * tipo_cambio * (1 + inflacion) ^ t',unidad:'$'},{k:'neto',nombre:'Patrimonio neto',formula:'pesos + dolares_en_pesos + inversiones - deuda',unidad:'$'},{k:'neto_real',nombre:'Patrimonio neto real',formula:'neto / (1 + inflacion) ^ t',unidad:'$'},{k:'colchon',nombre:'Colchón',formula:'(pesos + dolares_en_pesos) / (gastos * (1 + inflacion) ^ t)',unidad:'meses'}],
-  palancas:[{k:'p1',nombre:'Recortar 5 % de gastos',fuerza:12,tipo:'param',campo:'gastos',valor:'gastos * 0.95',descripcion:'Un recorte sostenido con voluntad.'},{k:'p5',nombre:'Dolarizar lo que excede 3 meses de gasto',fuerza:10,tipo:'stock',campo:'pesos',valor:'pesos = min(pesos, 3 * gastos); dolares = dolares + max(0, pesos - 3 * gastos) / tipo_cambio',descripcion:'Estructura: los pesos de más dejan de perder contra la inflación.'},{k:'p2',nombre:'Ahorro automático al 50 %',fuerza:10,tipo:'param',campo:'ahorro_auto',valor:'0.5',descripcion:'Cambia la estructura: el sobrante se invierte solo.'},{k:'p3',nombre:'Indexar el ingreso a la inflación',fuerza:9,tipo:'param',campo:'ajuste_anual',valor:'(1 + inflacion) ^ 12 - 1',descripcion:'Acorta el retardo del ajuste.'},{k:'p4',nombre:'Colchón inicial de 3 meses',fuerza:11,tipo:'stock',campo:'pesos',valor:'max(pesos, 3 * gastos)',descripcion:'Buffer: tener 3 meses de gasto en pesos desde hoy.'}],
-  reglas:[{k:'r1',cuando:'deuda > 0 && pesos >= deuda',nivel:'atencion',fuerza:5,titulo:'Deuda cubierta: cortá el bucle hoy',texto:'Debés {deuda} y tenés {pesos}. Cada mes de espera cuesta {interes} de interés. Pagala y el bucle vicioso se apaga.'},{k:'r2',cuando:'deuda > 0 && pesos < deuda',nivel:'critico',fuerza:5,titulo:'Desplazar la carga',texto:'La deuda ({deuda}) supera la liquidez ({pesos}). El sobrante tiene que ir entero a la deuda antes que a cualquier inversión.'},{k:'r3',cuando:'colchon < 3',nivel:'atencion',fuerza:11,titulo:'Colchón corto',texto:'Tenés {colchon} de gasto en pesos. Un buffer de 3 a 6 meses absorbe shocks sin activar la deuda.'},{k:'r4',cuando:'ahorro_auto == 0 && ingreso > gastos',nivel:'atencion',fuerza:10,titulo:'El ahorro depende de la voluntad',texto:'Sobran {entra_ingreso} menos {salen_gastos} por mes y nada va solo a inversión. La inflación se come lo que queda en pesos.'},{k:'r5',cuando:'neto_real_fin < neto_real',nivel:'critico',fuerza:7,titulo:'El sistema se descapitaliza',texto:'El patrimonio real pasa de {neto_real} a {neto_real_fin} en {H} meses. Algún bucle vicioso domina.'}]};}
+  palancas:[{k:'p0',nombre:'Pagar la deuda hoy con los pesos',fuerza:5,tipo:'stock',campo:'deuda',valor:'deuda = deuda - min(deuda, pesos); pesos = pesos - min(deuda, pesos)',descripcion:'Regla: la deuda se cancela de una vez en lugar de ir pagando la cuota.'},{k:'p6',nombre:'Comprar 200 USD por mes',fuerza:10,tipo:'param',campo:'compra_usd',valor:'200',descripcion:'Estructura: una compra fija que saca pesos de la inflación todos los meses.'},{k:'p1',nombre:'Recortar 5 % de gastos',fuerza:12,tipo:'param',campo:'gastos',valor:'gastos * 0.95',descripcion:'Un recorte sostenido con voluntad.'},{k:'p5',nombre:'Dolarizar lo que excede 3 meses de gasto',fuerza:10,tipo:'stock',campo:'pesos',valor:'pesos = min(pesos, 3 * gastos); dolares = dolares + max(0, pesos - 3 * gastos) / tipo_cambio',descripcion:'Estructura: los pesos de más dejan de perder contra la inflación.'},{k:'p2',nombre:'Ahorro automático al 50 %',fuerza:10,tipo:'param',campo:'ahorro_auto',valor:'0.5',descripcion:'Cambia la estructura: el sobrante se invierte solo.'},{k:'p3',nombre:'Indexar el ingreso a la inflación',fuerza:9,tipo:'param',campo:'ajuste_anual',valor:'(1 + inflacion) ^ 12 - 1',descripcion:'Acorta el retardo del ajuste.'},{k:'p4',nombre:'Colchón inicial de 3 meses',fuerza:11,tipo:'stock',campo:'pesos',valor:'max(pesos, 3 * gastos)',descripcion:'Buffer: tener 3 meses de gasto en pesos desde hoy.'}],
+  reglas:[{k:'r1',cuando:'deuda > 0 && pesos >= deuda',nivel:'atencion',fuerza:5,titulo:'Deuda cubierta: cortá el bucle hoy',texto:'Debés {deuda} y tenés {pesos}. Cada mes de espera cuesta {interes} de interés. Activá "Pagar la deuda hoy" y el bucle vicioso se apaga.'},{k:'r2',cuando:'deuda > 0 && pesos < deuda',nivel:'critico',fuerza:5,titulo:'Desplazar la carga',texto:'La deuda ({deuda}) supera la liquidez ({pesos}). El sobrante tiene que ir entero a la deuda antes que a cualquier inversión.'},{k:'r3',cuando:'colchon < 3',nivel:'atencion',fuerza:11,titulo:'Colchón corto',texto:'Tenés {colchon} de gasto en pesos. Un buffer de 3 a 6 meses absorbe shocks sin activar la deuda.'},{k:'r4',cuando:'ahorro_auto == 0 && ingreso > gastos',nivel:'atencion',fuerza:10,titulo:'El ahorro depende de la voluntad',texto:'Sobran {entra_ingreso} menos {salen_gastos} por mes y nada va solo a inversión. La inflación se come lo que queda en pesos.'},{k:'r5',cuando:'neto_real_fin < neto_real',nivel:'critico',fuerza:7,titulo:'El sistema se descapitaliza',texto:'El patrimonio real pasa de {neto_real} a {neto_real_fin} en {H} meses. Algún bucle vicioso domina.'}]};}
 function tplNegocio(){return {id:uid(),nombre:'Caja de un local',horizonte:12,unidad:'mes',objetivo:'caja',maximizar:1,formato:'ars',
   contexto:'Un local gastronómico: ventas diarias, insumos comprados a proveedores con plazo, costos fijos, y el retiro del dueño. El stock crítico es la caja.',
   stocks:[{k:'caja',nombre:'Caja',inicial:2000000,unidad:'$',min0:false},{k:'proveedores',nombre:'Deuda con proveedores',inicial:1500000,unidad:'$',min0:true}],
@@ -429,14 +438,13 @@ const TPL=[{n:'Vacío',f:tplVacio,d:'Empezá de cero.'},{n:'Finanzas personales'
 let LIB=[],M=null,DB=null,dirty=false,saveT=null,saving=false,pending=false,errs=[];
 function normalize(m){
   const b=tplVacio();const out={...b,...m};
-  for(const k of ['stocks','flujos','params','indicadores','palancas','reglas'])if(!Array.isArray(out[k]))out[k]=[];
+  for(const k of ['stocks','flujos','params','indicadores','palancas','reglas','activas'])if(!Array.isArray(out[k]))out[k]=[];
   if(!out.id)out.id=uid();out.horizonte=Math.max(2,Math.min(240,Math.round(out.horizonte||24)));
   return out;
 }
 
 /* ---------- motor ---------- */
 function simular(m){
-  errs=[];
   const H=m.horizonte;
   const comp=(src,who)=>{try{return compile(src);}catch(e){errs.push(who+': '+e.message);return {fn:()=>0,vars:[]};}};
   const fl=m.flujos.map(f=>({...f,c:comp(f.formula,'flujo "'+(f.nombre||f.k)+'"')}));
@@ -525,14 +533,7 @@ function renderLib(){
 }
 
 /* ---------- render: sistema ---------- */
-let lastSim=[],series=[];
-function renderTiles(sim){
-  const r0=sim[0],rH=sim[sim.length-1];
-  const items=[];
-  if(M.objetivo){const o=M.objetivo,d=rH[o]-r0[o];const good=M.maximizar?d>=0:d<=0;items.push({k:nombreDe(o)+' hoy',v:fmtV(r0[o],o),d:'objetivo'},{k:`${nombreDe(o)} en ${M.horizonte} ${plural(M.unidad)}`,v:fmtV(rH[o],o),d:(d>=0?'+':'')+fmtV(d,o),cls:good?'pos':'neg'});}
-  for(const s of M.stocks.slice(0,4))items.push({k:s.nombre||s.k,v:fmtV(r0[s.k],s.k),d:`→ ${fmtV(rH[s.k],s.k)} al final`});
-  $('tiles').innerHTML=items.map(x=>`<div class="tile ${x.cls||''}"><span class="k">${esc(x.k)}</span><span class="v">${x.v}</span><span class="d">${esc(x.d)}</span></div>`).join('');
-}
+let lastSim=[],lastBase=[],series=[];
 function nombreDe(k){const x=[...M.stocks,...M.indicadores,...M.flujos,...M.params].find(y=>y.k===k);return x?(x.nombre||k):k;}
 function renderDiagram(sim){
   const r0=sim[0];const S=M.stocks;const n=S.length;
@@ -557,33 +558,6 @@ function renderDiagram(sim){
 }
 const COLORS=['var(--s1)','var(--s2)','var(--s3)','var(--s4)','var(--s5)','var(--s6)'];
 let vis=null;
-function renderChart(sim){
-  lastSim=sim;
-  const all=[...(M.objetivo?[M.objetivo]:[]),...M.stocks.map(s=>s.k),...M.indicadores.map(x=>x.k).filter(k=>k!==M.objetivo)];
-  const uniq=[...new Set(all)].slice(0,6);
-  if(!vis||!uniq.some(k=>vis.has(k)))vis=new Set(uniq.slice(0,3));
-  series=uniq.map((k,i)=>({k,name:nombreDe(k),c:COLORS[i]}));
-  $('legend').innerHTML=series.map(s=>`<label><input type="checkbox" data-vis="${esc(s.k)}" ${vis.has(s.k)?'checked':''}><i style="background:${s.c}"></i>${esc(s.name)}</label>`).join('');
-  const ser=series.filter(s=>vis.has(s.k));
-  const W=720,Hh=300,pl=62,pr=120,pt=16,pb=30,n=sim.length-1;
-  if(!ser.length||n<1){$('chart').innerHTML='<p class="muted">Elegí series en la leyenda.</p>';return;}
-  let lo=0,hi=0;for(const r of sim)for(const s of ser){lo=Math.min(lo,r[s.k]);hi=Math.max(hi,r[s.k]);}
-  if(hi===lo)hi=lo+1;const step=nice((hi-lo)/5);lo=Math.floor(lo/step)*step;hi=Math.ceil(hi/step)*step;
-  const x=t=>pl+(W-pl-pr)*t/n,y=v=>pt+(Hh-pt-pb)*(1-(v-lo)/(hi-lo));
-  let g='';for(let v=lo;v<=hi+1e-9;v+=step)g+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="${Math.abs(v)<1e-9?'var(--axis)':'var(--grid)'}"/><text x="${pl-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--mono)">${fmt(v)}</text>`;
-  const xs=n<=12?2:n<=36?6:12;for(let t=0;t<=n;t+=xs)g+=`<text x="${x(t)}" y="${Hh-8}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="var(--mono)">${t===0?'hoy':t}</text>`;
-  const lines=ser.map(s=>`<path d="${sim.map((r,i)=>(i?'L':'M')+x(r.t).toFixed(1)+' '+y(r[s.k]).toFixed(1)).join('')}" fill="none" stroke="${s.c}" stroke-width="2" stroke-linejoin="round"/><circle cx="${x(n)}" cy="${y(sim[n][s.k])}" r="4" fill="${s.c}" stroke="var(--surface)" stroke-width="2"/>`).join('');
-  const labs=ser.map(s=>({s,yy:y(sim[n][s.k]),v:sim[n][s.k]})).sort((a,b)=>a.yy-b.yy);for(let i=1;i<labs.length;i++)if(labs[i].yy-labs[i-1].yy<14)labs[i].yy=labs[i-1].yy+14;
-  const endl=labs.map(l=>`<text x="${W-pr+10}" y="${l.yy+4}" font-size="11" fill="var(--fg2)" font-family="var(--mono)">${esc(l.s.name)} ${fmtV(l.v,l.s.k)}</text>`).join('');
-  $('chart').innerHTML=`<svg viewBox="0 0 ${W} ${Hh}" id="svgc" role="img" aria-label="Simulación"><g>${g}</g>${lines}${endl}<line id="xh" x1="0" x2="0" y1="${pt}" y2="${Hh-pb}" stroke="var(--fg2)" stroke-dasharray="3 3" opacity="0"/><rect x="${pl}" y="${pt}" width="${W-pl-pr}" height="${Hh-pt-pb}" fill="transparent" id="hit"/></svg>`;
-  const svg=$('svgc'),hit=$('hit'),xh=$('xh'),tip=$('tip'),wrap=svg.parentElement.parentElement;
-  hit.addEventListener('pointermove',ev=>{const rect=svg.getBoundingClientRect();const px=(ev.clientX-rect.left)*W/rect.width;const t=Math.max(0,Math.min(n,Math.round((px-pl)/(W-pl-pr)*n)));const r=sim[t];
-    xh.setAttribute('x1',x(t));xh.setAttribute('x2',x(t));xh.setAttribute('opacity','1');
-    tip.innerHTML=`<b>${t===0?'hoy':(M.unidad||'paso')+' '+t}</b><br>`+ser.map(s=>`<span style="color:${s.c}">●</span> ${esc(s.name)}: ${fmtV(r[s.k],s.k)}`).join('<br>');
-    tip.style.display='block';const wr=wrap.getBoundingClientRect();let tx=ev.clientX-wr.left+14;if(tx+tip.offsetWidth>wr.width-8)tx=ev.clientX-wr.left-tip.offsetWidth-14;tip.style.left=tx+'px';tip.style.top=(ev.clientY-wr.top-10)+'px';});
-  hit.addEventListener('pointerleave',()=>{tip.style.display='none';xh.setAttribute('opacity','0');});
-  const o=M.objetivo;$('sim-lede').textContent=o?`${nombreDe(o)}: de ${fmtV(sim[0][o],o)} a ${fmtV(sim[n][o],o)} en ${n} ${plural(M.unidad)}. Pasá el cursor para ver cada paso.`:'Elegí un indicador objetivo en Describir.';
-}
 function nice(raw){if(raw<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(raw)));const f=raw/p;return (f<=1?1:f<=2?2:f<=5?5:10)*p;}
 function renderTable(sim){
   const keys=[...M.stocks.map(s=>s.k),...M.flujos.map(f=>f.k),...M.indicadores.map(x=>x.k)];
@@ -591,23 +565,6 @@ function renderTable(sim){
 }
 
 /* ---------- render: diagnóstico ---------- */
-function sensibilidad(sim){
-  const H=M.horizonte,o=M.objetivo;if(!o)return [];
-  const out=[];
-  for(const pl of M.palancas){
-    const mx=aplicarPalanca(M,pl);if(!mx)continue;
-    const s2=simular(mx);const d=s2[H][o]-sim[H][o];const delta=M.maximizar?d:-d;
-    out.push({pl,delta,raw:d,path:s2.map((r,i)=>M.maximizar?r[o]-sim[i][o]:sim[i][o]-r[o])});
-  }
-  return out.sort((a,b)=>b.delta-a.delta);
-}
-function renderSens(list){
-  const H=M.horizonte;
-  $('sens-lede').textContent=M.objetivo?`Cada palanca se aplica sobre el modelo y se compara con el escenario base. Barra y valor: diferencia de ${nombreDe(M.objetivo)} en ${H} ${plural(M.unidad)}, en el sentido que definiste como mejor. Todo a la misma escala.`:'Elegí un indicador objetivo en Describir para medir las palancas.';
-  const maxAbs=Math.max(1e-9,...list.map(x=>Math.abs(x.delta)));
-  const spark=path=>{const w=120,h=36,n=path.length-1,mx=Math.max(1e-9,...path.map(Math.abs));const y=v=>h/2-(v/mx)*(h/2-3);return `<svg viewBox="0 0 ${w} ${h}" class="spark" aria-hidden="true"><line x1="0" x2="${w}" y1="${h/2}" y2="${h/2}" stroke="var(--grid)"/><path d="${path.map((v,i)=>(i?'L':'M')+(i/n*w).toFixed(1)+' '+y(v).toFixed(1)).join('')}" fill="none" stroke="var(--accent)" stroke-width="1.5"/></svg>`;};
-  $('pal-rows').innerHTML=list.length?list.map(x=>{const pos=x.delta>=0;return `<div class="pal"><div class="pal-n" title="${FUERZA[x.pl.fuerza]||''}">${x.pl.fuerza||12}</div><div class="pal-t"><b>${esc(x.pl.nombre||x.pl.k)}</b><span>${esc(x.pl.descripcion||'')}</span><em style="font-style:normal;font-family:var(--mono);font-size:11px;color:var(--muted)">${esc(nombreDe(x.pl.campo))} → ${esc(x.pl.valor)} · ${FUERZA[x.pl.fuerza]||'parámetros'}</em></div><div class="pal-bar"><i style="width:${(100*Math.abs(x.delta)/maxAbs).toFixed(1)}%;background:${pos?'var(--good)':'var(--crit)'}"></i></div>${spark(x.path)}<div class="pal-v ${pos?'pos':'neg'}">${pos?'+':'−'}${fmtV(Math.abs(x.raw),M.objetivo)}<small>${esc(nombreDe(M.objetivo))} en ${H} ${esc(plural(M.unidad))}</small></div></div>`;}).join(''):'<p class="muted">Sin palancas simulables. Agregá palancas en Describir y elegí un objetivo.</p>';
-}
 function patrones(sim){
   const C=[];const H=M.horizonte,o=M.objetivo;
   const add=(tipo,nivel,titulo,texto,fuerza)=>C.push({tipo,nivel,titulo,texto,fuerza});
@@ -628,8 +585,8 @@ function patrones(sim){
   }
   return C;
 }
-function reglas(sim){
-  const C=[];const sc=scopeReglas(M,sim);
+function reglas(sim,ME){
+  const C=[];const sc=scopeReglas(ME||M,sim);
   for(const r of M.reglas){
     if(!r.cuando)continue;
     let ok;try{ok=compile(r.cuando).fn(sc);}catch(e){errs.push('regla "'+(r.titulo||r.k)+'": '+e.message);continue;}
@@ -646,23 +603,88 @@ function renderCards(C){
   $('cards').innerHTML=al.length?al.map(card).join(''):'<p class="muted">Sin alertas.</p>';
   $('cards-ok').innerHTML=ok.map(card).join('');$('ok-count').textContent=ok.length?`(${ok.length})`:'';
 }
-function renderCamino(C,sens){
-  const steps=[];
-  const al=C.filter(x=>x.nivel!=='ok');
-  for(const x of al)steps.push({titulo:x.titulo,detalle:x.texto,fuerza:x.fuerza,peso:(x.nivel==='critico'?0:1)});
-  const pos=sens.filter(s=>s.delta>0);
-  pos.forEach((s,i)=>steps.push({titulo:s.pl.nombre||s.pl.k,detalle:`${s.pl.descripcion||''} Efecto: ${s.raw>=0?'+':'−'}${fmtV(Math.abs(s.raw),M.objetivo)} en ${nombreDe(M.objetivo)}.${i===0?' Es la palanca que más mueve el sistema.':''}`,fuerza:s.pl.fuerza||12,peso:2+i}));
-  steps.sort((a,b)=>a.peso-b.peso||(a.fuerza||12)-(b.fuerza||12));
-  $('camino-next').textContent=steps.length?`Próximo paso: ${steps[0].titulo}. ${steps.length-1} más por delante. Primero las alertas críticas, después las palancas por efecto; a igual urgencia, la más fuerte según Meadows.`:'Nada pendiente: sin alertas y sin palancas con efecto positivo.';
-  $('camino').innerHTML=steps.map((x,i)=>`<li class="step${i===0?' ahora':''}"><i>${i+1}</i><div><b>${esc(x.titulo)}</b><span>${esc(x.detalle)}</span><em>${x.fuerza?`palanca ${x.fuerza} · ${FUERZA[x.fuerza]||''}`:'patrón detectado'}</em></div></li>`).join('');
-}
 
 /* ---------- compute ---------- */
+
+function renderTiles(base,sim){
+  const r0=sim[0],rH=sim[sim.length-1],bH=base[base.length-1];
+  const items=[];const o=M.objetivo;
+  if(o){
+    const d=rH[o]-bH[o];const good=M.maximizar?d>=0:d<=0;const act=(M.activas||[]).length;
+    items.push({k:nombreDe(o)+' hoy',v:fmtV(r0[o],o),d:'objetivo'});
+    items.push({k:`${nombreDe(o)} en ${M.horizonte} ${plural(M.unidad)}, sin palancas`,v:fmtV(bH[o],o),d:'escenario base'});
+    if(act)items.push({k:`${nombreDe(o)} en ${M.horizonte} ${plural(M.unidad)}, con ${act} ${act===1?'palanca':'palancas'}`,v:fmtV(rH[o],o),d:(d>=0?'+':'')+fmtV(d,o)+' contra la base',cls:good?'pos':'neg'});
+  }
+  for(const s of M.stocks.slice(0,3))items.push({k:s.nombre||s.k,v:fmtV(r0[s.k],s.k),d:`→ ${fmtV(rH[s.k],s.k)} al final`});
+  $('tiles').innerHTML=items.map(x=>`<div class="tile ${x.cls||''}"><span class="k">${esc(x.k)}</span><span class="v">${x.v}</span><span class="d">${esc(x.d)}</span></div>`).join('');
+}
+function renderChart(base,sim){
+  lastSim=sim;lastBase=base;
+  const o=M.objetivo;const act=(M.activas||[]).length;
+  const all=[...(o?[o]:[]),...M.stocks.map(s=>s.k),...M.indicadores.map(x=>x.k).filter(k=>k!==o)];
+  const uniq=[...new Set(all)].slice(0,6);
+  if(!vis||!uniq.some(k=>vis.has(k)))vis=new Set(uniq.slice(0,o?1:3));
+  series=uniq.map((k,i)=>({k,name:nombreDe(k),c:COLORS[i],data:sim}));
+  $('legend').innerHTML=series.map(s=>`<label><input type="checkbox" data-vis="${esc(s.k)}" ${vis.has(s.k)?'checked':''}><i style="background:${s.c}"></i>${esc(s.name)}</label>`).join('')+(o&&act?`<span style="display:inline-flex;align-items:center;gap:6px"><i style="background:var(--muted);height:0;border-top:2px dashed var(--muted)"></i>${esc(nombreDe(o))} sin palancas</span>`:'');
+  const ser=series.filter(s=>vis.has(s.k));
+  const extra=(o&&act&&vis.has(o))?[{k:o,name:nombreDe(o)+' (base)',c:'var(--muted)',data:base,dash:true}]:[];
+  const all2=[...ser,...extra];
+  const W=720,Hh=300,pl=62,pr=130,pt=16,pb=30,n=sim.length-1;
+  if(!ser.length||n<1){$('chart').innerHTML='<p class="muted">Elegí series en la leyenda.</p>';return;}
+  let lo=0,hi=0;for(const s of all2)for(const r of s.data){lo=Math.min(lo,r[s.k]);hi=Math.max(hi,r[s.k]);}
+  if(hi===lo)hi=lo+1;const step=nice((hi-lo)/5);lo=Math.floor(lo/step)*step;hi=Math.ceil(hi/step)*step;
+  const x=t=>pl+(W-pl-pr)*t/n,y=v=>pt+(Hh-pt-pb)*(1-(v-lo)/(hi-lo));
+  let g='';for(let v=lo;v<=hi+1e-9;v+=step)g+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="${Math.abs(v)<1e-9?'var(--axis)':'var(--grid)'}"/><text x="${pl-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--mono)">${fmt(v)}</text>`;
+  const xs=n<=12?2:n<=36?6:12;for(let t=0;t<=n;t+=xs)g+=`<text x="${x(t)}" y="${Hh-8}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="var(--mono)">${t===0?'hoy':t}</text>`;
+  const lines=all2.map(s=>`<path d="${s.data.map((r,i)=>(i?'L':'M')+x(r.t).toFixed(1)+' '+y(r[s.k]).toFixed(1)).join('')}" fill="none" stroke="${s.c}" stroke-width="2" ${s.dash?'stroke-dasharray="5 4"':''} stroke-linejoin="round"/>${s.dash?'':`<circle cx="${x(n)}" cy="${y(s.data[n][s.k])}" r="4" fill="${s.c}" stroke="var(--surface)" stroke-width="2"/>`}`).join('');
+  const labs=all2.map(s=>({s,yy:y(s.data[n][s.k]),v:s.data[n][s.k]})).sort((a,b)=>a.yy-b.yy);for(let i=1;i<labs.length;i++)if(labs[i].yy-labs[i-1].yy<14)labs[i].yy=labs[i-1].yy+14;
+  const endl=labs.map(l=>`<text x="${W-pr+10}" y="${l.yy+4}" font-size="11" fill="var(--fg2)" font-family="var(--mono)">${esc(l.s.name)} ${fmtV(l.v,l.s.k)}</text>`).join('');
+  $('chart').innerHTML=`<svg viewBox="0 0 ${W} ${Hh}" id="svgc" role="img" aria-label="Simulación"><g>${g}</g>${lines}${endl}<line id="xh" x1="0" x2="0" y1="${pt}" y2="${Hh-pb}" stroke="var(--fg2)" stroke-dasharray="3 3" opacity="0"/><rect x="${pl}" y="${pt}" width="${W-pl-pr}" height="${Hh-pt-pb}" fill="transparent" id="hit"/></svg>`;
+  const svg=$('svgc'),hit=$('hit'),xh=$('xh'),tip=$('tip'),wrap=svg.parentElement.parentElement;
+  hit.addEventListener('pointermove',ev=>{const rect=svg.getBoundingClientRect();const px=(ev.clientX-rect.left)*W/rect.width;const t=Math.max(0,Math.min(n,Math.round((px-pl)/(W-pl-pr)*n)));
+    xh.setAttribute('x1',x(t));xh.setAttribute('x2',x(t));xh.setAttribute('opacity','1');
+    tip.innerHTML=`<b>${t===0?'hoy':(M.unidad||'paso')+' '+t}</b><br>`+all2.map(s=>`<span style="color:${s.c}">●</span> ${esc(s.name)}: ${fmtV(s.data[t][s.k],s.k)}`).join('<br>');
+    tip.style.display='block';const wr=wrap.getBoundingClientRect();let tx=ev.clientX-wr.left+14;if(tx+tip.offsetWidth>wr.width-8)tx=ev.clientX-wr.left-tip.offsetWidth-14;tip.style.left=tx+'px';tip.style.top=(ev.clientY-wr.top-10)+'px';});
+  hit.addEventListener('pointerleave',()=>{tip.style.display='none';xh.setAttribute('opacity','0');});
+  $('sim-lede').textContent=o?`${nombreDe(o)}: de ${fmtV(sim[0][o],o)} a ${fmtV(sim[n][o],o)} en ${n} ${plural(M.unidad)}${act?` con las palancas activas; sin ellas terminaría en ${fmtV(base[n][o],o)}`:''}. Pasá el cursor para ver cada paso.`:'Elegí un indicador objetivo en Describir.';
+}
+function aplicarLista(m,keys){let mx=m;for(const k of keys){const pl=M.palancas.find(p=>p.k===k);if(!pl)continue;const r=aplicarPalanca(mx,pl);if(r)mx=r;}return mx;}
+function sensibilidad(sim,ME){
+  const H=M.horizonte,o=M.objetivo;if(!o)return [];
+  const act=M.activas||[];const on=new Set(act);const out=[];
+  for(const pl of M.palancas){
+    if(on.has(pl.k)){const other=simular(aplicarLista(M,act.filter(k=>k!==pl.k)));const d=sim[H][o]-other[H][o];out.push({pl,on:true,delta:M.maximizar?d:-d,raw:d,path:sim.map((r,i)=>M.maximizar?r[o]-other[i][o]:other[i][o]-r[o])});}
+    else{const mx=aplicarPalanca(ME,pl);if(!mx)continue;const other=simular(mx);const d=other[H][o]-sim[H][o];out.push({pl,on:false,delta:M.maximizar?d:-d,raw:d,path:other.map((r,i)=>M.maximizar?r[o]-sim[i][o]:sim[i][o]-r[o])});}
+  }
+  return out.sort((a,b)=>(b.on-a.on)||(b.delta-a.delta));
+}
+function renderSens(list){
+  const H=M.horizonte,o=M.objetivo;const act=(M.activas||[]).length;
+  $('esc-lede').textContent=!M.palancas.length?'Este modelo no tiene palancas. Definilas en Describir.':!o?'Elegí un indicador objetivo en Describir para medir el efecto de cada palanca.':`Prendé y apagá. ${act?`${act} ${act===1?'activa':'activas'}.`:'Ninguna activa: estás viendo el escenario base.'} El efecto de cada una se mide sobre el escenario actual, en ${nombreDe(o)} a ${H} ${plural(M.unidad)}.`;
+  const maxAbs=Math.max(1e-9,...list.map(x=>Math.abs(x.delta)));
+  const spark=path=>{const w=120,h=36,n=path.length-1,mx=Math.max(1e-9,...path.map(Math.abs));const y=v=>h/2-(v/mx)*(h/2-3);return `<svg viewBox="0 0 ${w} ${h}" class="spark" aria-hidden="true"><line x1="0" x2="${w}" y1="${h/2}" y2="${h/2}" stroke="var(--grid)"/><path d="${path.map((v,i)=>(i?'L':'M')+(i/n*w).toFixed(1)+' '+y(v).toFixed(1)).join('')}" fill="none" stroke="var(--accent)" stroke-width="1.5"/></svg>`;};
+  const rows=o?list:M.palancas.map(pl=>({pl,on:(M.activas||[]).includes(pl.k),delta:0,raw:0,path:[0,0]}));
+  $('pal-rows').innerHTML=rows.length?rows.map(x=>{const pos=x.delta>=0;return `<div class="pal${x.on?' on':''}"><label class="sw" title="${x.on?'apagar':'activar'}"><input type="checkbox" data-toggle="${esc(x.pl.k)}" ${x.on?'checked':''}><i></i></label><div class="pal-t"><b>${esc(x.pl.nombre||x.pl.k)} <span class="pal-n" title="${FUERZA[x.pl.fuerza]||''}">${x.pl.fuerza||12} · ${FUERZA[x.pl.fuerza]||'parámetros'}</span></b><span>${esc(x.pl.descripcion||'')}</span><em>${esc(x.pl.valor.includes('=')?x.pl.valor:nombreDe(x.pl.campo)+' → '+x.pl.valor)}</em></div><div class="pal-bar"><i style="width:${(100*Math.abs(x.delta)/maxAbs).toFixed(1)}%;background:${pos?'var(--good)':'var(--crit)'}"></i></div>${spark(x.path)}<div class="pal-v ${pos?'pos':'neg'}">${o?(pos?'+':'−')+fmtV(Math.abs(x.raw),o):'—'}<small>${x.on?'aporta al escenario':'si la activás'}</small></div></div>`;}).join(''):'';
+}
+function renderCamino(C,sens){
+  const steps=[];
+  for(const x of C.filter(x=>x.nivel!=='ok'))steps.push({titulo:x.titulo,detalle:x.texto,fuerza:x.fuerza,peso:(x.nivel==='critico'?0:1)});
+  const pos=sens.filter(s=>!s.on&&s.delta>0);
+  pos.forEach((s,i)=>steps.push({titulo:s.pl.nombre||s.pl.k,detalle:`${s.pl.descripcion||''} Efecto: ${s.raw>=0?'+':'−'}${fmtV(Math.abs(s.raw),M.objetivo)} en ${nombreDe(M.objetivo)}.${i===0?' Es la palanca que más mueve el sistema ahora.':''}`,fuerza:s.pl.fuerza||12,peso:2+i,toggle:s.pl.k}));
+  steps.sort((a,b)=>a.peso-b.peso||(a.fuerza||12)-(b.fuerza||12));
+  const act=(M.activas||[]).length;
+  $('camino-next').textContent=steps.length?`Próximo paso: ${steps[0].titulo}. ${steps.length-1} más por delante. Primero las alertas, después las palancas por efecto; a igual urgencia, la más fuerte según Meadows.${act?' Lo que ya activaste no aparece.':''}`:(act?'Nada pendiente con las palancas activas: sin alertas y sin palancas que sumen.':'Nada pendiente: sin alertas y sin palancas con efecto positivo.');
+  $('camino').innerHTML=steps.map((x,i)=>`<li class="step${i===0?' ahora':''}"><i>${i+1}</i><div><b>${esc(x.titulo)}</b><span>${esc(x.detalle)}</span><em>${x.fuerza?`palanca ${x.fuerza} · ${FUERZA[x.fuerza]||''}`:'patrón detectado'}</em>${x.toggle?`<div><button class="small" data-toggle-btn="${esc(x.toggle)}">Activar</button></div>`:''}</div></li>`).join('');
+}
 function compute(){
-  const sim=simular(M);
-  renderTiles(sim);renderDiagram(sim);renderChart(sim);renderTable(sim);
-  const sens=sensibilidad(sim);renderSens(sens);
-  const C=[...patrones(sim),...reglas(sim)];renderCards(C);renderCamino(C,sens);
+  errs=[];
+  const base=simular(M);
+  const act=M.activas||[];
+  const ME=act.length?aplicarLista(M,act):M;
+  const sim=ME===M?base:simular(ME);
+  renderTiles(base,sim);renderChart(base,sim);renderDiagram(sim);renderTable(sim);
+  const sens=sensibilidad(sim,ME);renderSens(sens);
+  const C=[...patrones(sim),...reglas(sim,ME)];renderCards(C);renderCamino(C,sens);
   const box=$('errores');const u=[...new Set(errs)];box.hidden=!u.length;box.innerHTML=u.map(e=>'• '+esc(e)).join('<br>');
   document.querySelectorAll('.tabs [data-tab="describir"]').forEach(b=>b.textContent=u.length?`Describir (${u.length} ${u.length===1?'error':'errores'})`:'Describir');
 }
@@ -682,11 +704,13 @@ document.addEventListener('input',e=>{
       if(el.dataset.list==='params')renderList('palancas');
       if(el.dataset.list==='indicadores')renderObjetivo();
     }
-  }else if(el.dataset.vis!==undefined){if(el.checked)vis.add(el.dataset.vis);else vis.delete(el.dataset.vis);renderChart(lastSim);return;}
+  }else if(el.dataset.vis!==undefined){if(el.checked)vis.add(el.dataset.vis);else vis.delete(el.dataset.vis);renderChart(lastBase,lastSim);return;}
+  else if(el.dataset.toggle!==undefined){toggleLever(el.dataset.toggle,el.checked);return;}
   else return;
   dirty=true;scheduleCompute();scheduleSave();
 });
 let cT=null;function scheduleCompute(){clearTimeout(cT);cT=setTimeout(compute,120);}
+function toggleLever(k,on){M.activas=(M.activas||[]).filter(x=>x!==k);if(on)M.activas.push(k);dirty=true;compute();scheduleSave();}
 document.addEventListener('click',e=>{
   const b=e.target.closest('button,[data-open]');if(!b)return;
   if(b.dataset.add){
@@ -696,6 +720,8 @@ document.addEventListener('click',e=>{
   else if(b.dataset.tpl!==undefined){const m=normalize(TPL[+b.dataset.tpl].f());LIB.push(m);setCurrent(m);showTab('describir');}
   else if(b.dataset.dup){const src=LIB.find(x=>x.id===b.dataset.dup);if(!src)return;const m=structuredClone(src);m.id=uid();m.nombre=(src.nombre||'Modelo')+' (copia)';LIB.push(m);setCurrent(m);e.stopPropagation();}
   else if(b.dataset.delm){const i=LIB.findIndex(x=>x.id===b.dataset.delm);if(i<0)return;const gone=LIB[i];if(!b.dataset.sure){b.dataset.sure='1';b.textContent='¿Seguro? Borrar';e.stopPropagation();return;}LIB.splice(i,1);deleteRemote(gone.id);if(!LIB.length)LIB.push(normalize(tplFinanzas()));if(gone.id===M.id)setCurrent(LIB[0]);else renderLib();saveLocal();e.stopPropagation();return;}
+  else if(b.dataset.toggleBtn){toggleLever(b.dataset.toggleBtn,true);return;}
+  else if(b.id==='btn-reset'){M.activas=[];dirty=true;compute();scheduleSave();return;}
   else if(b.dataset.open){const m=LIB.find(x=>x.id===b.dataset.open);if(m&&m.id!==M.id)setCurrent(m);return;}
   else if(b.id==='btn-export'){const txt=JSON.stringify(M,null,2);$('json-io').value=txt;navigator.clipboard?.writeText(txt).then(()=>$('io-msg').textContent='Copiado al portapapeles.',()=>{$('json-io').select();$('io-msg').textContent='Seleccionado: copialo con Ctrl+C.';});return;}
   else if(b.id==='btn-import'){try{const m=normalize(JSON.parse($('json-io').value));m.id=uid();LIB.push(m);setCurrent(m);$('io-msg').textContent='Modelo cargado.';}catch(err){$('io-msg').textContent='No es un JSON válido: '+err.message;}return;}
