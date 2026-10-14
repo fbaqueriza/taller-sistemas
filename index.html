@@ -251,7 +251,7 @@ td:first-child,th:first-child{text-align:left}
   <details class="grp" open>
     <summary><span>Palancas <small>movimientos que podés hacer</small></span><b id="n-palancas"></b></summary>
     <div class="grp-body">
-      <p class="hint-p">Una palanca cambia un parámetro o el valor inicial de un stock. El nuevo valor puede ser una fórmula sobre parámetros y stocks iniciales. La fuerza es el lugar en la lista de Meadows: 12 es la más débil (parámetros), 1 la más fuerte (trascender el paradigma).</p>
+      <p class="hint-p">Una palanca cambia un parámetro o el valor inicial de un stock. El nuevo valor puede ser una fórmula sobre parámetros y stocks iniciales. Para mover varias cosas a la vez, escribí asignaciones separadas por punto y coma: <code>pesos = 3 * gastos; dolares = dolares + (pesos - 3 * gastos) / tipo_cambio</code>. La fuerza es el lugar en la lista de Meadows: 12 es la más débil (parámetros), 1 la más fuerte (trascender el paradigma).</p>
       <div class="row row-head" style="grid-template-columns:minmax(0,1.2fr) 60px minmax(90px,.7fr) minmax(90px,.8fr) minmax(90px,.8fr) minmax(0,1.3fr) 28px"><span>Nombre</span><span>Fuerza</span><span>Cambia</span><span>Clave</span><span>Nuevo valor</span><span>Descripción</span><span></span></div>
       <div class="rows" id="palancas"></div>
       <button class="add" data-add="palancas">+ agregar palanca</button>
@@ -408,12 +408,12 @@ function compile(src){
 /* ---------- plantillas ---------- */
 function tplVacio(){return {id:uid(),nombre:'Nuevo sistema',horizonte:24,unidad:'mes',objetivo:'',maximizar:1,formato:'num',contexto:'',stocks:[],flujos:[],params:[],indicadores:[],palancas:[],reglas:[]};}
 function tplFinanzas(){return {id:uid(),nombre:'Finanzas personales',horizonte:24,unidad:'mes',objetivo:'neto_real',maximizar:1,formato:'ars',
-  contexto:'Una persona con ingreso mensual, gastos que siguen la inflación, un colchón en pesos, inversiones y una deuda de tarjeta. Todo en pesos nominales; el indicador neto_real deflacta.',
-  stocks:[{k:'pesos',nombre:'Pesos líquidos',inicial:400000,unidad:'$',min0:true},{k:'inversiones',nombre:'Inversiones',inicial:0,unidad:'$',min0:true},{k:'deuda',nombre:'Deuda de tarjeta',inicial:300000,unidad:'$',min0:true}],
-  params:[{k:'ingreso',nombre:'Ingreso mensual',valor:3000000,nota:'típico'},{k:'gastos',nombre:'Gastos mensuales',valor:1135000,nota:'fijos + variables'},{k:'inflacion',nombre:'Inflación mensual',valor:0.019,unidad:'%',nota:'INDEC sep-2026'},{k:'ajuste_anual',nombre:'Crecimiento anual del ingreso',valor:0.21,unidad:'%',nota:'10 % cada 6 meses'},{k:'tasa_inv',nombre:'Rendimiento inversión (mensual)',valor:0.03,unidad:'%',nota:''},{k:'tasa_deuda',nombre:'Interés de la tarjeta (mensual)',valor:0.08,unidad:'%',nota:''},{k:'ahorro_auto',nombre:'Ahorro automático (fracción del sobrante)',valor:0,unidad:'%',nota:'0 a 1'}],
+  contexto:'Una persona con ingreso mensual, gastos que siguen la inflación, un colchón en pesos y dólares, inversiones y una deuda de tarjeta. Todo en pesos nominales; el indicador neto_real deflacta. Los indicadores se evalúan en orden, así que uno puede usar al anterior.',
+  stocks:[{k:'pesos',nombre:'Pesos líquidos',inicial:400000,unidad:'$',min0:true},{k:'dolares',nombre:'Dólares ahorrados',inicial:5000,unidad:'USD',min0:true},{k:'inversiones',nombre:'Inversiones',inicial:0,unidad:'$',min0:true},{k:'deuda',nombre:'Deuda de tarjeta',inicial:300000,unidad:'$',min0:true}],
+  params:[{k:'ingreso',nombre:'Ingreso mensual',valor:3000000,nota:'típico'},{k:'tipo_cambio',nombre:'Tipo de cambio hoy',valor:1535,unidad:'$',nota:'oficial venta 13-oct-2026; el dólar sigue la inflación'},{k:'gastos',nombre:'Gastos mensuales',valor:1135000,nota:'fijos + variables'},{k:'inflacion',nombre:'Inflación mensual',valor:0.019,unidad:'%',nota:'INDEC sep-2026'},{k:'ajuste_anual',nombre:'Crecimiento anual del ingreso',valor:0.21,unidad:'%',nota:'10 % cada 6 meses'},{k:'tasa_inv',nombre:'Rendimiento inversión (mensual)',valor:0.03,unidad:'%',nota:''},{k:'tasa_deuda',nombre:'Interés de la tarjeta (mensual)',valor:0.08,unidad:'%',nota:''},{k:'ahorro_auto',nombre:'Ahorro automático (fracción del sobrante)',valor:0,unidad:'%',nota:'0 a 1'}],
   flujos:[{k:'entra_ingreso',nombre:'Ingreso',desde:'',hacia:'pesos',formula:'ingreso * (1 + ajuste_anual) ^ (t / 12)'},{k:'salen_gastos',nombre:'Gastos',desde:'pesos',hacia:'',formula:'gastos * (1 + inflacion) ^ t'},{k:'ahorro',nombre:'Ahorro automático',desde:'pesos',hacia:'inversiones',formula:'max(0, ingreso * (1 + ajuste_anual) ^ (t / 12) - gastos * (1 + inflacion) ^ t) * ahorro_auto'},{k:'rendimiento',nombre:'Rendimiento',desde:'',hacia:'inversiones',formula:'inversiones * tasa_inv'},{k:'interes',nombre:'Interés de la deuda',desde:'',hacia:'deuda',formula:'deuda * tasa_deuda'},{k:'pago_deuda_p',nombre:'Pago de deuda (sale de pesos)',desde:'pesos',hacia:'',formula:'min(deuda, pesos)'},{k:'pago_deuda_d',nombre:'Pago de deuda (baja la deuda)',desde:'deuda',hacia:'',formula:'min(deuda, pesos)'}],
-  indicadores:[{k:'neto',nombre:'Patrimonio neto',formula:'pesos + inversiones - deuda',unidad:'$'},{k:'neto_real',nombre:'Patrimonio neto real',formula:'(pesos + inversiones - deuda) / (1 + inflacion) ^ t',unidad:'$'},{k:'colchon',nombre:'Colchón',formula:'pesos / (gastos * (1 + inflacion) ^ t)',unidad:'meses'}],
-  palancas:[{k:'p1',nombre:'Recortar 5 % de gastos',fuerza:12,tipo:'param',campo:'gastos',valor:'gastos * 0.95',descripcion:'Un recorte sostenido con voluntad.'},{k:'p2',nombre:'Ahorro automático al 50 %',fuerza:10,tipo:'param',campo:'ahorro_auto',valor:'0.5',descripcion:'Cambia la estructura: el sobrante se invierte solo.'},{k:'p3',nombre:'Indexar el ingreso a la inflación',fuerza:9,tipo:'param',campo:'ajuste_anual',valor:'(1 + inflacion) ^ 12 - 1',descripcion:'Acorta el retardo del ajuste.'},{k:'p4',nombre:'Colchón inicial de 3 meses',fuerza:11,tipo:'stock',campo:'pesos',valor:'max(pesos, 3 * gastos)',descripcion:'Buffer: tener 3 meses de gasto en pesos desde hoy.'}],
+  indicadores:[{k:'dolares_en_pesos',nombre:'Dólares en pesos',formula:'dolares * tipo_cambio * (1 + inflacion) ^ t',unidad:'$'},{k:'neto',nombre:'Patrimonio neto',formula:'pesos + dolares_en_pesos + inversiones - deuda',unidad:'$'},{k:'neto_real',nombre:'Patrimonio neto real',formula:'neto / (1 + inflacion) ^ t',unidad:'$'},{k:'colchon',nombre:'Colchón',formula:'(pesos + dolares_en_pesos) / (gastos * (1 + inflacion) ^ t)',unidad:'meses'}],
+  palancas:[{k:'p1',nombre:'Recortar 5 % de gastos',fuerza:12,tipo:'param',campo:'gastos',valor:'gastos * 0.95',descripcion:'Un recorte sostenido con voluntad.'},{k:'p5',nombre:'Dolarizar lo que excede 3 meses de gasto',fuerza:10,tipo:'stock',campo:'pesos',valor:'pesos = min(pesos, 3 * gastos); dolares = dolares + max(0, pesos - 3 * gastos) / tipo_cambio',descripcion:'Estructura: los pesos de más dejan de perder contra la inflación.'},{k:'p2',nombre:'Ahorro automático al 50 %',fuerza:10,tipo:'param',campo:'ahorro_auto',valor:'0.5',descripcion:'Cambia la estructura: el sobrante se invierte solo.'},{k:'p3',nombre:'Indexar el ingreso a la inflación',fuerza:9,tipo:'param',campo:'ajuste_anual',valor:'(1 + inflacion) ^ 12 - 1',descripcion:'Acorta el retardo del ajuste.'},{k:'p4',nombre:'Colchón inicial de 3 meses',fuerza:11,tipo:'stock',campo:'pesos',valor:'max(pesos, 3 * gastos)',descripcion:'Buffer: tener 3 meses de gasto en pesos desde hoy.'}],
   reglas:[{k:'r1',cuando:'deuda > 0 && pesos >= deuda',nivel:'atencion',fuerza:5,titulo:'Deuda cubierta: cortá el bucle hoy',texto:'Debés {deuda} y tenés {pesos}. Cada mes de espera cuesta {interes} de interés. Pagala y el bucle vicioso se apaga.'},{k:'r2',cuando:'deuda > 0 && pesos < deuda',nivel:'critico',fuerza:5,titulo:'Desplazar la carga',texto:'La deuda ({deuda}) supera la liquidez ({pesos}). El sobrante tiene que ir entero a la deuda antes que a cualquier inversión.'},{k:'r3',cuando:'colchon < 3',nivel:'atencion',fuerza:11,titulo:'Colchón corto',texto:'Tenés {colchon} de gasto en pesos. Un buffer de 3 a 6 meses absorbe shocks sin activar la deuda.'},{k:'r4',cuando:'ahorro_auto == 0 && ingreso > gastos',nivel:'atencion',fuerza:10,titulo:'El ahorro depende de la voluntad',texto:'Sobran {entra_ingreso} menos {salen_gastos} por mes y nada va solo a inversión. La inflación se come lo que queda en pesos.'},{k:'r5',cuando:'neto_real_fin < neto_real',nivel:'critico',fuerza:7,titulo:'El sistema se descapitaliza',texto:'El patrimonio real pasa de {neto_real} a {neto_real_fin} en {H} meses. Algún bucle vicioso domina.'}]};}
 function tplNegocio(){return {id:uid(),nombre:'Caja de un local',horizonte:12,unidad:'mes',objetivo:'caja',maximizar:1,formato:'ars',
   contexto:'Un local gastronómico: ventas diarias, insumos comprados a proveedores con plazo, costos fijos, y el retiro del dueño. El stock crítico es la caja.',
@@ -449,7 +449,7 @@ function simular(m){
     const sc={...base,...st,t,H};
     const fv={};for(const f of fl){fv[f.k]=safe(f.c,sc,'flujo "'+(f.nombre||f.k)+'"');}
     Object.assign(sc,fv);
-    const iv={};for(const x of ind){iv[x.k]=safe(x.c,sc,'indicador "'+(x.nombre||x.k)+'"');}
+    const iv={};for(const x of ind){iv[x.k]=safe(x.c,sc,'indicador "'+(x.nombre||x.k)+'"');sc[x.k]=iv[x.k];}
     const row={t,...st,...fv,...iv,_clamp:[]};rows.push(row);
     if(t===H)break;
     const inn={},out={};for(const s of m.stocks){inn[s.k]=0;out[s.k]=0;}
@@ -469,10 +469,16 @@ function scopeReglas(m,sim){
 function aplicarPalanca(m,pl){
   const mx=structuredClone(m);
   const sc={};for(const p of m.params)sc[p.k]=p.valor||0;for(const s of m.stocks)sc[s.k]=s.inicial||0;
-  let v;try{v=compile(pl.valor).fn(sc);}catch(e){errs.push('palanca "'+(pl.nombre||pl.k)+'": '+e.message);return null;}
-  if(pl.tipo==='stock'){const s=mx.stocks.find(x=>x.k===pl.campo);if(!s)return null;s.inicial=v;}
-  else{const p=mx.params.find(x=>x.k===pl.campo);if(!p)return null;p.valor=v;}
-  return mx;
+  const src=String(pl.valor||'');
+  const asg=src.includes('=')&&!/[<>!=]=/.test(src)?src.split(';').map(s=>s.trim()).filter(Boolean).map(s=>{const i=s.indexOf('=');return {k:s.slice(0,i).trim(),e:s.slice(i+1).trim()};}):[{k:pl.campo,e:src}];
+  const vals=[];
+  for(const a of asg){let v;try{v=compile(a.e).fn(sc);}catch(e){errs.push('palanca "'+(pl.nombre||pl.k)+'": '+e.message);return null;}vals.push({k:a.k,v});}
+  let any=false;
+  for(const {k,v} of vals){
+    const s=mx.stocks.find(x=>x.k===k),p=mx.params.find(x=>x.k===k);
+    if(s){s.inicial=v;any=true;}else if(p){p.valor=v;any=true;}else errs.push('palanca "'+(pl.nombre||pl.k)+'": no existe la clave "'+k+'"');
+  }
+  return any?mx:null;
 }
 
 /* ---------- render: editor ---------- */
@@ -507,6 +513,9 @@ function renderList(list){
 function renderEditor(){
   for(const r of ['stocks','flujos','params','indicadores','palancas','reglas']){for(const x of M[r])if(!x.id)x.id=uid();renderList(r);}
   $('m-nombre').value=M.nombre||'';$('m-horizonte').value=M.horizonte;$('m-unidad').value=M.unidad||'';$('m-maximizar').value=M.maximizar?'1':'0';$('m-moneda').value=M.formato||'num';$('m-contexto').value=M.contexto||'';
+  renderObjetivo();
+}
+function renderObjetivo(){
   const sel=$('m-objetivo');const opts=[...M.indicadores.map(x=>[x.k,x.nombre||x.k]),...M.stocks.map(s=>[s.k,s.nombre||s.k])];
   sel.innerHTML='<option value="">(elegí uno)</option>'+opts.map(([k,n])=>`<option value="${esc(k)}"${k===M.objetivo?' selected':''}>${esc(n)}</option>`).join('');
 }
@@ -668,9 +677,11 @@ document.addEventListener('input',e=>{
     if(f==='nombre'&&(el.dataset.list==='stocks'||el.dataset.list==='params'||el.dataset.list==='indicadores')&&!r.kManual){const ki=el.parentElement.querySelector('[data-field="k"]');if(ki&&!ki.dataset.touched){r.k=slug(el.value);ki.value=r.k;}}
     if(f==='k')el.dataset.touched='1';
     if(f==='tipo'){const row=el.closest('.row');row.querySelector('[data-field="campo"]').outerHTML=cell(el.dataset.list,r,['campo','camposel','']);r.campo=row.querySelector('[data-field="campo"]').value;}
-    if(el.dataset.list==='stocks'&&(f==='k'||f==='nombre')){renderList('flujos');renderList('palancas');renderEditor();}
-    if(el.dataset.list==='params'&&(f==='k'||f==='nombre'))renderList('palancas');
-    if(el.dataset.list==='indicadores'&&(f==='k'||f==='nombre'))renderEditor();
+    if(f==='k'||f==='nombre'){
+      if(el.dataset.list==='stocks'){renderList('flujos');renderList('palancas');renderObjetivo();}
+      if(el.dataset.list==='params')renderList('palancas');
+      if(el.dataset.list==='indicadores')renderObjetivo();
+    }
   }else if(el.dataset.vis!==undefined){if(el.checked)vis.add(el.dataset.vis);else vis.delete(el.dataset.vis);renderChart(lastSim);return;}
   else return;
   dirty=true;scheduleCompute();scheduleSave();
