@@ -123,7 +123,11 @@ th,td{text-align:right;padding:4px 8px;border-bottom:1px solid var(--line);white
 th{color:var(--muted);font-weight:500}
 td:first-child,th:first-child{text-align:left}
 .pal-head,.pal{display:grid;grid-template-columns:46px minmax(0,2fr) minmax(90px,1fr) 120px minmax(120px,.9fr);gap:12px;align-items:center}
+#pal-rows .pal{grid-template-columns:46px minmax(0,1fr) 100px minmax(110px,auto);padding:9px 0}
+#pal-rows .pal-bar{height:4px;margin-top:5px;max-width:260px}
+#pal-rows .pal-t span{font-size:12.5px}
 .pal.on{background:var(--accent-soft);margin:0 -16px;padding-inline:16px}
+button.small.inline{margin:0 0 0 8px;padding:2px 8px;font-size:12px;vertical-align:middle}
 .pal-t b .pal-n{display:inline-grid;font-weight:400;margin-left:6px;vertical-align:middle;font-size:11px;padding:0 8px;height:20px}
 .sw{position:relative;display:inline-block;width:42px;height:24px;cursor:pointer}
 .sw input{position:absolute;opacity:0;width:0;height:0}
@@ -151,6 +155,9 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
   .pal-head{display:none}
   .pal{grid-template-columns:46px minmax(0,1fr);grid-template-areas:"n t" "bar bar" "spark v"}
   .pal>.sw{grid-area:n}.pal-t{grid-area:t}.pal-bar{grid-area:bar}.spark{grid-area:spark}.pal-v{grid-area:v}
+  #pal-rows .pal{grid-template-columns:46px minmax(0,1fr) auto;grid-template-areas:"n t v"}
+  #pal-rows .spark{display:none}
+  #pal-rows .pal-v{font-size:14px}
 }
 .camino{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
 .step{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
@@ -180,6 +187,12 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 @media (max-width:640px){.capa{grid-template-columns:1fr}}
 .pal-n.int{background:var(--c-int-soft);color:var(--c-int-ink)}.pal-n.dis{background:var(--c-dis-soft);color:var(--c-dis-ink)}
 .errbox{background:var(--surface);border:1px solid var(--crit);border-radius:6px;padding:10px 14px;font-family:var(--mono);font-size:12px;color:var(--crit);display:grid;gap:3px}
+.pasos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pasos>div{display:grid;grid-template-columns:28px 1fr;gap:4px 10px;align-items:baseline;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.pasos i{grid-row:span 2;font-style:normal;font-family:var(--mono);font-size:13px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-ink);align-self:start}
+.pasos b{font-weight:600}
+.pasos span{font-size:13px;color:var(--fg2)}
+@media (max-width:640px){.pasos{grid-template-columns:1fr}}
 .lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
 .mcard{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;gap:6px;cursor:pointer;min-width:0}
 .mcard:hover{border-color:var(--accent)}
@@ -211,7 +224,12 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 </nav>
 
 <section class="tab" id="tab-modelos">
-  <div class="sec-head"><h2>Tus modelos</h2><p>Elegí uno, o creá otro desde una plantilla. Después: Describir para definirlo, Jugar para mover palancas y ver cómo responde.</p></div>
+  <div class="pasos">
+    <div><i>1</i><b>Elegí un modelo</b><span>o creá uno desde una plantilla, acá abajo.</span></div>
+    <div><i>2</i><b>Describilo</b><span>qué se acumula, qué lo mueve, qué podés cambiar.</span></div>
+    <div><i>3</i><b>Jugá</b><span>prendé palancas, adoptá decisiones, avanzá el tiempo.</span></div>
+  </div>
+  <div class="sec-head"><h2>Tus modelos</h2><p>Tocá uno para abrirlo.</p></div>
   <div class="lib" id="lib"></div>
   <div class="panel">
     <h3>Nuevo modelo</h3>
@@ -333,22 +351,6 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 <section class="tab" id="tab-jugar" hidden>
   <div class="tiles" id="tiles"></div>
 
-  <div class="panel">
-    <div class="btns" style="justify-content:space-between;align-items:flex-start">
-      <div><h2 style="margin:0">Palancas</h2><p class="note" id="esc-lede"></p></div>
-      <div class="btns"><button id="btn-adopt-all" class="primary">Adoptar las activas</button><button id="btn-reset">Apagar todas</button></div>
-    </div>
-    <div id="pal-rows" style="margin-top:10px"></div>
-    <p class="hint-p" style="margin-top:10px">Activar es probar. Adoptar es decidir: el cambio pasa al modelo y queda registrado, con deshacer.</p>
-  </div>
-
-  <div class="panel">
-    <div class="btns" style="justify-content:space-between;align-items:center">
-      <div><h2 style="margin:0">Avanzar el tiempo</h2><p class="note" id="avance-lede"></p></div>
-      <div class="btns"><button data-avanzar="1">+1</button><button data-avanzar="3">+3</button><button data-avanzar="6">+6</button><button data-avanzar="12">+12</button></div>
-    </div>
-  </div>
-
   <div class="chart-wrap">
     <div class="legend" id="legend"></div>
     <div id="chart"></div>
@@ -356,22 +358,34 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
     <p class="note" id="sim-lede" style="margin-top:8px"></p>
   </div>
 
-  <div class="panel"><h2>Camino</h2><p class="note" id="camino-next"></p><ol class="camino" id="camino"></ol></div>
+  <div class="panel">
+    <div class="btns" style="justify-content:space-between;align-items:flex-start">
+      <div><h2 style="margin:0">Palancas</h2><p class="note" id="esc-lede"></p></div>
+      <div class="btns"><button id="btn-adopt-all" class="primary">Adoptar las activas</button><button id="btn-reset">Apagar todas</button></div>
+    </div>
+    <div id="pal-rows" style="margin-top:6px"></div>
+    <div class="btns" style="justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)">
+      <div><b>Avanzar el tiempo</b><p class="note" id="avance-lede"></p></div>
+      <div class="btns"><button data-avanzar="1">+1</button><button data-avanzar="3">+3</button><button data-avanzar="6">+6</button><button data-avanzar="12">+12</button></div>
+    </div>
+  </div>
+  <details class="plain" id="dec-box"><summary>Decisiones y avances <span id="dec-count"></span></summary><div id="decisiones" style="margin-top:8px"></div></details>
 
-  <div class="sec-head"><h2>Las tres capas</h2><p>De arriba hacia abajo, de la más fuerte a la más débil. Lo que simula el motor vive en la capa de abajo; las otras dos le dan sentido y forma.</p></div>
-  <div class="capas" id="capas"></div>
+  <div class="panel"><h2>Camino</h2><p class="note" id="camino-next"></p><ol class="camino" id="camino"></ol><button class="small" id="camino-more" hidden></button></div>
 
   <div class="sec-head"><h2>Alertas</h2></div>
   <div class="cards" id="cards"></div>
   <details class="plain"><summary>Lo que está bien <span id="ok-count"></span></summary><div class="cards" id="cards-ok" style="margin-top:10px"></div></details>
 
-  <details class="plain" id="dec-box"><summary>Decisiones y avances <span id="dec-count"></span></summary><div id="decisiones" style="margin-top:8px"></div></details>
+  <div class="sec-head"><h2>Las tres capas</h2><p>De la más fuerte a la más débil. El motor simula la de abajo; las otras dos le dan sentido.</p></div>
+  <div class="capas" id="capas"></div>
+
   <details class="plain"><summary>Escenarios adversos <span id="estres-count"></span></summary>
-    <p class="hint-p" style="margin:8px 0">Qué pasa si lo que no controlás se mueve un 20 % en tu contra. Marcá parámetros como externos en Describir.</p>
+    <p class="hint-p" style="margin:8px 0">Qué pasa si lo que no controlás se mueve un 20 % en tu contra.</p>
     <div id="estres-rows"></div>
   </details>
   <details class="plain"><summary>Sugerencias del motor <span id="sug-count"></span></summary>
-    <p class="hint-p" style="margin:8px 0">Parámetros que controlás, movidos un 10 % en la dirección que mejora el objetivo. Son palancas débiles; las fuertes las escribís vos en Describir.</p>
+    <p class="hint-p" style="margin:8px 0">Parámetros que controlás, movidos un 10 % a favor. Son palancas débiles; las fuertes las escribís vos.</p>
     <div id="sug-rows"></div>
   </details>
   <details class="plain"><summary>Mapa de stocks y flujos</summary><p class="hint-p" style="margin:8px 0">Cajas sólidas son stocks. Punteadas, lo que está fuera del sistema. Las flechas llevan el valor del flujo en el paso actual.</p><div class="diagram" id="diagram"></div></details>
@@ -631,7 +645,7 @@ function renderObjetivo(){
   sel.innerHTML='<option value="">(elegí uno)</option>'+opts.map(([k,n])=>`<option value="${esc(k)}"${k===M.objetivo?' selected':''}>${esc(n)}</option>`).join('');
 }
 function renderLib(){
-  $('lib').innerHTML=LIB.map(m=>`<div class="mcard${m.id===M.id?' cur':''}" data-open="${m.id}" role="button" tabindex="0"><b>${esc(m.nombre||'Sin nombre')}</b><span>${esc((m.contexto||'').slice(0,110))}${(m.contexto||'').length>110?'…':''}</span><small>${m.stocks.length} stocks · ${m.flujos.length} flujos · ${m.palancas.length} palancas</small><div class="btns"><button data-dup="${m.id}">Duplicar</button><button data-delm="${m.id}" class="del" style="font-size:13px;padding:4px 6px">Borrar</button></div></div>`).join('');
+  $('lib').innerHTML=LIB.map(m=>`<div class="mcard${m.id===M.id?' cur':''}" data-open="${m.id}" role="button" tabindex="0"><b>${esc(m.nombre||'Sin nombre')}${m.id===M.id?' <small style="font-weight:400">· abierto</small>':''}</b><span>${esc((m.contexto||'').slice(0,110))}${(m.contexto||'').length>110?'…':''}</span><small>${m.stocks.length} stocks · ${m.flujos.length} flujos · ${m.palancas.length} palancas</small><div class="btns"><button class="small" style="margin:0" data-dup="${m.id}">Duplicar</button><button data-delm="${m.id}" class="del" style="font-size:13px;padding:4px 6px">Borrar</button></div></div>`).join('');
   $('tpl-btns').innerHTML=TPL.map((t,i)=>`<button data-tpl="${i}" title="${esc(t.d)}">${esc(t.n)}</button>`).join('');
 }
 
@@ -717,8 +731,8 @@ function renderTiles(base,sim){
   if(o){
     const d=rH[o]-bH[o];const good=M.maximizar?d>=0:d<=0;const act=(M.activas||[]).length;
     items.push({k:nombreDe(o)+' hoy',v:fmtV(r0[o],o),d:'objetivo'});
-    items.push({k:`${nombreDe(o)} en ${M.horizonte} ${plural(M.unidad)}, sin palancas`,v:fmtV(bH[o],o),d:'escenario base'});
-    if(act)items.push({k:`${nombreDe(o)} en ${M.horizonte} ${plural(M.unidad)}, con ${act} ${act===1?'palanca':'palancas'}`,v:fmtV(rH[o],o),d:(d>=0?'+':'')+fmtV(d,o)+' contra la base',cls:good?'pos':'neg'});
+    items.push({k:`A ${M.horizonte} ${plural(M.unidad)}, sin palancas`,v:fmtV(bH[o],o),d:'escenario base'});
+    if(act)items.push({k:`A ${M.horizonte} ${plural(M.unidad)}, con ${act} ${act===1?'palanca':'palancas'}`,v:fmtV(rH[o],o),d:(d>=0?'+':'')+fmtV(d,o)+' contra la base',cls:good?'pos':'neg'});
   }
   for(const s of M.stocks.slice(0,2))items.push({k:s.nombre||s.k,v:fmtV(r0[s.k],s.k),d:`→ ${fmtV(rH[s.k],s.k)} al final`});
   $('tiles').innerHTML=items.map(x=>`<div class="tile ${x.cls||''}"><span class="k">${esc(x.k)}</span><span class="v">${x.v}</span><span class="d">${esc(x.d)}</span></div>`).join('');
@@ -770,7 +784,7 @@ function renderSens(list){
   const maxAbs=Math.max(1e-9,...list.map(x=>Math.abs(x.delta)));
   const spark=path=>{const w=120,h=36,n=path.length-1,mx=Math.max(1e-9,...path.map(Math.abs));const y=v=>h/2-(v/mx)*(h/2-3);return `<svg viewBox="0 0 ${w} ${h}" class="spark" aria-hidden="true"><line x1="0" x2="${w}" y1="${h/2}" y2="${h/2}" stroke="var(--grid)"/><path d="${path.map((v,i)=>(i?'L':'M')+(i/n*w).toFixed(1)+' '+y(v).toFixed(1)).join('')}" fill="none" stroke="var(--accent)" stroke-width="1.5"/></svg>`;};
   const rows=o?list:M.palancas.map(pl=>({pl,on:(M.activas||[]).includes(pl.k),delta:0,raw:0,path:[0,0]}));
-  $('pal-rows').innerHTML=rows.length?rows.map(x=>{const pos=x.delta>=0;return `<div class="pal${x.on?' on':''}"><label class="sw" title="${x.on?'apagar':'activar'}"><input type="checkbox" data-toggle="${esc(x.pl.k)}" ${x.on?'checked':''}><i></i></label><div class="pal-t"><b>${esc(x.pl.nombre||x.pl.k)} <span class="pal-n ${CAPA(x.pl.fuerza||12)}" title="${FUERZA[x.pl.fuerza]||''}">${x.pl.fuerza||12} · ${FUERZA[x.pl.fuerza]||'parámetros'}</span></b><span>${esc(x.pl.descripcion||'')}</span><em>${esc(x.pl.valor.includes('=')?x.pl.valor:nombreDe(x.pl.campo)+' → '+x.pl.valor)}</em>${x.on?`<div><button class="small" data-adopt="${esc(x.pl.k)}">Adoptar: hacerla permanente</button></div>`:''}</div><div class="pal-bar"><i style="width:${(100*Math.abs(x.delta)/maxAbs).toFixed(1)}%;background:${pos?'var(--good)':'var(--crit)'}"></i></div>${spark(x.path)}<div class="pal-v ${pos?'pos':'neg'}">${o?(pos?'+':'−')+fmtV(Math.abs(x.raw),o):'—'}<small>${x.on?'aporta al escenario':'si la activás'}</small></div></div>`;}).join(''):'';
+  $('pal-rows').innerHTML=rows.length?rows.map(x=>{const pos=x.delta>=0;const cambio=x.pl.valor.includes('=')?x.pl.valor:nombreDe(x.pl.campo)+' → '+x.pl.valor;return `<div class="pal${x.on?' on':''}" title="${esc(cambio)}"><label class="sw" title="${x.on?'apagar':'activar'}"><input type="checkbox" data-toggle="${esc(x.pl.k)}" ${x.on?'checked':''}><i></i></label><div class="pal-t"><b>${esc(x.pl.nombre||x.pl.k)} <span class="pal-n ${CAPA(x.pl.fuerza||12)}" title="${FUERZA[x.pl.fuerza]||''}">${x.pl.fuerza||12} · ${FUERZA[x.pl.fuerza]||'parámetros'}</span>${x.on?`<button class="small inline" data-adopt="${esc(x.pl.k)}">Adoptar</button>`:''}</b><span>${esc(x.pl.descripcion||cambio)}</span><div class="pal-bar"><i style="width:${(100*Math.abs(x.delta)/maxAbs).toFixed(1)}%;background:${pos?'var(--good)':'var(--crit)'}"></i></div></div>${spark(x.path)}<div class="pal-v ${pos?'pos':'neg'}">${o?(pos?'+':'−')+fmtV(Math.abs(x.raw),o):'—'}<small>${x.on?'aporta':'si la activás'}</small></div></div>`;}).join(''):'';
 }
 function renderCamino(C,sens){
   const steps=[];
@@ -780,8 +794,11 @@ function renderCamino(C,sens){
   steps.sort((a,b)=>a.peso-b.peso||(a.fuerza||12)-(b.fuerza||12));
   const act=(M.activas||[]).length;
   $('camino-next').textContent=steps.length?`Próximo paso: ${steps[0].titulo}. ${steps.length-1} más por delante. Primero las alertas, después las palancas por efecto; a igual urgencia, la más fuerte según Meadows.${act?' Lo que ya activaste no aparece.':''}`:(act?'Nada pendiente con las palancas activas: sin alertas y sin palancas que sumen.':'Nada pendiente: sin alertas y sin palancas con efecto positivo.');
-  $('camino').innerHTML=steps.map((x,i)=>`<li class="step${i===0?' ahora':''}"><i>${i+1}</i><div><b>${esc(x.titulo)}</b><span>${esc(x.detalle)}</span><em>${x.fuerza?`palanca ${x.fuerza} · ${FUERZA[x.fuerza]||''}`:'patrón detectado'}</em>${x.toggle?`<div><button class="small" data-toggle-btn="${esc(x.toggle)}">Activar</button></div>`:''}</div></li>`).join('');
+  const LIM=5;const show=caminoAll?steps:steps.slice(0,LIM);
+  $('camino').innerHTML=show.map((x,i)=>`<li class="step${i===0?' ahora':''}"><i>${i+1}</i><div><b>${esc(x.titulo)}</b><span>${esc(x.detalle)}</span><em>${x.fuerza?`palanca ${x.fuerza} · ${FUERZA[x.fuerza]||''}`:'patrón detectado'}</em>${x.toggle?`<div><button class="small" data-toggle-btn="${esc(x.toggle)}">Activar</button></div>`:''}</div></li>`).join('');
+  const more=$('camino-more');more.hidden=steps.length<=LIM;more.textContent=caminoAll?'Ver menos':`Ver ${steps.length-LIM} pasos más`;
 }
+let caminoAll=false;
 function compute(){
   errs=[];
   const base=simular(M);
@@ -939,6 +956,7 @@ document.addEventListener('click',e=>{
   else if(b.id==='btn-adopt-all'){for(const k of [...(M.activas||[])])adoptar(k);return;}
   else if(b.dataset.undo){deshacer(b.dataset.undo);return;}
   else if(b.dataset.avanzar){avanzar(+b.dataset.avanzar);return;}
+  else if(b.id==='camino-more'){caminoAll=!caminoAll;compute();return;}
   else if(b.dataset.addsug){const p=M.params.find(x=>x.k===b.dataset.addsug);if(!p)return;const f=b.dataset.f;M.palancas.push({id:uid(),k:'pl_'+uid(),nombre:`${p.nombre||p.k} ${f==='1.1'?'+10 %':'−10 %'}`,fuerza:12,tipo:'param',campo:p.k,valor:`${p.k} * ${f}`,descripcion:'Sugerida por el motor: parámetro sensible. Convertila en algo concreto o subila de fuerza si implica una regla o una estructura.'});renderList('palancas');dirty=true;compute();scheduleSave();return;}
   else if(b.id==='btn-reset'){M.activas=[];dirty=true;compute();scheduleSave();return;}
   else if(b.dataset.open){const m=LIB.find(x=>x.id===b.dataset.open);if(m&&m.id!==M.id)setCurrent(m);return;}
