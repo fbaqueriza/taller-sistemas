@@ -1821,7 +1821,7 @@ document.addEventListener('click',e=>{
   const ch=t.closest('#mapwrap [data-chip]');if(ch){if(POP&&POP.k===ch.dataset.chip)popClose();else popOpen(ch.dataset.chip);return;}
   const b=t.closest('#pop button');if(!b)return;
   if(b.dataset.popObj){M.objetivo=b.dataset.popObj;renderObjetivo();dirty=true;compute();scheduleSave();renderPop();return;}
-  if(b.dataset.popDel==='param'){const k=POP.k;if(!b.dataset.sure){b.dataset.sure='1';const u=usosDe(k);if(u.length){const n=$('del-nota');const p=M.params.find(x=>x.k===k);const acc=M.palancas.filter(pl=>pl.campo===k&&!ES_ASG(pl.valor));n.hidden=false;n.innerHTML=`Lo usan: ${u.map(x=>`<b>${esc(x.n)}</b>`).join(', ')}. Si lo borrás, donde aparece queda su número (${esc(fmtV(p.valor,k))}) y el modelo da lo mismo.${acc.length?` Se borra${acc.length>1?'n':''} también ${acc.map(a=>`<b>${esc(a.nombre||a.k)}</b>`).join(', ')}, porque solo cambia${acc.length>1?'n':''} este dato.`:''}`;b.textContent='Borrar igual';}else b.textContent='¿Seguro? Borrar';return;}borrarDato(k);popClose();return;}
+  if(b.dataset.popDel==='param'){const k=POP.k;if(!b.dataset.sure){b.dataset.sure='1';if(usosDe(k).length){const n=$('del-nota');n.hidden=false;n.innerHTML=borrarDatoNota(k);b.textContent='Borrar igual';}else b.textContent='¿Seguro? Borrar';return;}borrarDato(k);popClose();return;}
   if(b.dataset.popDel==='ind'){if(!b.dataset.sure){const u=usosDe(POP.k);if(u.length){const n=$('del-nota');n.hidden=false;n.innerHTML=`No se puede borrar todavía: lo usan ${u.map(x=>`<b>${esc(x.n)}</b>`).join(', ')}. Un medidor es un resultado, no tiene un número fijo para dejar en su lugar. Sacalo primero de ahí.`;return;}b.dataset.sure='1';b.textContent='¿Seguro? Borrar';return;}const k=POP.k;M.indicadores=M.indicadores.filter(x=>x.k!==k);if(M.objetivo===k)M.objetivo='';renderList('indicadores');renderObjetivo();popClose();dirty=true;compute();scheduleSave();return;}
 });
 document.addEventListener('change',e=>{
@@ -1965,26 +1965,86 @@ function mas(id,titulo,resumen,html,extra){
 }
 document.addEventListener('toggle',e=>{const d=e.target;if(d.classList&&d.classList.contains('pop-more'))POPMAS[d.dataset.more]=d.open;},true);
 
-/* ---------- borrar un dato dejando su número ---------- */
-function borrarDato(k){
-  const p=M.params.find(x=>x.k===k);if(!p)return;
-  const v=+p.valor||0,lit=v<0?'('+v+')':String(v);const re=new RegExp('\\b'+k+'\\b','g');
-  for(const f of M.flujos){f.formula=String(f.formula||'').replace(re,lit);if(f.factor)f.factor=String(f.factor).replace(re,lit);}
-  for(const x of M.indicadores)x.formula=String(x.formula||'').replace(re,lit);
-  for(const r of M.reglas){r.cuando=String(r.cuando||'').replace(re,lit);r.texto=String(r.texto||'').replace(new RegExp('\\{'+k+'\\}','g'),fmtV(v,k));}
-  const fuera=new Set();
-  for(const pl of M.palancas){
-    const src=String(pl.valor||'');
-    if(ES_ASG(src)){const as=src.split(';').map(s=>s.trim()).filter(Boolean).filter(s=>s.slice(0,s.indexOf('=')).trim()!==k).map(s=>{const i=s.indexOf('=');return s.slice(0,i+1)+s.slice(i+1).replace(re,lit);});if(!as.length)fuera.add(pl.k);else pl.valor=as.join('; ');}
-    else if(pl.campo===k)fuera.add(pl.k);
-    else pl.valor=src.replace(re,lit);
+/* ---------- borrar un dato: sale de las fórmulas ---------- */
+function astDe(src){
+  const s=String(src??'').trim();if(!s)return {n:0};
+  const toks=[];let i=0;
+  while(i<s.length){const c=s[i];
+    if(/\s/.test(c)){i++;continue;}
+    if(/[0-9.]/.test(c)){let j=i;while(j<s.length&&/[0-9.]/.test(s[j]))j++;toks.push({t:'n',v:parseFloat(s.slice(i,j))});i=j;continue;}
+    if(/[A-Za-z_]/.test(c)){let j=i;while(j<s.length&&/[A-Za-z0-9_]/.test(s[j]))j++;toks.push({t:'id',v:s.slice(i,j)});i=j;continue;}
+    const two=s.slice(i,i+2);if(['<=','>=','==','!=','&&','||'].includes(two)){toks.push({t:'op',v:two});i+=2;continue;}
+    if('+-*/^(),<>'.includes(c)){toks.push({t:'op',v:c});i++;continue;}
+    throw new Error('carácter inesperado');
   }
-  M.palancas=M.palancas.filter(pl=>!fuera.has(pl.k));M.activas=(M.activas||[]).filter(a=>!fuera.has(a));
-  for(const pp of (M.plan||[]))if(pp.palanca&&fuera.has(pp.palanca)){delete pp.palanca;}
-  for(const i of M.info)if(i.senal===k)i.senal='';for(const n of M.normas)if(n.afecta===k)n.afecta='';
-  M.params=M.params.filter(x=>x.k!==k);delete OVR[k];
+  let p=0;const peek=()=>toks[p],next=()=>toks[p++];
+  function primary(){const tk=next();if(!tk)throw new Error('incompleta');
+    if(tk.t==='n')return {n:tk.v};
+    if(tk.t==='id'){if(peek()&&peek().v==='('){next();const args=[];if(!(peek()&&peek().v===')')){args.push(expr(0));while(peek()&&peek().v===','){next();args.push(expr(0));}}next();return {f:tk.v,args};}return {v:tk.v};}
+    if(tk.v==='('){const e=expr(0);next();return e;}
+    if(tk.v==='-')return {u:expr(7)};
+    throw new Error('inesperado');}
+  function expr(minP){let left=primary();
+    while(peek()&&peek().t==='op'&&PREC[peek().v]!==undefined&&PREC[peek().v]>=minP){const op=next().v;const right=expr(op==='^'?PREC[op]:PREC[op]+1);left={op,l:left,r:right};}
+    return left;}
+  const e=expr(0);if(p<toks.length)throw new Error('sobra');return e;
+}
+function astSin(e,k){
+  const N=x=>x&&x.n!==undefined,is=(x,v)=>N(x)&&x.n===v;
+  if(e.v!==undefined)return e.v===k?{n:0}:e;
+  if(N(e))return e;
+  if(e.u){const x=astSin(e.u,k);return N(x)?{n:-x.n}:{u:x};}
+  if(e.f){const args=e.args.map(a=>astSin(a,k));const f=FN[e.f];if(f&&args.every(N))return {n:f(...args.map(a=>a.n))};if(e.f==='if'&&args.length===3&&N(args[1])&&N(args[2])&&args[1].n===args[2].n)return args[1];return {f:e.f,args};}
+  if(e.op==='/'&&e.r.v===k)return astSin(e.l,k);
+  const l=astSin(e.l,k),r=astSin(e.r,k),op=e.op;
+  if(N(l)&&N(r)&&['+','-','*','/','^'].includes(op))return {n:op==='+'?l.n+r.n:op==='-'?l.n-r.n:op==='*'?l.n*r.n:op==='/'?(r.n===0?l.n:l.n/r.n):Math.pow(l.n,r.n)};
+  if(op==='*'){if(is(l,0)||is(r,0))return {n:0};if(is(l,1))return r;if(is(r,1))return l;}
+  if(op==='+'){if(is(l,0))return r;if(is(r,0))return l;}
+  if(op==='-'){if(is(r,0))return l;if(is(l,0))return {u:r};if(r.u)return {op:'+',l,r:r.u};}
+  if(op==='+'&&r.u)return {op:'-',l,r:r.u};
+  if(op==='/'){if(is(l,0))return {n:0};if(is(r,0)||is(r,1))return l;}
+  if(op==='^'){if(is(r,0))return {n:1};if(is(r,1))return l;if(is(l,1))return {n:1};}
+  return {op,l,r};
+}
+function astTxt(e,pp=0){
+  if(e.n!==undefined){const s=String(Math.round(e.n*1e10)/1e10);return e.n<0&&pp>0?'('+s+')':s;}
+  if(e.v!==undefined)return e.v;
+  if(e.f)return e.f+'('+e.args.map(a=>astTxt(a,0)).join(', ')+')';
+  if(e.u){const s='-'+astTxt(e.u,7);return pp>5?'('+s+')':s;}
+  const P=PREC[e.op];const l=astTxt(e.l,e.op==='^'?P+1:P),r=astTxt(e.r,e.op==='^'?P:P+1);
+  const s=l+' '+e.op+' '+r;return P<pp?'('+s+')':s;
+}
+function sinDato(src,k){const s=String(src||'');if(!new RegExp('\\b'+k+'\\b').test(s))return s;try{return astTxt(astSin(astDe(s),k));}catch(e){return s.replace(new RegExp('\\b'+k+'\\b','g'),'0');}}
+function borrarDatoEn(m,k){
+  const re=new RegExp('\\b'+k+'\\b');const ido={avisos:[],acciones:[]};
+  for(const f of m.flujos){f.formula=sinDato(f.formula,k);if(f.factor){f.factor=sinDato(f.factor,k);if(f.factor==='1')f.factor='';}}
+  for(const x of m.indicadores)x.formula=sinDato(x.formula,k);
+  m.reglas=m.reglas.filter(r=>{if(re.test(r.cuando||'')){ido.avisos.push(r.titulo||r.cuando);return false;}return true;});
+  const fuera=new Set();
+  for(const pl of m.palancas){
+    const src=String(pl.valor||'');
+    if(ES_ASG(src)){const as=src.split(';').map(s=>s.trim()).filter(Boolean).filter(s=>s.slice(0,s.indexOf('=')).trim()!==k).map(s=>{const i=s.indexOf('=');return s.slice(0,i+1)+' '+sinDato(s.slice(i+1),k);});if(!as.length)fuera.add(pl.k);else pl.valor=as.join('; ');}
+    else if(pl.campo===k)fuera.add(pl.k);
+    else pl.valor=sinDato(src,k);
+  }
+  for(const pl of m.palancas)if(fuera.has(pl.k))ido.acciones.push(pl.nombre||pl.k);
+  m.palancas=m.palancas.filter(pl=>!fuera.has(pl.k));m.activas=(m.activas||[]).filter(a=>!fuera.has(a));
+  for(const pp of (m.plan||[]))if(pp.palanca&&fuera.has(pp.palanca))delete pp.palanca;
+  for(const i of (m.info||[]))if(i.senal===k)i.senal='';for(const n of (m.normas||[]))if(n.afecta===k)n.afecta='';
+  m.params=m.params.filter(x=>x.k!==k);
+  return ido;
+}
+function borrarDato(k){
+  borrarDatoEn(M,k);delete OVR[k];
   for(const L of ['params','palancas','flujos','indicadores','reglas'])renderList(L);renderObjetivo();
   dirty=true;compute();scheduleSave();
+}
+function borrarDatoNota(k){
+  const u=usosDe(k).filter(x=>x.kind==='flujo'||x.kind==='ind');
+  const mx=structuredClone(M);const ido=borrarDatoEn(mx,k);const o=M.objetivo;
+  let efecto='';const fin=m=>{const M0=M;M=m;try{const s=simular(modeloJuego());return s[s.length-1][o];}finally{M=M0;}};try{if(o){const va=fin(M),vb=fin(mx);efecto=Math.abs(va-vb)<1e-9?` ${esc(nombreDe(o))} al final no cambia.`:` ${esc(nombreDe(o))} al final pasa de <b>${esc(fmtV(va,o))}</b> a <b>${esc(fmtV(vb,o))}</b>.`;}}catch(e){}
+  const L=a=>a.map(x=>`<b>${esc(x)}</b>`).join(', ');
+  return (u.length?`Sale de ${L(u.map(x=>x.n))}: es como si valiera 0.`:'')+(ido.avisos.length?` Se borra${ido.avisos.length>1?'n los avisos':' el aviso'} ${L(ido.avisos)}.`:'')+(ido.acciones.length?` Se borra${ido.acciones.length>1?'n las acciones':' la acción'} ${L(ido.acciones)}.`:'')+efecto;
 }
 
 /* ---------- eventos ---------- */
