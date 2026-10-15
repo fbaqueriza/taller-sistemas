@@ -564,7 +564,7 @@ button.small.primary{color:#fff;background:var(--accent)}
   <details class="grp" data-grp="flujos">
     <summary><span>Flujos <small>lo que entra y sale de las cajas por paso</small></span><b id="n-flujos"></b></summary>
     <div class="grp-body">
-      <p class="hint-p">Un flujo sale de una caja (o de afuera) y entra a otra caja (o se va afuera). La fórmula puede usar claves de cajas, perillas y <code>t</code>, el paso actual. <b>Factor</b> (opcional) es cuánto cambia el destino por cada unidad que sale: vacío es 1; <code>-1</code> para pagar una deuda, porque bajan las dos; <code>1 / tipo_cambio</code> para pasar pesos a dólares.</p>
+      <p class="hint-p">Un flujo sale de una caja (o de afuera) y entra a otra caja (o se va afuera). La fórmula puede usar claves de cajas, datos y <code>t</code>, el paso actual. <b>Factor</b> (opcional) es cuánto cambia el destino por cada unidad que sale: vacío es 1; <code>-1</code> para pagar una deuda, porque bajan las dos; <code>1 / tipo_cambio</code> para pasar pesos a dólares.</p>
       <div class="row row-head" style="grid-template-columns:minmax(0,1fr) minmax(100px,.7fr) minmax(100px,.7fr) minmax(0,1.6fr) minmax(64px,.45fr) minmax(96px,.6fr) minmax(60px,.4fr) 28px"><span>Nombre</span><span>Desde</span><span>Hacia</span><span>Fórmula</span><span title="cuánto cambia el destino por cada unidad que sale">Factor</span><span>Cada</span><span title="para montos en ciertos meses: 1 = enero, 12 = diciembre">Meses</span><span></span></div>
       <div class="rows" id="flujos"></div>
       <button class="add" data-add="flujos">+ agregar flujo</button>
@@ -572,12 +572,12 @@ button.small.primary{color:#fff;background:var(--accent)}
   </details>
 
   <details class="grp" data-grp="params">
-    <summary><span>Perillas <small>parámetros: los números que usan las fórmulas</small></span><b id="n-params"></b></summary>
+    <summary><span>Datos <small>parámetros: los números que usan las fórmulas</small></span><b id="n-params"></b></summary>
     <div class="grp-body">
       <p class="hint-p">Todo número que aparece en una fórmula. "Externo" es lo que no controlás, como la inflación o el tipo de cambio: no se sugiere como acción y sirve para probar escenarios adversos.</p>
       <div class="row row-head" style="grid-template-columns:minmax(0,1.3fr) minmax(90px,.8fr) minmax(110px,.9fr) minmax(60px,.4fr) minmax(0,1fr) 70px 28px"><span>Nombre</span><span>Clave</span><span>Valor</span><span>Unidad</span><span>Nota</span><span>Externo</span><span></span></div>
       <div class="rows" id="params"></div>
-      <button class="add" data-add="params">+ agregar perilla</button>
+      <button class="add" data-add="params">+ agregar dato</button>
     </div>
   </details>
 
@@ -594,7 +594,7 @@ button.small.primary{color:#fff;background:var(--accent)}
   <details class="grp" data-grp="palancas">
     <summary><span>Acciones <small>palancas: movimientos que podés hacer</small></span><b id="n-palancas"></b></summary>
     <div class="grp-body">
-      <p class="hint-p">Una acción cambia una perilla o el valor de hoy de una caja. El nuevo valor puede ser una fórmula sobre perillas y cajas. Para mover varias cosas a la vez, escribí asignaciones separadas por punto y coma: <code>pesos = 3 * gastos; dolares = dolares + (pesos - 3 * gastos) / tipo_cambio</code>. La fuerza es el lugar de la acción en la lista de Meadows: 12 es la más débil (parámetros), 1 la más fuerte (trascender el paradigma).</p>
+      <p class="hint-p">Una acción cambia un dato o el valor de hoy de una caja. El nuevo valor puede ser una fórmula sobre datos y cajas. Para mover varias cosas a la vez, escribí asignaciones separadas por punto y coma: <code>pesos = 3 * gastos; dolares = dolares + (pesos - 3 * gastos) / tipo_cambio</code>. La fuerza es el lugar de la acción en la lista de Meadows: 12 es la más débil (parámetros), 1 la más fuerte (trascender el paradigma).</p>
       <div class="row row-head" style="grid-template-columns:minmax(0,1.2fr) 60px minmax(90px,.7fr) minmax(90px,.8fr) minmax(90px,.8fr) minmax(0,1.3fr) 28px"><span>Nombre</span><span>Fuerza</span><span>Cambia</span><span>Clave</span><span>Nuevo valor</span><span>Descripción</span><span></span></div>
       <div class="rows" id="palancas"></div>
       <button class="add" data-add="palancas">+ agregar acción</button>
@@ -677,13 +677,13 @@ button.small.primary{color:#fff;background:var(--accent)}
 
     <aside class="board-side">
       <div class="tiles side-tiles" id="tiles"></div>
-      <div class="seg side-tabs" id="side-tabs"><button data-side="acc" class="on">Acciones</button><button data-side="plan">Plan</button><button data-side="num">Números</button></div>
+      <div class="seg side-tabs" id="side-tabs"><button data-side="acc" class="on">Acciones</button><button data-side="plan">Plan</button><button data-side="num">Datos</button></div>
 
       <div class="panel side-p" id="side-acc">
         <p class="note" id="esc-lede"></p>
         <div class="btns" style="margin:8px 0"><button id="btn-nueva-pal" class="small" style="margin:0">+ nueva acción</button><button id="btn-adopt-all" class="small primary" style="margin:0" hidden>Adoptar las activas</button><button id="btn-reset" class="small" style="margin:0" hidden>Apagar todas</button></div>
         <div id="pal-rows"></div>
-        <details class="sub" id="sug-box"><summary>Ideas del motor <span id="sug-count" class="muted"></span></summary><p class="hint-p" style="margin:6px 0">Tus perillas movidas un 10 % a favor. Son cambios chicos (palanca 12 de Meadows); las acciones fuertes las escribís vos.</p><div id="sug-rows"></div></details>
+        <details class="sub" id="sug-box"><summary>Ideas del motor <span id="sug-count" class="muted"></span></summary><p class="hint-p" style="margin:6px 0">Tus datos movidos un 10 % a favor. Son cambios chicos (palanca 12 de Meadows); las acciones fuertes las escribís vos.</p><div id="sug-rows"></div></details>
         <form id="pal-form" class="pal-form" hidden>
           <h3 id="pal-form-t" style="margin:0 0 8px">Nueva acción</h3>
           <input type="hidden" id="np-id">
@@ -736,7 +736,7 @@ button.small.primary{color:#fff;background:var(--accent)}
     <ol>
       <li><b>Cajas.</b> Lo que se acumula: plata, deuda, clientes, agua en un tanque. "+ caja" agrega una; tocala para darle nombre y valor de hoy.</li>
       <li><b>Flujos.</b> Desde la tarjeta de una caja: "+ algo que entra", "+ algo que sale" o "pasa a otra caja". Tocá la válvula para decir cuánto mueve: un monto fijo, una parte de una caja, algo que crece, lo que sobra o el menor de dos.</li>
-      <li><b>Perillas.</b> Los números que usan las fórmulas: tasas, precios, gastos. Se crean solas cuando escribís un número nuevo, y se ven en la tira de abajo. Una perilla puede tener un desglose en conceptos.</li>
+      <li><b>Datos.</b> Los números fijos con los que se calcula todo: ingreso, gastos, inflación, tasas, tipo de cambio. No se acumulan ni mueven nada solos; las válvulas los usan para saber cuánto mover. Se crean solos cuando escribís un número nuevo y se ven en la tira de abajo. Un dato puede tener un desglose en conceptos, como los gastos.</li>
       <li><b>Medidores.</b> Cuentas sobre las cajas, como patrimonio o meses de colchón. Uno es el ★ objetivo: lo que las acciones intentan mejorar.</li>
     </ol>
 
@@ -745,7 +745,7 @@ button.small.primary{color:#fff;background:var(--accent)}
     <ul>
       <li><b>Acciones.</b> Prender una es probarla: el mapa y el gráfico cambian en el momento. La barra muestra cuánto mueve el objetivo. <b>Adoptar</b> es decidir: pasa al modelo y queda registrada, con deshacer.</li>
       <li><b>Plan.</b> Tu lista de pasos, con lo que sugiere el motor y lo tuyo. "Ver el plan completo en el mapa" prende todo lo pendiente a la vez.</li>
-      <li><b>Números.</b> Deslizadores para probar otro valor de cualquier perilla, y sacudones: una caja que pierde o gana un 20 % de golpe.</li>
+      <li><b>Datos.</b> Deslizadores para probar otro valor de cualquier dato, y sacudones: una caja que pierde o gana un 20 % de golpe.</li>
     </ul>
     <p><b>Quedarme acá</b> aparece cuando movés el reloj: lleva el modelo a ese mes, y lo que ves pasa a ser hoy.</p>
 
@@ -1022,11 +1022,11 @@ function cell(list,r,[f,type,ph]){
     case 'cadasel':return `<select ${a}><option value=""${!v?' selected':''}>cada ${esc(M.unidad||'paso')}</option><option value="anual"${v==='anual'?' selected':''}>anual, repartido</option><option value="puntual"${v==='puntual'?' selected':''}>en ciertos meses</option></select>`;
     case 'carril':return `<input type="text" list="dl-carril" ${a} value="${esc(v)}" placeholder="${ph}">`;
     case 'key':return `<input type="text" class="f" ${a} value="${esc(v)}" placeholder="${ph}" pattern="[a-z_][a-z0-9_]*">`;
-    case 'number':return (list==='params'&&f==='valor'&&r.desglose&&r.desglose.length)?`<input type="number" ${a} value="${v??''}" readonly title="es la suma del desglose: se edita en la tarjeta de la perilla">`:`<input type="number" ${a} value="${v??''}" placeholder="${ph}" step="any">`;
+    case 'number':return (list==='params'&&f==='valor'&&r.desglose&&r.desglose.length)?`<input type="number" ${a} value="${v??''}" readonly title="es la suma del desglose: se edita en la tarjeta del dato">`:`<input type="number" ${a} value="${v??''}" placeholder="${ph}" step="any">`;
     case 'formula':return `<input type="text" class="f" ${a} value="${esc(v)}" placeholder="${ph}" spellcheck="false">`;
     case 'check':return `<input type="checkbox" ${a} ${v?'checked':''} style="width:auto;justify-self:center">`;
     case 'stocksel':return `<select ${a}><option value="">(afuera)</option>${M.stocks.map(s=>`<option value="${esc(s.k)}"${s.k===v?' selected':''}>${esc(s.nombre||s.k)}</option>`).join('')}</select>`;
-    case 'tiposel':return `<select ${a}><option value="param"${v!=='stock'?' selected':''}>una perilla</option><option value="stock"${v==='stock'?' selected':''}>una caja (valor de hoy)</option></select>`;
+    case 'tiposel':return `<select ${a}><option value="param"${v!=='stock'?' selected':''}>un dato</option><option value="stock"${v==='stock'?' selected':''}>una caja (valor de hoy)</option></select>`;
     case 'camposel':{const L=r.tipo==='stock'?M.stocks.map(s=>[s.k,s.nombre]):M.params.map(p=>[p.k,p.nombre]);return `<select ${a}>${L.map(([k,n])=>`<option value="${esc(k)}"${k===v?' selected':''}>${esc(n||k)}</option>`).join('')}</select>`;}
     case 'fuerza':return `<select ${a}>${Object.keys(FUERZA).sort((x,y)=>y-x).map(n=>`<option value="${n}"${+n===+(v||12)?' selected':''}>${n}</option>`).join('')}</select>`;
     case 'nivelsel':return `<select ${a}>${['critico','atencion','ok'].map(n=>`<option value="${n}"${n===(v||'atencion')?' selected':''}>${n}</option>`).join('')}</select>`;
@@ -1250,7 +1250,7 @@ function renderProbar(){
     box.dataset.keys=keys;
     const pb=p=>{const hoy=p.valor||0;const cur=OVR[p.k]??hoy;const max=p.unidad==='%'?Math.min(1,Math.max(0.05,Math.abs(hoy)*3)):hoy>0&&hoy<=1?1:Math.abs(hoy)*2||10;const step=nice((max)/100);return `<label class="pb" data-k="${esc(p.k)}"><span class="pb-top"><span>${esc(p.nombre||p.k)}${p.externo?' <i class="ext-tag">externo</i>':''}</span><b>${fmtV(cur,p.k)}</b></span><input type="range" data-ovr="${esc(p.k)}" min="0" max="${max}" step="${step}" value="${cur}"><small>hoy <span class="pb-hoy">${fmtV(hoy,p.k)}</span>${p.nota?' · '+esc(p.nota):''}</small></label>`;};
     const own=ps.filter(p=>!p.externo),ext=ps.filter(p=>p.externo);
-    box.innerHTML=own.length?own.map(pb).join(''):'<p class="muted">No hay perillas propias para mover. Agregá perillas desde el mapa.</p>';
+    box.innerHTML=own.length?own.map(pb).join(''):'<p class="muted">No hay datos propios para mover. Agregá datos desde el mapa.</p>';
     boxE.innerHTML=ext.map(pb).join('');$('probar-ext-box').hidden=!ext.length;$('probar-ext-n').textContent=ext.length?`(${ext.length})`:'';
   }
   for(const p of ps){const el=side.querySelector(`.pb[data-k="${p.k}"]`);if(!el)continue;const hoy=p.valor||0;const cur=OVR[p.k]??hoy;el.classList.toggle('distinto',cur!==hoy);el.querySelector('b').textContent=fmtV(cur,p.k);el.querySelector('.pb-hoy').textContent=fmtV(hoy,p.k);const inp=el.querySelector('input');if(document.activeElement!==inp)inp.value=cur;}
@@ -1521,7 +1521,7 @@ function fxChips(){
   const sc=fxScope();
   const g=(t,cls,items)=>items.length?`<div class="fx-g"><span>${t}</span>${items.map(([k,n,tt])=>`<button type="button" class="fxc ${cls}" data-ins="${esc(k)}" title="${esc(tt)}">${esc(n)}</button>`).join('')}</div>`:'';
   $('fx-chips').innerHTML=g('Cajas','fx-st',M.stocks.map(s=>[s.k,s.nombre||s.k,s.k+' · hoy '+fmtV(sc[s.k],s.k)]))
-    +g('Perillas','fx-pa',M.params.map(p=>[p.k,p.nombre||p.k,p.k+' · '+fmtV(p.valor,p.k)]))
+    +g('Datos','fx-pa',M.params.map(p=>[p.k,p.nombre||p.k,p.k+' · '+fmtV(p.valor,p.k)]))
     +g('Flujos','fx-fl',M.flujos.map(f=>[f.k,f.nombre||f.k,f.k+' · hoy '+fmtV(sc[f.k],f.k)]))
     +g('Medidores','fx-in',M.indicadores.map(x=>[x.k,x.nombre||x.k,x.k+' · hoy '+fmtV(sc[x.k],x.k)]))
     +`<div class="fx-g"><span>Armar</span>${[[' + ','+'],[' - ','−'],[' * ','×'],[' / ','÷'],[' ^ ','potencia'],['(','('],[')',')'],[', ',','],[' > ','>'],[' < ','<'],['t','el paso']].map(([o,n])=>`<button type="button" class="fxc fx-op" data-ins="${o}">${n}</button>`).join('')}${[['min(','el menor'],['max(','el mayor'],['if(','si…'],['abs(','sin signo']].map(([f,n])=>`<button type="button" class="fxc fx-op" data-ins="${f}">${n}</button>`).join('')}</div>`;
@@ -1609,12 +1609,12 @@ function renombrarClave(viejo,nuevo){
 function opSel(id,val,extra){
   const sc=fxScope();const v=String(val??'').trim();const num=esNum(v);
   const opt=(k,n,tt)=>`<option value="${esc(k)}"${k===v?' selected':''}>${esc(n)}</option>`;
-  return `<span class="op"><select data-op="${id}"><option value="">(elegí)</option><option value="#num"${num?' selected':''}>un número…</option><option value="#new">nueva perilla…</option>`+
-    (M.params.length?`<optgroup label="Perillas">${M.params.map(p=>opt(p.k,(p.nombre||p.k)+' · '+fmtV(sc[p.k],p.k))).join('')}</optgroup>`:'')+
+  return `<span class="op"><select data-op="${id}"><option value="">(elegí)</option><option value="#num"${num?' selected':''}>un número…</option><option value="#new">nuevo dato…</option>`+
+    (M.params.length?`<optgroup label="Datos">${M.params.map(p=>opt(p.k,(p.nombre||p.k)+' · '+fmtV(sc[p.k],p.k))).join('')}</optgroup>`:'')+
     (extra!=='sinstock'&&M.stocks.length?`<optgroup label="Cajas">${M.stocks.map(s=>opt(s.k,(s.nombre||s.k)+' · '+fmtV(sc[s.k],s.k))).join('')}</optgroup>`:'')+
     (M.flujos.length?`<optgroup label="Flujos">${M.flujos.map(f=>opt(f.k,f.nombre||f.k)).join('')}</optgroup>`:'')+
     (M.indicadores.length?`<optgroup label="Medidores">${M.indicadores.map(x=>opt(x.k,x.nombre||x.k)).join('')}</optgroup>`:'')+
-    `</select><input type="number" step="any" class="opnum" data-opnum="${id}" value="${num?v:''}" ${num?'':'hidden'} placeholder="número"><span class="opnew" data-opnew="${id}" hidden><input type="text" placeholder="nombre de la perilla" data-opnew-n><input type="number" step="any" placeholder="valor" data-opnew-v><button type="button" class="small" style="margin:0" data-opnew-ok="${id}">Crear</button></span></span>`;
+    `</select><input type="number" step="any" class="opnum" data-opnum="${id}" value="${num?v:''}" ${num?'':'hidden'} placeholder="número"><span class="opnew" data-opnew="${id}" hidden><input type="text" placeholder="nombre del dato" data-opnew-n><input type="number" step="any" placeholder="valor" data-opnew-v><button type="button" class="small" style="margin:0" data-opnew-ok="${id}">Crear</button></span></span>`;
 }
 function opVal(id){const root=$('pop');const s=root.querySelector(`[data-op="${id}"]`);if(!s)return null;const v=s.value;if(v==='#num'){const n=root.querySelector(`[data-opnum="${id}"]`).value;return esNum(n)?String(+n):null;}if(v==='#new'||!v)return null;return v;}
 function detectar(formula){
@@ -1753,7 +1753,7 @@ function renderStrips(sim,tc){
   $('strip-med').innerHTML=`<span class="strip-k">Medidores</span>${med}<button type="button" class="chipx add" id="btn-nuevo-med">+ medidor</button>`;
   const par=M.params.map(p=>`<button type="button" class="chipx par${p.externo?' ext':''}${POP&&POP.k===p.k?' on':''}" data-chip="${esc(p.k)}" title="${esc(p.nota||'')}">${esc(p.nombre||p.k)} <b>${fmtV(OVR[p.k]??p.valor,p.k)}</b></button>`).join('');
   const abierta=PER_OPEN||(POP&&POP.kind==='param');
-  $('strip-par').innerHTML=`<button type="button" class="strip-k tog" id="per-tog" aria-expanded="${abierta}">Perillas · ${M.params.length} ${abierta?'▾':'▸'}</button>${abierta?par+'<button type="button" class="chipx add" id="btn-nueva-per">+ perilla</button>':''}`;
+  $('strip-par').innerHTML=`<button type="button" class="strip-k tog" id="per-tog" aria-expanded="${abierta}">Datos · ${M.params.length} ${abierta?'▾':'▸'}</button>${abierta?par+'<button type="button" class="chipx add" id="btn-nueva-per">+ dato</button>':''}`;
 }
 function nodoDe(k){
   let it;
@@ -1783,8 +1783,8 @@ function componerInd(tipo,a,b){if(!a||!b)return null;return tipo==='suma'?`${a} 
 function popParam(p){
   const usos=usosDe(p.k);const sc=fxScope();
   const u=usos.length?usos.map(x=>x.kind==='accion'||x.kind==='regla'?`<span class="fl static">${esc(x.n)} <small>${x.kind==='accion'?'acción':'regla'}</small></span>`:`<button type="button" class="fl" data-pop-go="${esc(x.k)}">${esc(x.n)} <small>${x.kind==='ind'?'medidor':'válvula'}</small></button>`).join(''):'<span class="muted">todavía nada la usa: tocá una válvula y elegila en su fórmula</span>';
-  return `<div class="pop-h"><span class="pop-k">Perilla</span><button type="button" class="pop-x" data-pop-close aria-label="cerrar">×</button></div>
-    <div class="pop-f"><input type="text" class="big" data-list="params" data-id="${p.id}" data-field="nombre" value="${esc(p.nombre||'')}" placeholder="nombre de la perilla"></div>
+  return `<div class="pop-h"><span class="pop-k">Dato</span><button type="button" class="pop-x" data-pop-close aria-label="cerrar">×</button></div>
+    <div class="pop-f"><input type="text" class="big" data-list="params" data-id="${p.id}" data-field="nombre" value="${esc(p.nombre||'')}" placeholder="nombre del dato"></div>
     <div class="pop-g2">${p.desglose&&p.desglose.length?`<label>Total<input type="text" readonly value="${esc(mm(p.valor))}" id="desg-total"></label>`:`<label>Valor<input type="number" step="any" data-list="params" data-id="${p.id}" data-field="valor" value="${p.valor??''}"></label>`}<label>Unidad<input type="text" data-list="params" data-id="${p.id}" data-field="unidad" value="${esc(p.unidad||'')}" placeholder="$, %, meses"></label></div>
     ${desgHtml(p)}
     ${mas('perilla','Más opciones',[p.externo?'externo':'',p.nota],`<label>Nota<input type="text" data-list="params" data-id="${p.id}" data-field="nota" value="${esc(p.nota||'')}" placeholder="de dónde sale"></label>
@@ -1808,7 +1808,7 @@ function popInd(x){
     ${avisosHtml(x.k)}
     <div class="pop-foot"><button type="button" class="del" data-pop-del="ind" style="font-size:13px" ${usos.length?'disabled title="primero sacalo de donde se usa"':''}>Borrar</button></div>`;
 }
-function nuevaPerilla(){const p={id:uid(),k:keyLibre('perilla'),nombre:'',valor:0,unidad:'',nota:'',_fresh:1};M.params.push(p);renderList('params');renderList('palancas');dirty=true;compute();scheduleSave();POP={k:p.k,kind:'param'};renderPop();const i=$('pop').querySelector('.big');if(i)i.focus();}
+function nuevaPerilla(){const p={id:uid(),k:keyLibre('dato'),nombre:'',valor:0,unidad:'',nota:'',_fresh:1};M.params.push(p);renderList('params');renderList('palancas');dirty=true;compute();scheduleSave();POP={k:p.k,kind:'param'};renderPop();const i=$('pop').querySelector('.big');if(i)i.focus();}
 function nuevoMedidor(){const x={id:uid(),k:keyLibre('medidor'),nombre:'',formula:'0',unidad:'',_fresh:1};M.indicadores.push(x);renderList('indicadores');renderObjetivo();dirty=true;compute();scheduleSave();POP={k:x.k,kind:'ind',tipo:'suma'};renderPop();const i=$('pop').querySelector('.big');if(i)i.focus();}
 document.addEventListener('click',e=>{
   const t=e.target;
@@ -2054,7 +2054,7 @@ function estres(sim,ME){
 function renderEstres(list){
   const o=M.objetivo;$('estres-count').textContent=list.length?`(${list.length})`:'';
   const ext=M.params.filter(p=>p.externo).length;
-  $('estres-rows').innerHTML=!o?'<p class="muted">Elegí un objetivo: tocá un medidor en el mapa y "Hacerlo el objetivo".</p>':!ext?'<p class="muted">No hay perillas marcadas como externas.</p>':list.length?list.map(x=>{const peor=x.s2.find(r=>r._clamp&&r._clamp.length);return `<div class="pal" style="grid-template-columns:minmax(0,1fr) minmax(110px,.6fr)"><div class="pal-t"><b>${esc(x.p.nombre||x.p.k)} ${x.f>1?'+20 %':'−20 %'}</b><em>${esc(x.p.k)}: ${fmtV(x.p.valor,x.p.k)} → ${fmtV(x.p.valor*x.f,x.p.k)}${peor?` · una caja se agota en el ${M.unidad||'paso'} ${peor.t}`:''}</em></div><div class="pal-v neg">−${fmtV(Math.abs(x.raw),o)}<small>${esc(nombreDe(o))}</small></div></div>`;}).join(''):'<p class="muted">Ningún parámetro externo empeora el objetivo al 20 %.</p>';
+  $('estres-rows').innerHTML=!o?'<p class="muted">Elegí un objetivo: tocá un medidor en el mapa y "Hacerlo el objetivo".</p>':!ext?'<p class="muted">No hay datos marcados como externos.</p>':list.length?list.map(x=>{const peor=x.s2.find(r=>r._clamp&&r._clamp.length);return `<div class="pal" style="grid-template-columns:minmax(0,1fr) minmax(110px,.6fr)"><div class="pal-t"><b>${esc(x.p.nombre||x.p.k)} ${x.f>1?'+20 %':'−20 %'}</b><em>${esc(x.p.k)}: ${fmtV(x.p.valor,x.p.k)} → ${fmtV(x.p.valor*x.f,x.p.k)}${peor?` · una caja se agota en el ${M.unidad||'paso'} ${peor.t}`:''}</em></div><div class="pal-v neg">−${fmtV(Math.abs(x.raw),o)}<small>${esc(nombreDe(o))}</small></div></div>`;}).join(''):'<p class="muted">Ningún parámetro externo empeora el objetivo al 20 %.</p>';
 }
 function metaEstado(sim){
   const o=M.objetivo,H=M.horizonte;
@@ -2081,7 +2081,7 @@ function renderCapas(C,sim){
   const loops=C.filter(x=>['bucle de refuerzo','oscilación','deriva'].includes(x.tipo)).map(x=>chip(x.titulo,x.nivel==='critico'?'warn':''));
   const buffers=M.stocks.filter(s=>s.min0).map(s=>chip(s.nombre||s.k));
   const retardos=M.info.filter(i=>i.retardo>0).map(i=>chip(`${nombreDe(i.senal)}: ${i.retardo} ${i.retardo===1?(M.unidad||'paso'):plural(M.unidad)}`));
-  const ret=item('Cajas y flujos',chip(`${M.stocks.length} cajas · ${M.flujos.length} flujos`))+item('Bucles',loops.length?loops.join(''):chip('ninguno detectado','off'))+item('Buffers',buffers.length?buffers.join(''):chip('ninguna caja que no pueda bajar de cero','off'))+item('Retardos',retardos.length?retardos.join(''):chip('ninguno declarado','off'))+item('Perillas',chip(`${M.params.filter(p=>!p.externo).length} propias · ${M.params.filter(p=>p.externo).length} externas`));
+  const ret=item('Cajas y flujos',chip(`${M.stocks.length} cajas · ${M.flujos.length} flujos`))+item('Bucles',loops.length?loops.join(''):chip('ninguno detectado','off'))+item('Buffers',buffers.length?buffers.join(''):chip('ninguna caja que no pueda bajar de cero','off'))+item('Retardos',retardos.length?retardos.join(''):chip('ninguno declarado','off'))+item('Datos',chip(`${M.params.filter(p=>!p.externo).length} propios · ${M.params.filter(p=>p.externo).length} externos`));
   $('capas').innerHTML=`<div class="capa intencion"><div><b>Intención</b><span>palancas 3 · 2 · 1</span></div><div class="items">${int}</div></div><div class="capa diseno"><div><b>Diseño</b><span>palancas 6 · 5 · 4</span></div><div class="items">${dis}</div></div><div class="capa retro"><div><b>Retroalimentación y parámetros</b><span>palancas 12 a 7 · lo que simula el motor</span></div><div class="items">${ret}</div></div>`;
 }
 function renderSug(list){
@@ -2124,7 +2124,7 @@ document.addEventListener('click',e=>{
   else if(b.dataset.planDel){M.plan=(M.plan||[]).filter(p=>p.id!==b.dataset.planDel);dirty=true;compute();scheduleSave();return;}
   else if(b.id==='btn-nueva-pal'){abrirPalForm();return;}
   else if(b.id==='np-cancel'){$('pal-form').hidden=true;return;}
-  else if(b.dataset.addsug){const p=M.params.find(x=>x.k===b.dataset.addsug);if(!p)return;const f=b.dataset.f;M.palancas.push({id:uid(),k:'pl_'+uid(),nombre:`${p.nombre||p.k} ${f==='1.1'?'+10 %':'−10 %'}`,fuerza:12,tipo:'param',campo:p.k,valor:`${p.k} * ${f}`,descripcion:'Sugerida por el motor: perilla sensible. Convertila en algo concreto o subila de fuerza si implica una regla o una estructura.'});renderList('palancas');dirty=true;compute();scheduleSave();return;}
+  else if(b.dataset.addsug){const p=M.params.find(x=>x.k===b.dataset.addsug);if(!p)return;const f=b.dataset.f;M.palancas.push({id:uid(),k:'pl_'+uid(),nombre:`${p.nombre||p.k} ${f==='1.1'?'+10 %':'−10 %'}`,fuerza:12,tipo:'param',campo:p.k,valor:`${p.k} * ${f}`,descripcion:'Sugerida por el motor: dato sensible. Convertila en algo concreto o subila de fuerza si implica una regla o una estructura.'});renderList('palancas');dirty=true;compute();scheduleSave();return;}
   else if(b.id==='btn-reset'){M.activas=[];dirty=true;compute();scheduleSave();return;}
   else if(b.dataset.open){const m=LIB.find(x=>x.id===b.dataset.open);if(m&&m.id!==M.id)setCurrent(m);modelMenu(false);showTab('jugar');return;}
   else if(b.id==='btn-export'){const txt=JSON.stringify(M,null,2);$('json-io').value=txt;navigator.clipboard?.writeText(txt).then(()=>$('io-msg').textContent='Copiado al portapapeles.',()=>{$('json-io').select();$('io-msg').textContent='Seleccionado: copialo con Ctrl+C.';});return;}
