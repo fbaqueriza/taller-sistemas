@@ -883,7 +883,7 @@ let LIB=[],M=null,DB=null,dirty=false,saveT=null,saving=false,pending=false,errs
 function normalize(m){
   const b=tplVacio();const out={...b,...m};
   for(const k of ['stocks','flujos','params','indicadores','palancas','reglas','activas','decisiones','info','normas','plan'])if(!Array.isArray(out[k]))out[k]=[];
-  for(const p of out.params){if(p.k==='gastos'&&!Array.isArray(p.desglose)&&Math.round(p.valor||0)===1135000){p.desglose=desgInicial();p.nota='suma del desglose';}if(p.k==='gastos'&&Array.isArray(p.desglose)&&p.desgV!==2){const tiene=new Set(p.desglose.map(d=>(d.nombre||'').trim().toLowerCase()));for(const d of desgInicial())if(!tiene.has(d.nombre.toLowerCase()))p.desglose.push(d);p.desgV=2;}if(p.k==='gastos'&&Array.isArray(p.desglose)&&p.desgV===2){const ini={acuarela:70000,'carpintería':100000,'fútbol (2 por semana)':173000,supermercado:100000};for(const d of p.desglose){const v=ini[(d.nombre||'').trim().toLowerCase()];if(v!==undefined&&!(+d.monto))d.monto=v;}p.desgV=3;}syncDesg(p);}
+  for(const p of out.params){if(p.k==='gastos'&&!Array.isArray(p.desglose)){p.desglose=desgInicial();p.desgV=3;p.nota='suma del desglose';}if(p.k==='gastos'&&Array.isArray(p.desglose)&&p.desgV!==2){const tiene=new Set(p.desglose.map(d=>(d.nombre||'').trim().toLowerCase()));for(const d of desgInicial())if(!tiene.has(d.nombre.toLowerCase()))p.desglose.push(d);p.desgV=2;}if(p.k==='gastos'&&Array.isArray(p.desglose)&&p.desgV===2){const ini={acuarela:70000,'carpintería':100000,'fútbol (2 por semana)':173000,supermercado:100000};for(const d of p.desglose){const v=ini[(d.nombre||'').trim().toLowerCase()];if(v!==undefined&&!(+d.monto))d.monto=v;}p.desgV=3;}syncDesg(p);}
   for(const s of out.stocks)if(s.menos===undefined)s.menos=/deuda|debo|pasivo|pr[eé]stamo|hipoteca|atraso|faltante|merma|reclamo/i.test((s.nombre||'')+' '+(s.k||''));
   for(const k of ['auto','meta','paradigma','trascender'])if(typeof out[k]!=='string')out[k]='';
   if(!out.id)out.id=uid();out.horizonte=Math.max(2,Math.min(240,Math.round(out.horizonte||24)));out.t0=Math.max(0,Math.round(out.t0||0));if(!/^\d{4}-\d{2}$/.test(out.inicio||''))out.inicio=hoyYM();
@@ -1801,7 +1801,7 @@ function setParamValor(p,v){
 }
 function desgHtml(p){
   const D=p.desglose;
-  if(!Array.isArray(D)||!D.length)return `<div class="pop-s"><button type="button" class="small" style="margin:0;justify-self:start" data-desg-start="${esc(p.k)}">Desglosar este número en conceptos</button></div>`;
+  if(!Array.isArray(D)||!D.length)return `<div class="pop-s"><div class="btns"><button type="button" class="small" style="margin:0" data-desg-start="${esc(p.k)}">Desglosar este número en conceptos</button>${p.k==='gastos'?`<button type="button" class="small primary" style="margin:0" data-desg-load="1">Cargar mi desglose de gastos</button>`:''}</div></div>`;
   const tot=k=>D.filter(d=>d.tipo===k).reduce((a,d)=>a+d.monto,0);
   return `<div class="pop-s"><span class="pop-k">Desglose · ${D.length} conceptos</span>${D.map((d,i)=>`<div class="desg"><input type="text" data-desg="nombre" data-di="${i}" value="${esc(d.nombre||'')}" placeholder="concepto"><input type="number" step="any" data-desg="monto" data-di="${i}" value="${d.monto}"><select data-desg="tipo" data-di="${i}"><option value="fijo"${d.tipo==='fijo'?' selected':''}>fijo</option><option value="variable"${d.tipo==='variable'?' selected':''}>variable</option></select><button type="button" class="del" data-desg-del="${i}" aria-label="quitar">×</button></div>`).join('')}<div class="desg-foot"><button type="button" class="small" style="margin:0" data-desg-add="${esc(p.k)}">+ concepto</button><span id="desg-sub" class="muted">Fijos ${mm(tot('fijo'))} · Variables ${mm(tot('variable'))}</span></div></div>`;
 }
@@ -1811,6 +1811,7 @@ document.addEventListener('change',e=>{const el=e.target;if(el.dataset.desg!=='t
 document.addEventListener('click',e=>{
   const b=e.target.closest('#pop button');if(!b||!POP)return;
   const p=M.params.find(x=>x.k===POP.k);if(!p)return;
+  if(b.dataset.desgLoad){p.desglose=desgInicial();p.desgV=3;syncDesg(p);dirty=true;renderList('params');compute();scheduleSave();renderPop();return;}
   if(b.dataset.desgStart){p.desglose=[{id:uid(),nombre:'Total actual',monto:p.valor||0,tipo:'fijo'}];syncDesg(p);dirty=true;renderList('params');renderPop();scheduleSave();return;}
   if(b.dataset.desgAdd){(p.desglose=p.desglose||[]).push({id:uid(),nombre:'',monto:0,tipo:'fijo'});dirty=true;renderPop();const ins=$('pop').querySelectorAll('[data-desg="nombre"]');const l=ins[ins.length-1];if(l)l.focus();return;}
   if(b.dataset.desgDel!==undefined){p.desglose.splice(+b.dataset.desgDel,1);if(!p.desglose.length)delete p.desglose;else syncDesg(p);dirty=true;renderList('params');compute();scheduleSave();renderPop();return;}
