@@ -53,6 +53,8 @@ h3{font-family:var(--display);font-size:15px;font-weight:700;margin:0 0 6px}
 .top .status{margin-left:auto}
 .drop{position:absolute;z-index:8;left:16px;right:16px;max-width:760px;margin:0 auto;top:52px;background:var(--surface);border:1px solid var(--accent);border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.2);padding:16px;display:grid;gap:12px}
 .drop[hidden]{display:none}
+.modo-chip[hidden],#btn-quedarme[hidden]{display:none}
+#pal-rows .pal-t .pal-bar{grid-area:auto;width:100%;max-width:260px}
 .drop-h{display:flex;justify-content:space-between;align-items:center}
 .drop-h b{font-family:var(--display);font-size:16px}
 .page{position:relative}
@@ -311,6 +313,10 @@ details.sub>summary{cursor:pointer;font-weight:600;font-size:14px}
 .pop .fls{display:flex;flex-wrap:wrap;gap:4px}
 .pop .fl.static{display:inline-block;padding:5px 8px;border-radius:6px;background:var(--surface-2);font-size:13px}
 .pop-foot{gap:8px}
+#loopchips{scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 90%,transparent);mask-image:linear-gradient(90deg,#000 90%,transparent)}#loopchips::-webkit-scrollbar{display:none}
+.modo-chip{display:inline-flex;align-items:center;gap:4px;background:var(--accent-soft);color:var(--accent-ink);border-color:var(--accent)}
+.modo-chip button{border:0;background:none;padding:0 2px;margin:0;color:inherit;font-size:15px;line-height:1;cursor:pointer}
+.guide details.sub{margin-top:14px}.guide details.sub>summary{font-family:var(--display);font-weight:700;font-size:16px;cursor:pointer}
 .av{display:grid;grid-template-columns:10px minmax(0,1.15fr) minmax(0,1fr) 22px;grid-template-areas:"d c s x" ". v n .";gap:4px 6px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line)}
 .av>.av-dot{grid-area:d}.av>[data-av="cuando"]{grid-area:c}.av>[data-av="dir"]{grid-area:s}.av>[data-av="v"]{grid-area:v}.av>[data-av="nivel"]{grid-area:n}.av>.del{grid-area:x}
 .av select,.av input{padding:4px 5px;font-size:12.5px;min-width:0}
@@ -607,8 +613,8 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
       <button id="vivo-speed" class="speed" title="Velocidad">1×</button>
       <input type="range" id="vivo-scrub" class="scrub" min="0" max="24" step="1" value="0" aria-label="Momento en el tiempo">
       <span class="vivo-t" id="vivo-t"></span>
-      <span class="seg" id="vivo-modo" title="Qué escenario corre"><button data-modo="base">Base</button><button data-modo="activo" class="on">Con lo activo</button><button data-modo="plan">Plan completo</button></span>
-      <button id="btn-quedarme" class="small" style="margin:0" title="Mover el modelo hasta este punto del tiempo: lo que ves pasa a ser el presente">Quedarme acá</button>
+      <span class="chip modo-chip" id="vivo-modo" hidden>Viendo el plan completo <button type="button" data-modo="activo" aria-label="volver a lo activo">×</button></span>
+      <button id="btn-quedarme" class="small" style="margin:0" title="Mover el modelo hasta este punto del tiempo: lo que ves pasa a ser el presente" hidden>Quedarme acá</button>
     </div>
     <p class="note" id="vivo-manda"></p>
   </div>
@@ -655,6 +661,7 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 
       <div class="panel side-p" id="side-plan" hidden>
         <p class="note" id="plan-lede"></p>
+        <label class="check" style="margin:6px 0 4px"><input type="checkbox" id="plan-ver"> Ver el plan completo en el mapa</label>
         <ol class="plan" id="plan"></ol>
         <form id="plan-form" class="btns" style="margin-top:10px"><input type="text" id="plan-nuevo" placeholder="un paso propio" style="flex:1;min-width:140px"><button type="submit" class="small" style="margin:0">Agregar</button></form>
         <details class="sub"><summary>Para sumar al plan</summary><div id="plan-sug" style="margin-top:8px"></div></details>
@@ -673,7 +680,7 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 </section>
 
 <section class="tab" id="tab-analisis" hidden>
-  <div class="sec-head"><h2>Alertas</h2><p>Lo que el motor ve en el escenario que está corriendo en Jugar: patrones, reglas y la meta.</p></div>
+  <div class="sec-head"><h2>Alertas</h2><p>Lo que el motor ve en el escenario que corre en el mapa: patrones, avisos y la meta.</p></div>
   <div class="cards" id="cards"></div>
   <details class="plain"><summary>Lo que está bien <span id="ok-count"></span></summary><div class="cards" id="cards-ok" style="margin-top:10px"></div></details>
   <details class="plain" id="dec-box" open><summary>Decisiones y avances <span id="dec-count"></span></summary><div id="decisiones" style="margin-top:8px"></div></details>
@@ -686,67 +693,76 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 <section class="tab" id="tab-guia" hidden>
   <div class="panel guide">
     <p class="eyebrow">Pensamiento sistémico · Donella Meadows</p>
-    <p>Describí cualquier sistema con stocks, flujos y parámetros. El taller lo simula, mide qué palanca mueve más, detecta patrones y arma un camino de acción. Arriba elegís el modelo; en <b>Mapa</b> lo jugás, en <b>Análisis</b> ves lo que el motor detecta, y en <b>Tablas</b> está todo el modelo en forma de tabla.</p>
-    <h2>Cómo describir un sistema</h2>
+    <p>Un sistema es lo que se acumula, lo que lo mueve y los números que deciden cuánto. El taller lo dibuja, lo corre en el tiempo y te muestra qué acción mueve más. Todo se arma y se juega en el <b>Mapa</b>. <b>Análisis</b> junta lo que el motor detecta, y <b>Tablas</b> tiene el modelo entero en forma de tabla.</p>
+
+    <h2>Armar el mapa</h2>
     <ol>
-      <li><b>Nombrá los stocks.</b> Lo que se acumula y podés medir en un instante: plata en caja, gente en un equipo, clientes activos, agua en un tanque, deuda. Dales un valor inicial.</li>
-      <li><b>Escribí los flujos.</b> Lo que cambia un stock por paso. Cada flujo va desde algo hacia algo: desde afuera hacia un stock (una entrada), desde un stock hacia afuera (una salida) o entre stocks (una transferencia). La fórmula dice cuánto por paso.</li>
-      <li><b>Sacá los parámetros.</b> Todo número que aparezca en una fórmula y pueda cambiar: tasas, precios, cantidades, porcentajes. Así las palancas tienen algo que mover.</li>
-      <li><b>Definí indicadores.</b> Medidas derivadas: patrimonio neto, días de caja, margen. Elegí uno como objetivo.</li>
-      <li><b>Listá las palancas.</b> Cada decisión que podrías tomar, escrita como un cambio concreto a un parámetro o a un stock inicial. Asignale su fuerza según Meadows.</li>
-      <li><b>Escribí reglas de lectura.</b> Condiciones que te importan: "si la caja mínima baja de cero", "si la deuda supera la liquidez". El motor las evalúa y las convierte en alertas y pasos del camino.</li>
+      <li><b>Cajas.</b> Lo que se acumula: plata, deuda, clientes, agua en un tanque. "+ caja" agrega una; tocala para darle nombre y valor de hoy.</li>
+      <li><b>Flujos.</b> Desde la tarjeta de una caja: "+ algo que entra", "+ algo que sale" o "pasa a otra caja". Tocá la válvula para decir cuánto mueve: un monto fijo, una parte de una caja, algo que crece, lo que sobra o el menor de dos.</li>
+      <li><b>Perillas.</b> Los números que usan las fórmulas: tasas, precios, gastos. Se crean solas cuando escribís un número nuevo, y se ven en la tira de abajo. Una perilla puede tener un desglose en conceptos.</li>
+      <li><b>Medidores.</b> Cuentas sobre las cajas, como patrimonio o meses de colchón. Uno es el ★ objetivo: lo que las acciones intentan mejorar.</li>
     </ol>
-    <h3>Avisos</h3>
-    <p>En la tarjeta de una caja o de un medidor, <b>Avisame si…</b> crea un aviso sin escribir fórmulas: en algún momento, al final o hoy; si baja de o supera un valor. El punto de color muestra si salta ahora. Cuando salta, la caja o el medidor se marcan en el mapa y el aviso aparece en Análisis. Las condiciones más elaboradas se escriben en Tablas → Avisos.</p>
-    <h3>Stocks que conviene que bajen</h3>
-    <p>Una deuda, una merma o una lista de reclamos son stocks donde menos es mejor. Marcalos como <b>mejor si baja</b> en la tarjeta de la caja. Con esa marca, llegar a cero se lee como un logro, crecer acelerando es un bucle vicioso, y el bucle de refuerzo que lo alimenta se pinta en rojo. Las cajas que se llaman deuda, préstamo o pasivo vienen marcadas.</p>
-    <h3>Montos anuales</h3>
-    <p>Cada flujo dice cada cuánto se mueve su monto. <b>Cada mes</b> es lo normal. <b>Anual, repartido</b>: escribís el monto del año y cada mes se mueve la doceava parte. <b>En ciertos meses</b>: escribís el monto de cada vez y marcás los meses, por ejemplo vacaciones en enero o aguinaldo en junio y diciembre. Para que los meses caigan bien, el modelo tiene un mes de inicio en Describir.</p>
-    <h3>Fórmulas</h3>
-    <p>Un flujo puede tener un <b>factor</b>: cuánto cambia el destino por cada unidad que sale del origen. Con <code>-1</code>, pagar una deuda baja los pesos y la deuda en un solo flujo. Con <code>1 / tipo_cambio</code>, comprar dólares saca pesos y suma dólares.</p>
-    <p>No hace falta escribirlas de memoria: al tocar cualquier campo de fórmula aparece debajo un ayudante con todos los stocks, parámetros, flujos e indicadores del modelo. Tocás uno y entra en la fórmula; arriba la ves leída en palabras y con su valor de hoy, o el error si algo no cierra.</p>
-    <p>Operadores: <code>+ - * / ^</code>, comparaciones <code>&lt; &gt; &lt;= &gt;= == !=</code>, lógica <code>&amp;&amp; ||</code>, paréntesis. Funciones: <code>min max abs sqrt log exp round floor ceil pow if(cond, a, b)</code>. <code>t</code> es el paso actual, de 0 en adelante.</p>
+
+    <h2>Jugar</h2>
+    <p><b>▶</b> corre el tiempo; el deslizador te lleva a cualquier mes. En el panel de al lado:</p>
     <ul>
-      <li>Algo que crece con inflación: <code>gastos * (1 + inflacion) ^ t</code></li>
-      <li>Interés sobre un stock: <code>deuda * tasa</code></li>
-      <li>Pagar lo que se pueda: <code>min(deuda, pesos)</code>, cargado como dos flujos de salida, uno desde cada stock</li>
-      <li>Un sobrante que se reparte: <code>max(0, ingreso - gastos) * fraccion</code></li>
+      <li><b>Acciones.</b> Prender una es probarla: el mapa y el gráfico cambian en el momento. La barra muestra cuánto mueve el objetivo. <b>Adoptar</b> es decidir: pasa al modelo y queda registrada, con deshacer.</li>
+      <li><b>Plan.</b> Tu lista de pasos, con lo que sugiere el motor y lo tuyo. "Ver el plan completo en el mapa" prende todo lo pendiente a la vez.</li>
+      <li><b>Números.</b> Deslizadores para probar otro valor de cualquier perilla, y sacudones: una caja que pierde o gana un 20 % de golpe.</li>
     </ul>
-    <h3>Las tres capas</h3>
-    <p>Meadows ordena doce palancas; conviene leerlas en tres capas. <b>Retroalimentación y parámetros</b> (12 a 7): números, buffers, estructura de stocks y flujos, retardos, bucles. Es lo que el motor simula. <b>Diseño</b> (6 a 4): quién ve qué información y cuándo, qué reglas gobiernan, cómo puede el sistema reorganizarse. <b>Intención</b> (3 a 1): la meta, el paradigma desde el que surge, y la capacidad de trascenderlo. Las capas de arriba no se simulan, pero deciden qué vale la pena simular. En Jugar, "Las tres capas" las muestra juntas con lo que cargaste en Describir.</p>
-    <h3>Las doce palancas de Meadows, de la más débil a la más fuerte</h3>
-    <ol reversed>
-      <li value="12"><b>Parámetros.</b> Números, subsidios, impuestos, estándares.</li>
-      <li><b>Buffers.</b> Tamaño de los stocks estabilizadores respecto de sus flujos.</li>
-      <li><b>Estructura de stocks y flujos.</b> Cómo está conectado el sistema.</li>
-      <li><b>Retardos.</b> Cuánto tarda la información o el material en moverse.</li>
-      <li><b>Bucles de balance.</b> Qué tan fuerte corrigen hacia la meta.</li>
-      <li><b>Bucles de refuerzo.</b> Qué tan rápido se aceleran.</li>
-      <li><b>Flujos de información.</b> Quién ve qué y cuándo.</li>
-      <li><b>Reglas.</b> Incentivos, castigos, restricciones.</li>
-      <li><b>Auto-organización.</b> La capacidad del sistema de cambiar su propia estructura.</li>
-      <li><b>Metas.</b> El propósito del sistema.</li>
-      <li><b>Paradigma.</b> La idea desde la que surge el sistema.</li>
-      <li><b>Trascender el paradigma.</b> Saber que ningún paradigma es la verdad.</li>
-    </ol>
-    <h3>Editar desde el mapa</h3>
-    <p>En Jugar, tocá una caja para cambiarle el nombre, el valor de hoy, la unidad o el carril, y para agregarle algo que entra, algo que sale o un pase a otra caja. Tocá una válvula para elegir cuánto mueve por paso con un patrón: un monto fijo, una parte de un stock, un monto que crece, lo que sobra de una resta o el menor de dos. Cada opción se elige de una lista con los nombres del modelo; un número suelto se puede convertir en parámetro nuevo ahí mismo. Debajo aparecen los números que usa la fórmula, editables, y un botón para crear una acción que cambie cualquiera de ellos. "+ caja" agrega una caja nueva. Debajo del mapa hay dos tiras: los <b>medidores</b> (indicadores, con ★ en el objetivo) y las <b>perillas</b> (parámetros, punteadas las externas). Tocá una perilla para cambiarle el valor y ver en el mapa qué válvulas la usan; tocá un medidor para armarlo como suma, resta o división, o para volverlo el objetivo.</p>
-<h3>Bucles</h3>
-    <p>En Jugar, el dibujo muestra cada caja, cada válvula y de qué depende cada una. Los bucles aparecen marcados con R o B; tocá uno, en el dibujo o en la fila de arriba, para verlo solo.</p>
-    <p>El motor busca circuitos en tus fórmulas: un flujo que depende de un stock y a la vez lo mueve. Mide, sobre el estado actual, cómo cambia cada flujo cuando el stock sube un 1 %, y arma las vueltas de hasta tres stocks. <b>R</b> es un bucle de refuerzo: el producto de los signos es positivo y el stock se alimenta a sí mismo. <b>B</b> es un bucle de balance: el producto es negativo y el flujo lo empuja de vuelta. El porcentaje es la ganancia por paso: cuánto del stock vuelve a entrar o salir en una vuelta. Un flujo con umbral, como "si hay plata, comprá", no aparece hasta que el estado está cerca del umbral.</p>
-    <h3>Plan de mejora</h3>
-    <p>Es tu lista. Se arma con lo que el motor sugiere (alertas y palancas con efecto positivo que todavía no están en el plan) y con pasos propios. Cada paso tiene estado; los que son palancas se activan o adoptan desde el plan, y al adoptarlos quedan hechos solos. Una sugerencia desaparece cuando la agregás, así nada se repite.</p>
-    <h3>El tablero</h3>
-    <p>En Jugar, el mapa ocupa el centro y a su lado queda un panel fijo con el objetivo ahora y al final, y tres pestañas: <b>Acciones</b> para prender, adoptar, editar o crear; <b>Plan</b> para ordenar los pasos; <b>Números</b> para mover cualquier parámetro o meter un sacudón. Lo que tocás ahí se ve enseguida en el mapa y en el gráfico. Todo el análisis (alertas, decisiones, capas, escenarios adversos, sugerencias y la tabla) está en la pestaña <b>Análisis</b>.</p>
-    <h3>Jugar: correr, probar, decidir</h3>
-    <p><b>▶</b> corre el tiempo sobre la simulación: el dibujo, los números, el gráfico y los bucles muestran cada paso. Tocar el gráfico lleva el reloj a ese punto. Los tres modos comparan escenarios: <b>Base</b> es el modelo sin tocar, <b>Con lo activo</b> incluye las palancas prendidas y los números que moviste, <b>Plan completo</b> prende además todas las palancas pendientes del plan. <b>Activar</b> una palanca es probarla; <b>adoptar</b> es decidir: pasa al modelo y queda registrada. Los <b>deslizadores</b> mueven cualquier parámetro propio mientras ves "hoy" al lado; se adoptan o se vuelven atrás. <b>Pasa algo</b> mete un sacudón en el paso donde está el reloj. <b>Quedarme acá</b> mueve el modelo hasta ese momento: los stocks pasan a lo que ves y el reloj del modelo avanza; desde ahí volvés a decidir. Todo queda en "Decisiones y avances", con deshacer. Los <b>parámetros externos</b> (inflación, tipo de cambio) no se sugieren como acciones: alimentan los escenarios adversos.</p>
-    <h3>Qué detecta el motor por su cuenta</h3>
+    <p><b>Quedarme acá</b> aparece cuando movés el reloj: lleva el modelo a ese mes, y lo que ves pasa a ser hoy.</p>
+
+    <h2>Avisos</h2>
+    <p>En la tarjeta de una caja o de un medidor, <b>Avisame si…</b>: en algún momento, al final o hoy; si baja de o supera un valor. El punto de color dice si salta ahora. Cuando salta, la caja o el medidor se marcan en el mapa y el aviso aparece en Análisis.</p>
+
+    <h2>Leer el mapa</h2>
     <ul>
-      <li><b>Bucle de refuerzo dominante:</b> un stock que crece o cae acelerando.</li>
-      <li><b>Oscilación:</b> un stock que sube y baja repetidamente, señal de bucle de balance con retardo.</li>
-      <li><b>Deriva:</b> el objetivo que empeora de forma sostenida.</li>
-      <li><b>Agotamiento:</b> un stock no negativo que llega a cero y frena sus salidas.</li>
+      <li><b>R</b> es un bucle de refuerzo: la caja se alimenta a sí misma. <b>B</b> es de balance: el flujo la empuja de vuelta. Tocá un bucle para verlo solo.</li>
+      <li>Las cajas marcadas <b>mejor si baja</b>, como una deuda, se leen al revés: llegar a cero es un logro y el bucle que la hace crecer se pinta en rojo.</li>
+      <li>Un borde punteado naranja es un aviso que salta. Un reloj es un retardo; un ojo, alguien que mira esa señal.</li>
     </ul>
+
+    <h2>Montos que no son de todos los meses</h2>
+    <p>En la tarjeta de una válvula, <b>cada mes</b> es lo normal; <b>anual, repartido</b> toma el monto del año y mueve la doceava parte por mes; <b>en ciertos meses</b> mueve el monto entero en los meses que marques, como vacaciones en enero o aguinaldo en junio y diciembre.</p>
+
+    <details class="sub"><summary>Fórmulas</summary>
+      <p>Al tocar un campo de fórmula aparece debajo un ayudante con todo lo del modelo: tocás un elemento y entra en la fórmula, y arriba la ves leída en palabras con su valor de hoy.</p>
+      <p>Operadores <code>+ - * / ^</code>, comparaciones <code>&lt; &gt; &lt;= &gt;= == !=</code>, <code>&amp;&amp; ||</code>, paréntesis. Funciones <code>min max abs sqrt log exp round floor ceil pow if(cond, a, b)</code>. <code>t</code> es el mes actual.</p>
+      <p>Un flujo puede tener un <b>factor</b> para el destino: con <code>-1</code>, pagar una deuda baja los pesos y la deuda a la vez; con <code>1 / tipo_cambio</code>, comprar dólares saca pesos y suma dólares.</p>
+      <ul>
+        <li>Crece con la inflación: <code>gastos * (1 + inflacion) ^ t</code></li>
+        <li>Interés sobre una caja: <code>deuda * tasa</code></li>
+        <li>Un sobrante que se reparte: <code>max(0, ingreso - gastos) * fraccion</code></li>
+      </ul>
+    </details>
+
+    <details class="sub"><summary>Las doce palancas de Meadows</summary>
+      <p>De la más débil a la más fuerte, en tres capas. <b>Retroalimentación y parámetros</b> (12 a 7) es lo que el taller simula. <b>Diseño</b> (6 a 4) e <b>Intención</b> (3 a 1) se cargan en Tablas y se muestran en Análisis.</p>
+      <ol reversed>
+        <li value="12"><b>Parámetros.</b> Números, subsidios, impuestos.</li>
+        <li><b>Buffers.</b> Tamaño de los stocks que estabilizan.</li>
+        <li><b>Estructura.</b> Cómo está conectado el sistema.</li>
+        <li><b>Retardos.</b> Cuánto tarda en moverse algo.</li>
+        <li><b>Bucles de balance.</b> Qué tan fuerte corrigen.</li>
+        <li><b>Bucles de refuerzo.</b> Qué tan rápido aceleran.</li>
+        <li><b>Información.</b> Quién ve qué y cuándo.</li>
+        <li><b>Reglas.</b> Incentivos, castigos, restricciones.</li>
+        <li><b>Auto-organización.</b> Cambiar la propia estructura.</li>
+        <li><b>Metas.</b> El propósito del sistema.</li>
+        <li><b>Paradigma.</b> La idea de la que surge.</li>
+        <li><b>Trascender el paradigma.</b> Saber que ninguno es la verdad.</li>
+      </ol>
+    </details>
+
+    <details class="sub"><summary>Qué detecta el motor solo</summary>
+      <ul>
+        <li><b>Refuerzo:</b> una caja que crece o cae acelerando.</li>
+        <li><b>Oscilación:</b> sube y baja una y otra vez; suele ser un balance con retardo.</li>
+        <li><b>Deriva:</b> el objetivo empeora de forma sostenida.</li>
+        <li><b>Agotamiento:</b> una caja que no puede bajar de cero llega a cero y frena lo que sale.</li>
+      </ul>
+      <p>Los bucles se buscan midiendo cómo cambia cada flujo cuando una caja sube un 1 %, en vueltas de hasta tres cajas. El porcentaje de cada bucle es cuánto vuelve en una vuelta por mes.</p>
+    </details>
   </div>
 </section>
 <div id="fx" class="fx" hidden><div id="fx-prev" class="fx-prev"></div><div id="fx-chips"></div></div>
@@ -1140,7 +1156,7 @@ function compute(){
   renderVivo();
   const box=$('errores');const u=[...new Set(errs)];box.hidden=!u.length;box.innerHTML=u.map(e=>'• '+esc(e)).join('<br>');
   document.querySelectorAll('.tabs [data-tab="describir"]').forEach(b=>b.textContent=u.length?`Tablas (${u.length} ${u.length===1?'error':'errores'})`:'Tablas');
-  $('vivo-modo').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.modo===MODO));
+  {if(MODO==='base')MODO='activo';$('vivo-modo').hidden=MODO!=='plan';const pv=$('plan-ver');if(pv)pv.checked=MODO==='plan';}
 }
 /* lo que depende del reloj */
 function renderVivo(){
@@ -1150,7 +1166,7 @@ function renderVivo(){
   renderDiagram(sim,TCUR,lastLoops);renderStrips(sim,TCUR);renderKpis(base,sim,TCUR);renderChart(base,sim,TCUR);
   const t0=M.t0||0,H=M.horizonte,u=M.unidad||'paso';
   $('vivo-t').textContent=fechaDe(t0+TCUR)||`${u} ${t0+TCUR}`;
-  $('btn-quedarme').disabled=TCUR===0;
+  $('btn-quedarme').hidden=TCUR===0;
   $('vivo-play').textContent=RUN?'❚❚':'▶';
   {const sc=$('vivo-scrub');if(sc){sc.max=H;if(document.activeElement!==sc)sc.value=TCUR;}}
   const o=M.objetivo;let manda='';
@@ -1186,7 +1202,7 @@ function renderProbar(){
   const box=$('probar');const keys=ps.map(p=>p.k).join('|');
   if(box.dataset.keys!==keys){
     box.dataset.keys=keys;
-    box.innerHTML=ps.length?ps.map(p=>{const hoy=p.valor||0;const cur=OVR[p.k]??hoy;const max=p.unidad==='%'?Math.min(1,Math.max(0.05,Math.abs(hoy)*3)):hoy>0&&hoy<=1?1:Math.abs(hoy)*2||10;const step=nice((max)/100);return `<label class="pb" data-k="${esc(p.k)}"><span class="pb-top"><span>${esc(p.nombre||p.k)}${p.externo?' <i class="ext-tag">externo</i>':''}</span><b>${fmtV(cur,p.k)}</b></span><input type="range" data-ovr="${esc(p.k)}" min="0" max="${max}" step="${step}" value="${cur}"><small>hoy <span class="pb-hoy">${fmtV(hoy,p.k)}</span>${p.nota?' · '+esc(p.nota):''}</small></label>`;}).join(''):'<p class="muted">No hay parámetros propios para mover. Marcá en Describir cuáles controlás.</p>';
+    box.innerHTML=ps.length?ps.map(p=>{const hoy=p.valor||0;const cur=OVR[p.k]??hoy;const max=p.unidad==='%'?Math.min(1,Math.max(0.05,Math.abs(hoy)*3)):hoy>0&&hoy<=1?1:Math.abs(hoy)*2||10;const step=nice((max)/100);return `<label class="pb" data-k="${esc(p.k)}"><span class="pb-top"><span>${esc(p.nombre||p.k)}${p.externo?' <i class="ext-tag">externo</i>':''}</span><b>${fmtV(cur,p.k)}</b></span><input type="range" data-ovr="${esc(p.k)}" min="0" max="${max}" step="${step}" value="${cur}"><small>hoy <span class="pb-hoy">${fmtV(hoy,p.k)}</span>${p.nota?' · '+esc(p.nota):''}</small></label>`;}).join(''):'<p class="muted">No hay parámetros propios para mover. Agregá perillas desde el mapa.</p>';
   }
   for(const p of ps){const el=box.querySelector(`.pb[data-k="${p.k}"]`);if(!el)continue;const hoy=p.valor||0;const cur=OVR[p.k]??hoy;el.classList.toggle('distinto',cur!==hoy);el.querySelector('b').textContent=fmtV(cur,p.k);el.querySelector('.pb-hoy').textContent=fmtV(hoy,p.k);const inp=el.querySelector('input');if(document.activeElement!==inp)inp.value=cur;}
   $('probar-btns').hidden=!Object.keys(OVR).length;
@@ -1314,7 +1330,7 @@ function causal(ME,r){
 }
 function renderDiagram(sim,tc,loops){
   const r=sim[tc];
-  if(!M.stocks.length){$('loopchips').innerHTML='';$('diagram').innerHTML='<p class="muted">Agregá stocks en Describir para ver el sistema.</p>';return;}
+  if(!M.stocks.length){$('loopchips').innerHTML='';$('diagram').innerHTML='<p class="muted">Tocá "+ caja" para empezar a dibujar el sistema.</p>';return;}
   layoutCausal();
   const {s,ox,oy,W,H}=LAY.T;const P=LAY.pos;const X=k=>ox+s*P[k].x,Y=k=>oy+s*P[k].y;
   const F=M.flujos.filter(f=>P[f.k]);
@@ -1396,7 +1412,7 @@ function renderKpis(base,sim,tc){
 function renderSens(list){
   const H=M.horizonte,o=M.objetivo;const actS=new Set(M.activas||[]);
   {const ha=(M.activas||[]).length>0;$('btn-adopt-all').hidden=!ha;$('btn-reset').hidden=!ha;}
-  $('esc-lede').textContent=!M.palancas.length?'Todavía no hay acciones. Creá una con "+ nueva acción".':!o?'Elegí un objetivo en Describir para medir cada acción.':`Prendé una para probarla. La barra es su efecto en ${nombreDe(o)} a ${H} ${plural(M.unidad)}.`;
+  $('esc-lede').textContent=!M.palancas.length?'Todavía no hay acciones. Creá una con "+ nueva acción".':!o?'Elegí un objetivo para medir cada acción: tocá un medidor y "Hacerlo el objetivo".':`Prendé una para probarla. La barra es su efecto en ${nombreDe(o)} a ${H} ${plural(M.unidad)}.`;
   const by={};for(const x of list)by[x.pl.k]=x;
   const maxAbs=Math.max(1e-9,...list.map(x=>Math.abs(x.delta)));
   const best=list.filter(x=>!x.on&&x.delta>0).sort((a,b)=>b.delta-a.delta)[0];
@@ -1404,7 +1420,7 @@ function renderSens(list){
     const x=by[pl.k]||{on:actS.has(pl.k),delta:0,raw:0};const pos=x.delta>=0;
     const cambio=String(pl.valor||'').includes('=')?pl.valor:nombreDe(pl.campo)+' → '+pl.valor;
     return `<div class="pal acc${x.on?' on':''}" title="${esc(cambio)}"><label class="sw" title="${x.on?'apagar':'activar'}"><input type="checkbox" data-toggle="${esc(pl.k)}" ${x.on?'checked':''}><i></i></label>
-      <div class="pal-t"><b>${esc(pl.nombre||pl.k)} <span class="pal-n ${CAPA(pl.fuerza||12)}" title="${FUERZA[pl.fuerza]||''}">${pl.fuerza||12} · ${FUERZA[pl.fuerza]||'parámetros'}</span>${best&&best.pl.k===pl.k?'<span class="mejor">la que más mueve</span>':''}${x.on?`<button class="small inline" data-adopt="${esc(pl.k)}">Adoptar</button>`:''}</b><span>${esc(pl.descripcion||cambio)}</span>${o?`<div class="pal-bar"><i style="width:${(100*Math.abs(x.delta)/maxAbs).toFixed(1)}%;background:${pos?'var(--good)':'var(--crit)'}"></i></div>`:''}</div>
+      <div class="pal-t"><b>${esc(pl.nombre||pl.k)}${best&&best.pl.k===pl.k?'<span class="mejor">la que más mueve</span>':''}${x.on?`<button class="small inline" data-adopt="${esc(pl.k)}">Adoptar</button>`:''}</b><span>${esc(pl.descripcion||cambio)}</span>${o?`<div class="pal-bar"><i style="width:${(100*Math.abs(x.delta)/maxAbs).toFixed(1)}%;background:${pos?'var(--good)':'var(--crit)'}"></i></div>`:''}</div>
       <div class="pal-v ${pos?'pos':'neg'}">${o?(pos?'+':'−')+fmtV(Math.abs(x.raw),o):'—'}<small>${x.on?'aporta':'si la activás'}</small></div>
       <div class="pal-ed"><button data-pal-up="${esc(pl.k)}" title="subir" aria-label="subir" ${i===0?'disabled':''}>↑</button><button data-pal-down="${esc(pl.k)}" title="bajar" aria-label="bajar" ${i===M.palancas.length-1?'disabled':''}>↓</button><button data-pal-edit="${esc(pl.k)}" title="editar" aria-label="editar">✎</button><button data-pal-del="${esc(pl.k)}" title="borrar" aria-label="borrar" class="x">×</button></div></div>`;
   }).join('');
@@ -1882,6 +1898,9 @@ function grpInit(){let o={};try{o=JSON.parse(localStorage.getItem(KEY+'-grp')||'
 document.addEventListener('toggle',e=>{const d=e.target;if(!d.dataset||!d.dataset.grp)return;let o={};try{o=JSON.parse(localStorage.getItem(KEY+'-grp')||'{}');}catch(x){}o[d.dataset.grp]=d.open;try{localStorage.setItem(KEY+'-grp',JSON.stringify(o));}catch(x){}},true);
 document.addEventListener('click',e=>{const b=e.target.closest('[data-ir]');if(b)showTab(b.dataset.ir);});
 
+/* ---------- ver el plan completo ---------- */
+document.addEventListener('change',e=>{if(e.target.id!=='plan-ver')return;MODO=e.target.checked?'plan':'activo';compute();});
+
 /* ---------- eventos ---------- */
 document.addEventListener('input',e=>{
   const el=e.target;
@@ -1975,7 +1994,7 @@ function estres(sim,ME){
 function renderEstres(list){
   const o=M.objetivo;$('estres-count').textContent=list.length?`(${list.length})`:'';
   const ext=M.params.filter(p=>p.externo).length;
-  $('estres-rows').innerHTML=!o?'<p class="muted">Elegí un objetivo en Describir.</p>':!ext?'<p class="muted">No hay parámetros marcados como externos.</p>':list.length?list.map(x=>{const peor=x.s2.find(r=>r._clamp&&r._clamp.length);return `<div class="pal" style="grid-template-columns:minmax(0,1fr) minmax(110px,.6fr)"><div class="pal-t"><b>${esc(x.p.nombre||x.p.k)} ${x.f>1?'+20 %':'−20 %'}</b><em>${esc(x.p.k)}: ${fmtV(x.p.valor,x.p.k)} → ${fmtV(x.p.valor*x.f,x.p.k)}${peor?` · un stock se agota en el paso ${peor.t}`:''}</em></div><div class="pal-v neg">−${fmtV(Math.abs(x.raw),o)}<small>${esc(nombreDe(o))}</small></div></div>`;}).join(''):'<p class="muted">Ningún parámetro externo empeora el objetivo al 20 %.</p>';
+  $('estres-rows').innerHTML=!o?'<p class="muted">Elegí un objetivo: tocá un medidor en el mapa y "Hacerlo el objetivo".</p>':!ext?'<p class="muted">No hay parámetros marcados como externos.</p>':list.length?list.map(x=>{const peor=x.s2.find(r=>r._clamp&&r._clamp.length);return `<div class="pal" style="grid-template-columns:minmax(0,1fr) minmax(110px,.6fr)"><div class="pal-t"><b>${esc(x.p.nombre||x.p.k)} ${x.f>1?'+20 %':'−20 %'}</b><em>${esc(x.p.k)}: ${fmtV(x.p.valor,x.p.k)} → ${fmtV(x.p.valor*x.f,x.p.k)}${peor?` · un stock se agota en el paso ${peor.t}`:''}</em></div><div class="pal-v neg">−${fmtV(Math.abs(x.raw),o)}<small>${esc(nombreDe(o))}</small></div></div>`;}).join(''):'<p class="muted">Ningún parámetro externo empeora el objetivo al 20 %.</p>';
 }
 function metaEstado(sim){
   const o=M.objetivo,H=M.horizonte;
@@ -2008,7 +2027,7 @@ function renderCapas(C,sim){
 function renderSug(list){
   const o=M.objetivo;$('sug-count').textContent=list.length?`(${list.length})`:'';
   const ya=new Set(M.palancas.map(p=>p.campo+'|'+p.valor));
-  $('sug-rows').innerHTML=!o?'<p class="muted">Elegí un objetivo en Describir.</p>':list.length?list.map(x=>{const expr=`${x.p.k} * ${x.f}`;const dup=ya.has(x.p.k+'|'+expr);return `<div class="pal" style="grid-template-columns:minmax(0,1fr) minmax(110px,.6fr) auto"><div class="pal-t"><b>${esc(x.p.nombre||x.p.k)} ${x.f>1?'+10 %':'−10 %'}</b><em>${esc(x.p.k)}: ${fmtV(x.p.valor,x.p.k)} → ${fmtV(x.p.valor*x.f,x.p.k)}</em></div><div class="pal-v pos">+${fmtV(Math.abs(x.raw),o)}<small>${esc(nombreDe(o))}</small></div><button class="small" style="margin:0" data-addsug="${esc(x.p.k)}" data-f="${x.f}" ${dup?'disabled title="ya existe como palanca"':''}>${dup?'Ya es palanca':'Agregar como palanca'}</button></div>`;}).join(''):'<p class="muted">Ningún parámetro mueve el objetivo al 10 %.</p>';
+  $('sug-rows').innerHTML=!o?'<p class="muted">Elegí un objetivo: tocá un medidor en el mapa y "Hacerlo el objetivo".</p>':list.length?list.map(x=>{const expr=`${x.p.k} * ${x.f}`;const dup=ya.has(x.p.k+'|'+expr);return `<div class="pal" style="grid-template-columns:minmax(0,1fr) minmax(110px,.6fr) auto"><div class="pal-t"><b>${esc(x.p.nombre||x.p.k)} ${x.f>1?'+10 %':'−10 %'}</b><em>${esc(x.p.k)}: ${fmtV(x.p.valor,x.p.k)} → ${fmtV(x.p.valor*x.f,x.p.k)}</em></div><div class="pal-v pos">+${fmtV(Math.abs(x.raw),o)}<small>${esc(nombreDe(o))}</small></div><button class="small" style="margin:0" data-addsug="${esc(x.p.k)}" data-f="${x.f}" ${dup?'disabled title="ya existe como palanca"':''}>${dup?'Ya es palanca':'Agregar como palanca'}</button></div>`;}).join(''):'<p class="muted">Ningún parámetro mueve el objetivo al 10 %.</p>';
 }
 document.addEventListener('click',e=>{
   const b=e.target.closest('button,[data-open]');if(!b)return;
@@ -2072,7 +2091,7 @@ function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(LIB));}catch(e)
 function scheduleSave(){clearTimeout(saveT);saveT=setTimeout(save,800);}
 async function save(){
   saveLocal();
-  if(!DB){setStatus('Guardado en este navegador');return;}
+  if(!DB){setStatus('Guardado');return;}
   if(saving){pending=true;return;}saving=true;
   try{await DB.collection('modelos2').doc(M.id).set(M);setStatus('Guardado '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}));}
   catch(e){setStatus('No se pudo guardar en la nube; queda en este navegador');}
@@ -2082,11 +2101,11 @@ async function deleteRemote(id){if(DB){try{await DB.collection('modelos2').doc(i
 function loadLocal(){try{const r=localStorage.getItem(KEY);if(r){const L=JSON.parse(r);if(Array.isArray(L)&&L.length)LIB=L.map(normalize);}}catch(e){}}
 async function initDb(){
   try{
-    const db=await window.claude?.use?.('db');if(!db){setStatus('Guardado en este navegador');return;}
+    const db=await window.claude?.use?.('db');if(!db){setStatus('Guardado');return;}
     DB=db;const snap=await db.collection('modelos2').get();
     if(!snap.empty&&!dirty){LIB=snap.docs.map(d=>normalize(d.data()));let cur=null;try{cur=localStorage.getItem(KEY+'-cur');}catch(e){}M=LIB.find(x=>x.id===cur)||LIB[0];vis=null;renderLib();renderEditor();compute();}
     setStatus(snap.empty?'Los cambios se guardan solos':'Sincronizado');
-  }catch(e){setStatus('Guardado en este navegador');}
+  }catch(e){setStatus('Guardado');}
 }
 
 /* ---------- arranque ---------- */
