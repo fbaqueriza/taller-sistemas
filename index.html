@@ -314,6 +314,7 @@ details.sub>summary{cursor:pointer;font-weight:600;font-size:14px}
 .pop .fls{display:flex;flex-wrap:wrap;gap:4px}
 .pop .fl.static{display:inline-block;padding:5px 8px;border-radius:6px;background:var(--surface-2);font-size:13px}
 .pop-foot{gap:8px}
+.del-nota{font-size:12.5px;color:var(--fg2);background:var(--surface-2);border-left:3px solid var(--warn);padding:8px 10px;border-radius:3px;line-height:1.45}
 #sug-rows .pal.sugr{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"t v" "b b";gap:4px 8px;padding:8px 0}
 #sug-rows .pal.sugr>.pal-t{grid-area:t}#sug-rows .pal.sugr>.pal-v{grid-area:v;font-size:13px}#sug-rows .pal.sugr>button{grid-area:b;justify-self:start}
 #sug-rows .pal-t em{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--muted)}
@@ -1701,7 +1702,7 @@ document.addEventListener('click',e=>{
     const b=t.closest('button');
     if(b&&b.dataset.popGo){POP={k:b.dataset.popGo,kind:'flujo'};renderPop();return;}
     if(b&&b.dataset.popNew){popNuevoFlujo(b.dataset.popNew);return;}
-    if(b&&b.dataset.popDel){
+    if(b&&(b.dataset.popDel==='stock'||b.dataset.popDel==='flujo')){
       if(!b.dataset.sure){b.dataset.sure='1';b.textContent='¿Seguro? Borrar';return;}
       const k=POP.k;
       if(b.dataset.popDel==='stock'){M.stocks=M.stocks.filter(s=>s.k!==k);for(const f of M.flujos){if(f.desde===k)f.desde='';if(f.hacia===k)f.hacia='';}M.flujos=M.flujos.filter(f=>f.desde||f.hacia);if(M.objetivo===k)M.objetivo='';renderList('stocks');renderObjetivo();}
@@ -1793,7 +1794,7 @@ function popParam(p){
     ${mas('perilla','Más opciones',[p.externo?'externo':'',p.nota],`<label>Nota<input type="text" data-list="params" data-id="${p.id}" data-field="nota" value="${esc(p.nota||'')}" placeholder="de dónde sale"></label>
     <label class="check"><input type="checkbox" data-list="params" data-id="${p.id}" data-field="externo" ${p.externo?'checked':''}> No lo controlo yo (inflación, dólar…)</label>${(p.desglose&&p.desglose.length)||p.k==='gastos'?'':desgBtns(p)}`)}
     <div class="pop-s"><span class="pop-k">Se usa en</span><div class="fls">${u}</div></div>
-    <div class="pop-foot"><button type="button" class="small" style="margin:0" data-pop-acc="${esc(p.k)}">Crear una acción que lo cambie</button><button type="button" class="del" data-pop-del="param" style="font-size:13px" ${usos.length?'disabled title="primero sacalo de donde se usa"':''}>Borrar</button></div>`;
+    <div class="pop-foot"><button type="button" class="small" style="margin:0" data-pop-acc="${esc(p.k)}">Crear una acción que lo cambie</button><button type="button" class="del" data-pop-del="param" style="font-size:13px">Borrar</button></div><div class="del-nota" id="del-nota" hidden></div>`;
 }
 function popInd(x){
   const det=detectarInd(x.formula);const tipo=POP.tipo||det.tipo;const a=POP.a??det.a??'',b=POP.b??det.b??'';const sc=fxScope();
@@ -1809,7 +1810,7 @@ function popInd(x){
     <div class="pop-s">${cuerpo}${lectura}</div>
     <div class="pop-s"><span class="pop-k">Objetivo</span><div class="btns">${esObj?`<span class="chip good">★ es el objetivo del sistema</span><select data-m="maximizar"><option value="1"${M.maximizar?' selected':''}>cuanto más, mejor</option><option value="0"${!M.maximizar?' selected':''}>cuanto menos, mejor</option></select>`:`<button type="button" class="small" style="margin:0" data-pop-obj="${esc(x.k)}">Hacerlo el objetivo</button>`}</div></div>
     ${avisosHtml(x.k)}
-    <div class="pop-foot"><button type="button" class="del" data-pop-del="ind" style="font-size:13px" ${usos.length?'disabled title="primero sacalo de donde se usa"':''}>Borrar</button></div>`;
+    <div class="pop-foot"><button type="button" class="del" data-pop-del="ind" style="font-size:13px">Borrar</button></div><div class="del-nota" id="del-nota" hidden></div>`;
 }
 function nuevaPerilla(){const p={id:uid(),k:keyLibre('dato'),nombre:'',valor:0,unidad:'',nota:'',_fresh:1};M.params.push(p);renderList('params');renderList('palancas');dirty=true;compute();scheduleSave();POP={k:p.k,kind:'param'};renderPop();const i=$('pop').querySelector('.big');if(i)i.focus();}
 function nuevoMedidor(){const x={id:uid(),k:keyLibre('medidor'),nombre:'',formula:'0',unidad:'',_fresh:1};M.indicadores.push(x);renderList('indicadores');renderObjetivo();dirty=true;compute();scheduleSave();POP={k:x.k,kind:'ind',tipo:'suma'};renderPop();const i=$('pop').querySelector('.big');if(i)i.focus();}
@@ -1820,8 +1821,8 @@ document.addEventListener('click',e=>{
   const ch=t.closest('#mapwrap [data-chip]');if(ch){if(POP&&POP.k===ch.dataset.chip)popClose();else popOpen(ch.dataset.chip);return;}
   const b=t.closest('#pop button');if(!b)return;
   if(b.dataset.popObj){M.objetivo=b.dataset.popObj;renderObjetivo();dirty=true;compute();scheduleSave();renderPop();return;}
-  if(b.dataset.popDel==='param'&&!b.disabled){if(!b.dataset.sure){b.dataset.sure='1';b.textContent='¿Seguro? Borrar';return;}const k=POP.k;M.params=M.params.filter(p=>p.k!==k);delete OVR[k];renderList('params');renderList('palancas');popClose();dirty=true;compute();scheduleSave();return;}
-  if(b.dataset.popDel==='ind'&&!b.disabled){if(!b.dataset.sure){b.dataset.sure='1';b.textContent='¿Seguro? Borrar';return;}const k=POP.k;M.indicadores=M.indicadores.filter(x=>x.k!==k);if(M.objetivo===k)M.objetivo='';renderList('indicadores');renderObjetivo();popClose();dirty=true;compute();scheduleSave();return;}
+  if(b.dataset.popDel==='param'){const k=POP.k;if(!b.dataset.sure){b.dataset.sure='1';const u=usosDe(k);if(u.length){const n=$('del-nota');const p=M.params.find(x=>x.k===k);const acc=M.palancas.filter(pl=>pl.campo===k&&!ES_ASG(pl.valor));n.hidden=false;n.innerHTML=`Lo usan: ${u.map(x=>`<b>${esc(x.n)}</b>`).join(', ')}. Si lo borrás, donde aparece queda su número (${esc(fmtV(p.valor,k))}) y el modelo da lo mismo.${acc.length?` Se borra${acc.length>1?'n':''} también ${acc.map(a=>`<b>${esc(a.nombre||a.k)}</b>`).join(', ')}, porque solo cambia${acc.length>1?'n':''} este dato.`:''}`;b.textContent='Borrar igual';}else b.textContent='¿Seguro? Borrar';return;}borrarDato(k);popClose();return;}
+  if(b.dataset.popDel==='ind'){if(!b.dataset.sure){const u=usosDe(POP.k);if(u.length){const n=$('del-nota');n.hidden=false;n.innerHTML=`No se puede borrar todavía: lo usan ${u.map(x=>`<b>${esc(x.n)}</b>`).join(', ')}. Un medidor es un resultado, no tiene un número fijo para dejar en su lugar. Sacalo primero de ahí.`;return;}b.dataset.sure='1';b.textContent='¿Seguro? Borrar';return;}const k=POP.k;M.indicadores=M.indicadores.filter(x=>x.k!==k);if(M.objetivo===k)M.objetivo='';renderList('indicadores');renderObjetivo();popClose();dirty=true;compute();scheduleSave();return;}
 });
 document.addEventListener('change',e=>{
   const el=e.target;if(!el.closest('#pop'))return;
@@ -1963,6 +1964,28 @@ function mas(id,titulo,resumen,html,extra){
   return `<details class="pop-more" data-more="${id}"${POPMAS[id]?' open':''}><summary>${esc(titulo)}${extra?' <small>'+extra+'</small>':r?' <small>'+r+'</small>':''}</summary><div class="pop-more-b">${html}</div></details>`;
 }
 document.addEventListener('toggle',e=>{const d=e.target;if(d.classList&&d.classList.contains('pop-more'))POPMAS[d.dataset.more]=d.open;},true);
+
+/* ---------- borrar un dato dejando su número ---------- */
+function borrarDato(k){
+  const p=M.params.find(x=>x.k===k);if(!p)return;
+  const v=+p.valor||0,lit=v<0?'('+v+')':String(v);const re=new RegExp('\\b'+k+'\\b','g');
+  for(const f of M.flujos){f.formula=String(f.formula||'').replace(re,lit);if(f.factor)f.factor=String(f.factor).replace(re,lit);}
+  for(const x of M.indicadores)x.formula=String(x.formula||'').replace(re,lit);
+  for(const r of M.reglas){r.cuando=String(r.cuando||'').replace(re,lit);r.texto=String(r.texto||'').replace(new RegExp('\\{'+k+'\\}','g'),fmtV(v,k));}
+  const fuera=new Set();
+  for(const pl of M.palancas){
+    const src=String(pl.valor||'');
+    if(ES_ASG(src)){const as=src.split(';').map(s=>s.trim()).filter(Boolean).filter(s=>s.slice(0,s.indexOf('=')).trim()!==k).map(s=>{const i=s.indexOf('=');return s.slice(0,i+1)+s.slice(i+1).replace(re,lit);});if(!as.length)fuera.add(pl.k);else pl.valor=as.join('; ');}
+    else if(pl.campo===k)fuera.add(pl.k);
+    else pl.valor=src.replace(re,lit);
+  }
+  M.palancas=M.palancas.filter(pl=>!fuera.has(pl.k));M.activas=(M.activas||[]).filter(a=>!fuera.has(a));
+  for(const pp of (M.plan||[]))if(pp.palanca&&fuera.has(pp.palanca)){delete pp.palanca;}
+  for(const i of M.info)if(i.senal===k)i.senal='';for(const n of M.normas)if(n.afecta===k)n.afecta='';
+  M.params=M.params.filter(x=>x.k!==k);delete OVR[k];
+  for(const L of ['params','palancas','flujos','indicadores','reglas'])renderList(L);renderObjetivo();
+  dirty=true;compute();scheduleSave();
+}
 
 /* ---------- eventos ---------- */
 document.addEventListener('input',e=>{
