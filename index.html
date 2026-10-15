@@ -765,7 +765,7 @@ button.small.primary{color:#fff;background:var(--accent)}
 
     <details class="sub"><summary>Fórmulas</summary>
       <p>Al tocar un campo de fórmula aparece debajo un ayudante con todo lo del modelo: tocás un elemento y entra en la fórmula, y arriba la ves leída en palabras con su valor de hoy.</p>
-      <p>Operadores <code>+ - * / ^</code>, comparaciones <code>&lt; &gt; &lt;= &gt;= == !=</code>, <code>&amp;&amp; ||</code>, paréntesis. Funciones <code>min max abs sqrt log exp round floor ceil pow if(cond, a, b)</code>. <code>t</code> es el mes actual.</p>
+      <p>Operadores <code>+ - * / ^</code>, comparaciones <code>&lt; &gt; &lt;= &gt;= == !=</code>, <code>&amp;&amp; ||</code>, paréntesis. Funciones <code>min max abs sqrt log exp round floor ceil pow if(cond, a, b)</code>. <code>t</code> son los meses desde hoy: 0 hoy, 1 el mes que viene. Los datos son valores de hoy, así que <code>gastos * (1 + inflacion) ^ t</code> arranca en lo que pusiste.</p>
       <p>Un flujo puede tener un <b>factor</b> para el destino: con <code>-1</code>, pagar una deuda baja los pesos y la deuda a la vez; con <code>1 / tipo_cambio</code>, comprar dólares saca pesos y suma dólares.</p>
       <ul>
         <li>Crece con la inflación: <code>gastos * (1 + inflacion) ^ t</code></li>
@@ -948,7 +948,7 @@ let LIB=[],M=null,DB=null,dirty=false,saveT=null,saving=false,pending=false,errs
 function normalize(m){
   const b=tplVacio();const out={...b,...m};
   for(const k of ['stocks','flujos','params','indicadores','palancas','reglas','activas','decisiones','info','normas','plan'])if(!Array.isArray(out[k]))out[k]=[];
-  for(const p of out.params){if(p.k==='gastos'&&!Array.isArray(p.desglose)&&!p.desgV){p.desglose=desgInicial();p.desgV=3;p.nota='suma del desglose';}if(p.k==='gastos'&&Array.isArray(p.desglose)&&p.desgV!==2){const tiene=new Set(p.desglose.map(d=>(d.nombre||'').trim().toLowerCase()));for(const d of desgInicial())if(!tiene.has(d.nombre.toLowerCase()))p.desglose.push(d);p.desgV=2;}if(p.k==='gastos'&&Array.isArray(p.desglose)&&p.desgV===2){const ini={acuarela:70000,'carpintería':100000,'fútbol (2 por semana)':173000,supermercado:100000};for(const d of p.desglose){const v=ini[(d.nombre||'').trim().toLowerCase()];if(v!==undefined&&!(+d.monto))d.monto=v;}p.desgV=3;}syncDesg(p);}
+  for(const p of out.params){if(p.k==='gastos'&&!Array.isArray(p.desglose)&&!p.desgV){p.desglose=desgInicial();p.desgV=3;p.nota='suma del desglose';}if(p.k==='gastos'&&Array.isArray(p.desglose)&&!(p.desgV>=2)){const tiene=new Set(p.desglose.map(d=>(d.nombre||'').trim().toLowerCase()));for(const d of desgInicial())if(!tiene.has(d.nombre.toLowerCase()))p.desglose.push(d);p.desgV=2;}if(p.k==='gastos'&&Array.isArray(p.desglose)&&p.desgV===2){const ini={acuarela:70000,'carpintería':100000,'fútbol (2 por semana)':173000,supermercado:100000};for(const d of p.desglose){const v=ini[(d.nombre||'').trim().toLowerCase()];if(v!==undefined&&!(+d.monto))d.monto=v;}p.desgV=3;}syncDesg(p);}
   for(const p of out.params)if(p.k==='colchon_meses'&&p.nombre==='Colchón en pesos'){p.nombre='Meta de colchón';if(!p.nota||/quedan líquidos/.test(p.nota))p.nota='cuántos meses de gasto querés tener en pesos antes de ahorrar';}
   for(const x of out.indicadores)if(x.k==='colchon'&&x.nombre==='Colchón')x.nombre='Colchón actual';
   for(const r of out.reglas)if(r.titulo==='Colchón por debajo del objetivo'){r.titulo='Colchón por debajo de tu meta';r.texto=String(r.texto||'').replace('el objetivo es','tu meta es');}
@@ -972,7 +972,7 @@ function simular(m){
   for(let i=0;i<=H;i++){
     const t=t0+i;
     if(m._pert)for(const q of m._pert)if(q.t===t&&st[q.k]!==undefined)st[q.k]=st[q.k]*q.f;
-    const sc={...base,...st,t,H};
+    const sc={...base,...st,t:i,H};
     const fv={};for(const f of fl){fv[f.k]=safe(f.c,sc,'flujo "'+(f.nombre||f.k)+'"')*cadaMul(f,t,m);}
     Object.assign(sc,fv);
     const iv={};for(const x of ind){iv[x.k]=safe(x.c,sc,'indicador "'+(x.nombre||x.k)+'"');sc[x.k]=iv[x.k];}
@@ -1508,8 +1508,8 @@ function moverPalanca(k,d){const L=M.palancas;const i=L.findIndex(p=>p.k===k),j=
 let FXEL=null,FXT=0;
 function fxEs(el){return el&&el.tagName==='INPUT'&&el.type!=='hidden'&&el.type!=='number'&&(el.id==='np-valor'||['formula','valor','cuando','factor'].includes(el.dataset.field));}
 function fxTipo(k){if(M.stocks.some(s=>s.k===k))return 'st';if(M.params.some(p=>p.k===k))return 'pa';if(M.flujos.some(f=>f.k===k))return 'fl';if(M.indicadores.some(x=>x.k===k))return 'in';return '';}
-function fxScope(){const sc={t:M.t0||0,H:M.horizonte};const r0=(lastBase&&lastBase[0])||{};for(const s of M.stocks)sc[s.k]=s.inicial||0;for(const f of M.flujos)sc[f.k]=r0[f.k]??0;for(const x of M.indicadores)sc[x.k]=r0[x.k]??0;for(const p of M.params)sc[p.k]=p.valor||0;return sc;}
-function fxLeer(src){return esc(String(src).replace(/\*/g,' × ').replace(/\//g,' ÷ ')).replace(/[A-Za-z_][A-Za-z0-9_]*/g,w=>{if(FN[w])return `<i>${w==='if'?'si':w}</i>`;if(w==='t')return '<b class="fx-t">el paso</b>';const tp=fxTipo(w);return tp?`<b class="fx-${tp}">${esc(nombreDe(w))}</b>`:w;}).replace(/\s+/g,' ');}
+function fxScope(){const sc={t:0,H:M.horizonte};const r0=(lastBase&&lastBase[0])||{};for(const s of M.stocks)sc[s.k]=s.inicial||0;for(const f of M.flujos)sc[f.k]=r0[f.k]??0;for(const x of M.indicadores)sc[x.k]=r0[x.k]??0;for(const p of M.params)sc[p.k]=p.valor||0;return sc;}
+function fxLeer(src){return esc(String(src).replace(/\*/g,' × ').replace(/\//g,' ÷ ')).replace(/[A-Za-z_][A-Za-z0-9_]*/g,w=>{if(FN[w])return `<i>${w==='if'?'si':w}</i>`;if(w==='t')return '<b class="fx-t">meses desde hoy</b>';const tp=fxTipo(w);return tp?`<b class="fx-${tp}">${esc(nombreDe(w))}</b>`:w;}).replace(/\s+/g,' ');}
 function fxUnidad(){const el=FXEL;if(!el)return null;if(el.id==='np-valor')return $('np-campo').value;const L=el.dataset.list,r=L&&M[L]?M[L].find(x=>x.id===el.dataset.id):null;if(!r)return null;return L==='palancas'?r.campo:r.k;}
 function fxPrev(){
   if(!FXEL)return;const src=FXEL.value.trim();const box=$('fx-prev');
@@ -1528,7 +1528,7 @@ function fxChips(){
     +g('Datos','fx-pa',M.params.map(p=>[p.k,p.nombre||p.k,p.k+' · '+fmtV(p.valor,p.k)]))
     +g('Flujos','fx-fl',M.flujos.map(f=>[f.k,f.nombre||f.k,f.k+' · hoy '+fmtV(sc[f.k],f.k)]))
     +g('Medidores','fx-in',M.indicadores.map(x=>[x.k,x.nombre||x.k,x.k+' · hoy '+fmtV(sc[x.k],x.k)]))
-    +`<div class="fx-g"><span>Armar</span>${[[' + ','+'],[' - ','−'],[' * ','×'],[' / ','÷'],[' ^ ','potencia'],['(','('],[')',')'],[', ',','],[' > ','>'],[' < ','<'],['t','el paso']].map(([o,n])=>`<button type="button" class="fxc fx-op" data-ins="${o}">${n}</button>`).join('')}${[['min(','el menor'],['max(','el mayor'],['if(','si…'],['abs(','sin signo']].map(([f,n])=>`<button type="button" class="fxc fx-op" data-ins="${f}">${n}</button>`).join('')}</div>`;
+    +`<div class="fx-g"><span>Armar</span>${[[' + ','+'],[' - ','−'],[' * ','×'],[' / ','÷'],[' ^ ','potencia'],['(','('],[')',')'],[', ',','],[' > ','>'],[' < ','<'],['t','meses desde hoy']].map(([o,n])=>`<button type="button" class="fxc fx-op" data-ins="${o}">${n}</button>`).join('')}${[['min(','el menor'],['max(','el mayor'],['if(','si…'],['abs(','sin signo']].map(([f,n])=>`<button type="button" class="fxc fx-op" data-ins="${f}">${n}</button>`).join('')}</div>`;
 }
 function fxShow(el){if(!fxEs(el))return;clearTimeout(FXT);if(FXEL===el&&!$('fx').hidden)return;FXEL=el;const fx=$('fx');const anchor=el.closest('.row')||el.closest('.field')||el;anchor.after(fx);fx.hidden=false;fxChips();fxPrev();}
 document.addEventListener('focusin',e=>fxShow(e.target));
