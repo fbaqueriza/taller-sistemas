@@ -884,7 +884,7 @@ function tplFinanzas(){return {id:uid(),nombre:'Finanzas personales',horizonte:2
     {k:'ingreso',nombre:'Ingreso mensual',valor:3000000,nota:'típico'},
     {k:'gastos',nombre:'Gastos mensuales',valor:1678000,nota:'suma del desglose',desglose:desgInicial(),desgV:3},
     {k:'ajuste_anual',nombre:'Crecimiento anual del ingreso',valor:0.21,unidad:'%',nota:'10 % cada 6 meses'},
-    {k:'colchon_meses',nombre:'Colchón en pesos',valor:3,unidad:'meses',nota:'meses de gasto que quedan líquidos antes de ahorrar'},
+    {k:'colchon_meses',nombre:'Meta de colchón',valor:3,unidad:'meses',nota:'cuántos meses de gasto querés tener en pesos antes de ahorrar'},
     {k:'a_fondo',nombre:'Parte del ahorro al fondo',valor:0,unidad:'%',nota:'de lo que pasa el colchón'},
     {k:'a_dolares',nombre:'Parte del ahorro a dólares',valor:0,unidad:'%',nota:'lo que no va a ninguno queda en pesos'},
     {k:'tasa_liquida',nombre:'Rendimiento de los pesos líquidos',valor:0.015,unidad:'%',nota:'mensual · cuenta remunerada o fondo de liquidez · supuesto, ajustalo'},
@@ -909,7 +909,7 @@ function tplFinanzas(){return {id:uid(),nombre:'Finanzas personales',horizonte:2
     {k:'dolares_en_pesos',nombre:'Dólares en pesos',formula:'dolares * tipo_cambio * ((1 + inflacion) * (1 + deval_extra)) ^ t',unidad:'$'},
     {k:'neto',nombre:'Patrimonio neto',formula:'pesos + fondo + dolares_en_pesos - deuda',unidad:'$'},
     {k:'neto_real',nombre:'Patrimonio neto real',formula:'neto / (1 + inflacion) ^ t',unidad:'$'},
-    {k:'colchon',nombre:'Colchón',formula:'pesos / (gastos * (1 + inflacion) ^ t)',unidad:'meses'}],
+    {k:'colchon',nombre:'Colchón actual',formula:'pesos / (gastos * (1 + inflacion) ^ t)',unidad:'meses'}],
   palancas:[
     {k:'m_fondo',nombre:'Ahorrar en un fondo',fuerza:10,tipo:'param',campo:'a_fondo',valor:'a_fondo = 1; a_dolares = 0',descripcion:'Lo que pasa el colchón va al fondo, que rinde la tasa del fondo.'},
     {k:'m_usd',nombre:'Ahorrar en dólares',fuerza:10,tipo:'param',campo:'a_dolares',valor:'a_fondo = 0; a_dolares = 1',descripcion:'Lo que pasa el colchón se pasa a dólares todos los meses.'},
@@ -920,7 +920,7 @@ function tplFinanzas(){return {id:uid(),nombre:'Finanzas personales',horizonte:2
     {k:'p_colchon',nombre:'Colchón de 6 meses',fuerza:11,tipo:'param',campo:'colchon_meses',valor:'6',descripcion:'Más resiliencia: se ahorra recién después de juntar 6 meses de gasto.'}],
   reglas:[
     {k:'r1',cuando:'deuda > 0 && pesos >= deuda',nivel:'atencion',fuerza:5,titulo:'Deuda cubierta: cortá el bucle',texto:'Debés {deuda} y tenés {pesos} en pesos. Cada mes cuesta {interes} de interés.'},
-    {k:'r2',cuando:'colchon < colchon_meses',nivel:'atencion',fuerza:11,titulo:'Colchón por debajo del objetivo',texto:'Tenés {colchon} de gasto en pesos; el objetivo es {colchon_meses}.'},
+    {k:'r2',cuando:'colchon < colchon_meses',nivel:'atencion',fuerza:11,titulo:'Colchón por debajo de tu meta',texto:'Tenés {colchon} de gasto en pesos; tu meta es {colchon_meses}.'},
     {k:'r3',cuando:'a_fondo + a_dolares == 0 && tasa_liquida < inflacion',nivel:'atencion',fuerza:10,titulo:'El ahorro se queda en pesos que pierden',texto:'Lo que pasa el colchón queda en pesos líquidos que rinden {tasa_liquida} por mes contra {inflacion} de inflación. Elegí un método de ahorro.'},
     {k:'r4',cuando:'neto_real_fin < neto_real',nivel:'critico',fuerza:7,titulo:'El sistema se descapitaliza',texto:'El patrimonio real pasa de {neto_real} a {neto_real_fin} en {H} meses.'}],
   info:[{k:'i1',senal:'pesos',quien:'yo',cada:'cuando llega el resumen',retardo:1},{k:'i2',senal:'neto_real',quien:'yo',cada:'una vez por mes en esta página',retardo:0}],
@@ -948,6 +948,9 @@ function normalize(m){
   const b=tplVacio();const out={...b,...m};
   for(const k of ['stocks','flujos','params','indicadores','palancas','reglas','activas','decisiones','info','normas','plan'])if(!Array.isArray(out[k]))out[k]=[];
   for(const p of out.params){if(p.k==='gastos'&&!Array.isArray(p.desglose)){p.desglose=desgInicial();p.desgV=3;p.nota='suma del desglose';}if(p.k==='gastos'&&Array.isArray(p.desglose)&&p.desgV!==2){const tiene=new Set(p.desglose.map(d=>(d.nombre||'').trim().toLowerCase()));for(const d of desgInicial())if(!tiene.has(d.nombre.toLowerCase()))p.desglose.push(d);p.desgV=2;}if(p.k==='gastos'&&Array.isArray(p.desglose)&&p.desgV===2){const ini={acuarela:70000,'carpintería':100000,'fútbol (2 por semana)':173000,supermercado:100000};for(const d of p.desglose){const v=ini[(d.nombre||'').trim().toLowerCase()];if(v!==undefined&&!(+d.monto))d.monto=v;}p.desgV=3;}syncDesg(p);}
+  for(const p of out.params)if(p.k==='colchon_meses'&&p.nombre==='Colchón en pesos'){p.nombre='Meta de colchón';if(!p.nota||/quedan líquidos/.test(p.nota))p.nota='cuántos meses de gasto querés tener en pesos antes de ahorrar';}
+  for(const x of out.indicadores)if(x.k==='colchon'&&x.nombre==='Colchón')x.nombre='Colchón actual';
+  for(const r of out.reglas)if(r.titulo==='Colchón por debajo del objetivo'){r.titulo='Colchón por debajo de tu meta';r.texto=String(r.texto||'').replace('el objetivo es','tu meta es');}
   for(const s of out.stocks)if(s.menos===undefined)s.menos=/deuda|debo|pasivo|pr[eé]stamo|hipoteca|atraso|faltante|merma|reclamo/i.test((s.nombre||'')+' '+(s.k||''));
   for(const k of ['auto','meta','paradigma','trascender'])if(typeof out[k]!=='string')out[k]='';
   if(!out.id)out.id=uid();out.horizonte=Math.max(2,Math.min(240,Math.round(out.horizonte||24)));out.t0=Math.max(0,Math.round(out.t0||0));if(!/^\d{4}-\d{2}$/.test(out.inicio||''))out.inicio=hoyYM();
@@ -1121,7 +1124,7 @@ function renderCards(C){
   const order={critico:0,atencion:1,ok:2};C.sort((a,b)=>order[a.nivel]-order[b.nivel]);
   const enPlan=new Map((M.plan||[]).map((p,i)=>[p.key,i+1]));
   const planNota=x=>{const n=enPlan.get('alerta:'+x.titulo);return n?`<span class="en-plan">en tu plan · paso ${n}</span>`:(x.nivel!=='ok'&&['regla','meta','agotamiento','deriva'].includes(x.tipo)?`<span class="en-plan off">sugerida en Plan</span>`:'');};
-  const card=x=>`<details class="card ${x.nivel}" data-card="${esc(x.titulo)}"${CARD_OPEN.has(x.titulo)?' open':''}><summary><span class="lvl ${x.nivel}"></span><b>${esc(x.titulo)}</b><small>${esc(x.tipo)}</small></summary><p>${esc(x.texto)}</p>${planNota(x)}${x.fuerza?`<span class="palanca">palanca ${x.fuerza} · ${FUERZA[x.fuerza]||''}</span>`:''}</details>`;
+  const card=x=>`<details class="card ${x.nivel}" data-card="${esc(x.titulo)}"${CARD_OPEN.has(x.titulo)?' open':''}><summary><span class="lvl ${x.nivel}"></span><b>${esc(x.titulo)}</b><small>${esc(x.tipo==='regla'?'aviso':x.tipo)}</small></summary><p>${esc(x.texto)}</p>${planNota(x)}${x.fuerza?`<span class="palanca">palanca ${x.fuerza} · ${FUERZA[x.fuerza]||''}</span>`:''}</details>`;
   const al=C.filter(x=>x.nivel!=='ok'),ok=C.filter(x=>x.nivel==='ok');
   $('cards').innerHTML=al.length?al.map(card).join(''):'<p class="muted">Sin alertas.</p>';
   $('cards-ok').innerHTML=ok.map(card).join('');$('ok-count').textContent=ok.length?`(${ok.length})`:'';
