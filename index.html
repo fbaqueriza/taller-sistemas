@@ -54,6 +54,7 @@ h3{font-family:var(--display);font-size:15px;font-weight:700;margin:0 0 6px}
 .drop{position:absolute;z-index:8;left:16px;right:16px;max-width:760px;margin:0 auto;top:52px;background:var(--surface);border:1px solid var(--accent);border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.2);padding:16px;display:grid;gap:12px}
 .drop[hidden]{display:none}
 .modo-chip[hidden],#btn-quedarme[hidden]{display:none}
+#side-plan label.check{display:flex;gap:8px;align-items:center;font-size:13.5px;cursor:pointer}#side-plan label.check input{width:auto;margin:0}
 #pal-rows .pal-t .pal-bar{grid-area:auto;width:100%;max-width:260px}
 .drop-h{display:flex;justify-content:space-between;align-items:center}
 .drop-h b{font-family:var(--display);font-size:16px}
@@ -299,7 +300,7 @@ details.sub>summary{cursor:pointer;font-weight:600;font-size:14px}
 .board-side button.small.inline{margin:0}
 .board-side #pal-rows .pal.acc>.sw{grid-area:n}.board-side #pal-rows .pal-t{grid-area:t}.board-side #pal-rows .pal-v{grid-area:v;font-size:13px}.board-side .pal-ed{grid-area:ed}
 .board-side .pal.on{margin:0 -12px;padding-inline:12px}
-.board-side .paso{grid-template-columns:34px minmax(0,1fr)}.board-side .paso-a{grid-column:2;justify-content:flex-start}
+
 .board-side .probar{grid-template-columns:1fr}
 @media (max-width:760px){.board{grid-template-columns:1fr}.board-side{position:static}.side-p{max-height:none}}
 .strip{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
@@ -364,7 +365,19 @@ details.card{padding:10px 14px}
 .vuelta.ref .centro{fill:var(--good)}.vuelta.ref .giro{stroke:var(--good);color:var(--good)}
 .vuelta.bal .centro{fill:var(--accent)}.vuelta.bal .giro{stroke:var(--accent);color:var(--accent)}
 .plan{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
-.paso{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.paso>details>summary{list-style:none;cursor:pointer;display:flex;gap:8px;align-items:center}
+.paso>details>summary::-webkit-details-marker{display:none}
+.paso>details>summary i{flex:none;font-style:normal;font-family:var(--mono);font-size:12px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);color:var(--fg2)}
+.paso.en curso>details>summary i{background:var(--accent);color:#fff}
+.paso.hecho>details>summary i{background:var(--good);color:#fff}
+.paso>details>summary b{flex:1;min-width:0;font-weight:600;font-size:13.5px;line-height:1.3}
+.paso>details>summary small{font-family:var(--mono);font-size:10.5px;color:var(--accent-ink)}
+.paso.hecho>details>summary b{text-decoration:line-through}
+.paso-d{display:grid;gap:6px;margin:8px 0 2px 32px}
+.paso-d span{font-size:13px;color:var(--fg2)}
+.paso-d em{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.paso-d .paso-a{justify-content:flex-start}
+.paso{display:block;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
 .paso.hecho{opacity:.55}.paso.hecho .paso-t b{text-decoration:line-through}
 .paso.en\ curso{border-color:var(--accent)}
 .paso-n{display:grid;justify-items:center;gap:2px}
@@ -380,7 +393,7 @@ details.card{padding:10px 14px}
 .paso-a{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .paso-a select{width:auto;font-size:13px;padding:4px 6px}
 .pal-form{margin-top:10px;padding:12px;border:1px dashed var(--line);border-radius:6px;background:var(--surface-2)}
-@media (max-width:640px){.paso{grid-template-columns:34px minmax(0,1fr)}.paso-a{grid-column:2;justify-content:flex-start}}
+
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;border-left-width:4px;min-width:0}
 .card .tag{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;gap:8px;align-items:center;margin-bottom:4px}
@@ -411,6 +424,7 @@ button.small.inline{margin:0 0 0 8px;padding:2px 8px;font-size:12px;vertical-ali
 .sw input:checked+i::after{transform:translateX(18px)}
 .sw input:focus-visible+i{outline:2px solid var(--accent);outline-offset:2px}
 button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-ink);border-color:var(--accent)}
+button.small.primary{color:#fff;background:var(--accent)}
 @media (prefers-reduced-motion:reduce){.sw i,.sw i::after{transition:none}}
 .pal-head{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding-bottom:8px;border-bottom:1px solid var(--line)}
 .pal{padding:12px 0;border-bottom:1px solid var(--line)}
@@ -1130,12 +1144,15 @@ function sugerenciasPlan(C,sens){
   for(const s of sens.filter(s=>!s.on&&s.delta>0)){const key='palanca:'+s.pl.k;if(en.has(key))continue;out.push({key,titulo:s.pl.nombre||s.pl.k,detalle:`${s.pl.descripcion||''} Efecto: +${fmtV(Math.abs(s.raw),M.objetivo)} en ${nombreDe(M.objetivo)}.`,fuerza:s.pl.fuerza||12,palanca:s.pl.k,peso:2});}
   return out.sort((a,b)=>a.peso-b.peso||(a.fuerza||12)-(b.fuerza||12));
 }
+const PASO_OPEN=new Set();
+document.addEventListener('toggle',e=>{const d=e.target;if(!d.dataset||d.dataset.paso===undefined)return;d.open?PASO_OPEN.add(d.dataset.paso):PASO_OPEN.delete(d.dataset.paso);},true);
+document.addEventListener('click',e=>{if(e.target.closest('.paso summary button'))e.preventDefault();},true);
 function renderPlan(C,sens){
   const P=M.plan||[];const act=new Set(M.activas||[]);const adoptadas=new Set((M.decisiones||[]).filter(d=>d.tipo==='palanca').map(d=>d.palanca).filter(Boolean));
   for(const p of P){if(p.palanca&&adoptadas.has(p.palanca)&&p.estado!=='hecho')p.estado='hecho';}
   const pend=P.filter(p=>p.estado!=='hecho');
-  $('plan-lede').textContent=P.length?`${P.length} ${P.length===1?'paso':'pasos'}, ${pend.length} por hacer. Ordenalos, marcá el estado, y activá o adoptá las palancas desde acá.`:'Todavía no hay pasos. Agregá los que te sugiere el motor abajo, o escribí uno propio.';
-  $('plan').innerHTML=P.map((p,i)=>{const on=p.palanca&&act.has(p.palanca);return `<li class="paso ${p.estado}"><div class="paso-n"><button data-plan-up="${p.id}" title="subir" ${i===0?'disabled':''}>▲</button><i>${i+1}</i><button data-plan-down="${p.id}" title="bajar" ${i===P.length-1?'disabled':''}>▼</button></div><div class="paso-t"><b>${esc(p.titulo)}</b>${p.detalle?`<span>${esc(p.detalle)}</span>`:''}<em>${p.fuerza?`palanca ${p.fuerza} · ${FUERZA[p.fuerza]||''}`:'paso propio'}</em></div><div class="paso-a"><select data-plan-estado="${p.id}"><option value="pendiente"${p.estado==='pendiente'?' selected':''}>pendiente</option><option value="en curso"${p.estado==='en curso'?' selected':''}>en curso</option><option value="hecho"${p.estado==='hecho'?' selected':''}>hecho</option></select>${p.palanca&&p.estado!=='hecho'?(on?`<button class="small" style="margin:0" data-adopt="${esc(p.palanca)}">Adoptar</button>`:`<button class="small" style="margin:0" data-toggle-btn="${esc(p.palanca)}">Activar</button>`):''}<button class="del" data-plan-del="${p.id}" aria-label="quitar">×</button></div></li>`;}).join('');
+  $('plan-lede').textContent=P.length?`${P.length} ${P.length===1?'paso':'pasos'}, ${pend.length} por hacer. Tocá uno para ver el detalle, cambiarle el estado u ordenarlo.`:'Todavía no hay pasos. Agregá los que te sugiere el motor abajo, o escribí uno propio.';
+  $('plan').innerHTML=P.map((p,i)=>{const on=p.palanca&&act.has(p.palanca);const acc=p.palanca&&p.estado!=='hecho'?(on?`<button class="small" style="margin:0" data-adopt="${esc(p.palanca)}">Adoptar</button>`:`<button class="small" style="margin:0" data-toggle-btn="${esc(p.palanca)}">Probar</button>`):'';return `<li class="paso ${p.estado}"><details data-paso="${p.id}"${PASO_OPEN.has(p.id)?' open':''}><summary><i>${p.estado==='hecho'?'✓':i+1}</i><b>${esc(p.titulo)}</b>${p.estado==='en curso'?'<small>en curso</small>':''}${acc}</summary><div class="paso-d">${p.detalle?`<span>${esc(p.detalle)}</span>`:''}<em>${p.fuerza?`palanca ${p.fuerza} · ${FUERZA[p.fuerza]||''}`:'paso propio'}</em><div class="paso-a"><select data-plan-estado="${p.id}"><option value="pendiente"${p.estado==='pendiente'?' selected':''}>pendiente</option><option value="en curso"${p.estado==='en curso'?' selected':''}>en curso</option><option value="hecho"${p.estado==='hecho'?' selected':''}>hecho</option></select><button class="small" style="margin:0" data-plan-up="${p.id}" title="subir" ${i===0?'disabled':''}>↑ subir</button><button class="small" style="margin:0" data-plan-down="${p.id}" title="bajar" ${i===P.length-1?'disabled':''}>↓ bajar</button><button class="del" data-plan-del="${p.id}" style="font-size:13px">Quitar</button></div></div></details></li>`;}).join('');
   const S=sugerenciasPlan(C,sens);
   $('plan-sug').innerHTML=S.length?S.slice(0,8).map(s=>`<div class="pal" style="grid-template-columns:minmax(0,1fr) auto;padding:8px 0"><div class="pal-t"><b>${esc(s.titulo)} ${s.fuerza?`<span class="pal-n ${CAPA(s.fuerza)}">${s.fuerza} · ${FUERZA[s.fuerza]||''}</span>`:''}</b><span>${esc(s.detalle)}</span></div><button class="small" style="margin:0" data-plan-add="${esc(s.key)}">Agregar al plan</button></div>`).join(''):'<p class="muted">Nada pendiente que no esté ya en el plan.</p>';
   lastSugPlan=S;
