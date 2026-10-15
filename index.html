@@ -311,6 +311,10 @@ details.sub>summary{cursor:pointer;font-weight:600;font-size:14px}
 .pop .fls{display:flex;flex-wrap:wrap;gap:4px}
 .pop .fl.static{display:inline-block;padding:5px 8px;border-radius:6px;background:var(--surface-2);font-size:13px}
 .pop-foot{gap:8px}
+.desg{display:grid;grid-template-columns:minmax(0,1fr) 96px 78px 22px;gap:4px;align-items:center}
+.desg input,.desg select{padding:4px 6px;font-size:12.5px}
+.desg-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.pop input[readonly]{background:var(--surface-2);color:var(--fg2)}
 .diagram .conv{font-family:var(--mono);font-size:10px;fill:var(--accent-ink);text-anchor:middle}
 .ext-tag{font-style:normal;font-family:var(--mono);font-size:10px;color:var(--c-dis-ink);background:var(--c-dis-soft);padding:0 5px;border-radius:3px}
 .bucle{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;gap:8px;min-width:0;border-top-width:4px}
@@ -814,7 +818,7 @@ function tplFinanzas(){return {id:uid(),nombre:'Finanzas personales',horizonte:2
   stocks:[{k:'pesos',nombre:'Pesos líquidos',inicial:400000,unidad:'$',min0:true,carril:'Lo que tengo'},{k:'fondo',nombre:'Fondo de inversión',inicial:0,unidad:'$',min0:true,carril:'Lo que tengo'},{k:'dolares',nombre:'Dólares',inicial:5000,unidad:'USD',min0:true,carril:'Lo que tengo'},{k:'deuda',nombre:'Deuda de tarjeta',inicial:300000,unidad:'$',min0:true,menos:true,carril:'Lo que debo'}],
   params:[
     {k:'ingreso',nombre:'Ingreso mensual',valor:3000000,nota:'típico'},
-    {k:'gastos',nombre:'Gastos mensuales',valor:1135000,nota:'fijos + variables'},
+    {k:'gastos',nombre:'Gastos mensuales',valor:1235000,nota:'suma del desglose',desglose:desgInicial()},
     {k:'ajuste_anual',nombre:'Crecimiento anual del ingreso',valor:0.21,unidad:'%',nota:'10 % cada 6 meses'},
     {k:'colchon_meses',nombre:'Colchón en pesos',valor:3,unidad:'meses',nota:'meses de gasto que quedan líquidos antes de ahorrar'},
     {k:'a_fondo',nombre:'Parte del ahorro al fondo',valor:0,unidad:'%',nota:'de lo que pasa el colchón'},
@@ -879,6 +883,7 @@ let LIB=[],M=null,DB=null,dirty=false,saveT=null,saving=false,pending=false,errs
 function normalize(m){
   const b=tplVacio();const out={...b,...m};
   for(const k of ['stocks','flujos','params','indicadores','palancas','reglas','activas','decisiones','info','normas','plan'])if(!Array.isArray(out[k]))out[k]=[];
+  for(const p of out.params){if(p.k==='gastos'&&!Array.isArray(p.desglose)&&Math.round(p.valor||0)===1135000){p.desglose=desgInicial();p.nota='suma del desglose';}syncDesg(p);}
   for(const s of out.stocks)if(s.menos===undefined)s.menos=/deuda|debo|pasivo|pr[eé]stamo|hipoteca|atraso|faltante|merma|reclamo/i.test((s.nombre||'')+' '+(s.k||''));
   for(const k of ['auto','meta','paradigma','trascender'])if(typeof out[k]!=='string')out[k]='';
   if(!out.id)out.id=uid();out.horizonte=Math.max(2,Math.min(240,Math.round(out.horizonte||24)));out.t0=Math.max(0,Math.round(out.t0||0));if(!/^\d{4}-\d{2}$/.test(out.inicio||''))out.inicio=hoyYM();
@@ -952,7 +957,7 @@ function cell(list,r,[f,type,ph]){
     case 'cadasel':return `<select ${a}><option value=""${!v?' selected':''}>cada ${esc(M.unidad||'paso')}</option><option value="anual"${v==='anual'?' selected':''}>anual, repartido</option><option value="puntual"${v==='puntual'?' selected':''}>en ciertos meses</option></select>`;
     case 'carril':return `<input type="text" list="dl-carril" ${a} value="${esc(v)}" placeholder="${ph}">`;
     case 'key':return `<input type="text" class="f" ${a} value="${esc(v)}" placeholder="${ph}" pattern="[a-z_][a-z0-9_]*">`;
-    case 'number':return `<input type="number" ${a} value="${v??''}" placeholder="${ph}" step="any">`;
+    case 'number':return (list==='params'&&f==='valor'&&r.desglose&&r.desglose.length)?`<input type="number" ${a} value="${v??''}" readonly title="es la suma del desglose: se edita en la tarjeta de la perilla">`:`<input type="number" ${a} value="${v??''}" placeholder="${ph}" step="any">`;
     case 'formula':return `<input type="text" class="f" ${a} value="${esc(v)}" placeholder="${ph}" spellcheck="false">`;
     case 'check':return `<input type="checkbox" ${a} ${v?'checked':''} style="width:auto;justify-self:center">`;
     case 'stocksel':return `<select ${a}><option value="">(afuera)</option>${M.stocks.map(s=>`<option value="${esc(s.k)}"${s.k===v?' selected':''}>${esc(s.nombre||s.k)}</option>`).join('')}</select>`;
@@ -1185,7 +1190,7 @@ function moverParam(k,v){
 function adoptarOvr(){
   const ks=Object.keys(OVR);if(!ks.length)return;
   const antes=[],despues=[];
-  for(const k of ks){const p=M.params.find(x=>x.k===k);if(!p)continue;antes.push({k,v:p.valor||0});despues.push({k,v:OVR[k]});p.valor=OVR[k];}
+  for(const k of ks){const p=M.params.find(x=>x.k===k);if(!p)continue;antes.push({k,v:p.valor||0});despues.push({k,v:OVR[k]});setParamValor(p,OVR[k]);}
   M.decisiones=M.decisiones||[];
   M.decisiones.push({id:uid(),tipo:'palanca',fecha:new Date().toISOString().slice(0,10),t:M.t0||0,nombre:ks.length===1?`Mover ${nombreDe(ks[0])}`:`Mover ${ks.length} números`,antes,despues,proy:null});
   OVR={};renderList('params');dirty=true;compute();scheduleSave();
@@ -1701,8 +1706,9 @@ function popParam(p){
   const u=usos.length?usos.map(x=>x.kind==='accion'||x.kind==='regla'?`<span class="fl static">${esc(x.n)} <small>${x.kind==='accion'?'acción':'regla'}</small></span>`:`<button type="button" class="fl" data-pop-go="${esc(x.k)}">${esc(x.n)} <small>${x.kind==='ind'?'medidor':'válvula'}</small></button>`).join(''):'<span class="muted">todavía nada la usa: tocá una válvula y elegila en su fórmula</span>';
   return `<div class="pop-h"><span class="pop-k">Perilla</span><button type="button" class="pop-x" data-pop-close aria-label="cerrar">×</button></div>
     <div class="pop-f"><input type="text" class="big" data-list="params" data-id="${p.id}" data-field="nombre" value="${esc(p.nombre||'')}" placeholder="nombre del parámetro"></div>
-    <div class="pop-g3"><label>Valor<input type="number" step="any" data-list="params" data-id="${p.id}" data-field="valor" value="${p.valor??''}"></label><label>Unidad<input type="text" data-list="params" data-id="${p.id}" data-field="unidad" value="${esc(p.unidad||'')}" placeholder="$, %, meses"></label><label>Nota<input type="text" data-list="params" data-id="${p.id}" data-field="nota" value="${esc(p.nota||'')}" placeholder="de dónde sale"></label></div>
+    <div class="pop-g3">${p.desglose&&p.desglose.length?`<label>Total<input type="text" readonly value="${esc(mm(p.valor))}" id="desg-total"></label>`:`<label>Valor<input type="number" step="any" data-list="params" data-id="${p.id}" data-field="valor" value="${p.valor??''}"></label>`}<label>Unidad<input type="text" data-list="params" data-id="${p.id}" data-field="unidad" value="${esc(p.unidad||'')}" placeholder="$, %, meses"></label><label>Nota<input type="text" data-list="params" data-id="${p.id}" data-field="nota" value="${esc(p.nota||'')}" placeholder="de dónde sale"></label></div>
     <label class="check"><input type="checkbox" data-list="params" data-id="${p.id}" data-field="externo" ${p.externo?'checked':''}> No lo controlo yo (inflación, dólar…)</label>
+    ${desgHtml(p)}
     <div class="pop-s"><span class="pop-k">Se usa en</span><div class="fls">${u}</div></div>
     <div class="pop-foot"><button type="button" class="small" style="margin:0" data-pop-acc="${esc(p.k)}">Crear una acción que lo cambie</button><button type="button" class="del" data-pop-del="param" style="font-size:13px" ${usos.length?'disabled title="primero sacalo de donde se usa"':''}>Borrar</button></div>`;
 }
@@ -1783,6 +1789,33 @@ document.addEventListener('click',e=>{
 document.addEventListener('input',e=>{if(e.target.id==='vivo-scrub'){TCUR=+e.target.value;stopRun();renderVivo();}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('tab-modelos').hidden)modelMenu(false);});
 
+/* ---------- desglose de una perilla ---------- */
+const mm=v=>"$ "+nf.format(Math.round(v||0));
+function desgInicial(){return [['Alquiler depto Retiro',900000,'fijo'],['Expensas depto Congreso',120000,'fijo'],['ABL Retiro',35000,'fijo'],['ABL Congreso',20000,'fijo'],['Luz y agua Retiro',40000,'fijo'],['Luz y agua Congreso',15000,'fijo'],['Gas Retiro',5000,'fijo'],['Yoga',100000,'fijo']].map(([nombre,monto,tipo])=>({id:uid(),nombre,monto,tipo}));}
+function syncDesg(p){if(!Array.isArray(p.desglose)||!p.desglose.length)return;for(const d of p.desglose){if(!d.id)d.id=uid();d.monto=+d.monto||0;if(!d.tipo)d.tipo='fijo';}p.valor=Math.round(p.desglose.reduce((a,d)=>a+d.monto,0)*100)/100;}
+function setParamValor(p,v){
+  if(!(Array.isArray(p.desglose)&&p.desglose.length)){p.valor=v;return;}
+  const s=p.desglose.reduce((a,d)=>a+(+d.monto||0),0);
+  if(s>0){const f=v/s;for(const d of p.desglose)d.monto=Math.round(d.monto*f*100)/100;}else p.desglose[0].monto=v;
+  syncDesg(p);
+}
+function desgHtml(p){
+  const D=p.desglose;
+  if(!Array.isArray(D)||!D.length)return `<div class="pop-s"><button type="button" class="small" style="margin:0;justify-self:start" data-desg-start="${esc(p.k)}">Desglosar este número en conceptos</button></div>`;
+  const tot=k=>D.filter(d=>d.tipo===k).reduce((a,d)=>a+d.monto,0);
+  return `<div class="pop-s"><span class="pop-k">Desglose · ${D.length} conceptos</span>${D.map((d,i)=>`<div class="desg"><input type="text" data-desg="nombre" data-di="${i}" value="${esc(d.nombre||'')}" placeholder="concepto"><input type="number" step="any" data-desg="monto" data-di="${i}" value="${d.monto}"><select data-desg="tipo" data-di="${i}"><option value="fijo"${d.tipo==='fijo'?' selected':''}>fijo</option><option value="variable"${d.tipo==='variable'?' selected':''}>variable</option></select><button type="button" class="del" data-desg-del="${i}" aria-label="quitar">×</button></div>`).join('')}<div class="desg-foot"><button type="button" class="small" style="margin:0" data-desg-add="${esc(p.k)}">+ concepto</button><span id="desg-sub" class="muted">Fijos ${mm(tot('fijo'))} · Variables ${mm(tot('variable'))}</span></div></div>`;
+}
+function desgCambio(){const p=M.params.find(x=>x.k===POP.k);if(!p)return;syncDesg(p);renderList('params');dirty=true;scheduleCompute();scheduleSave();const t=$('desg-total');if(t)t.value=mm(p.valor);const D=p.desglose,tot=k=>D.filter(d=>d.tipo===k).reduce((a,d)=>a+d.monto,0);const s=$('desg-sub');if(s)s.textContent='Fijos '+mm(tot('fijo'))+' · Variables '+mm(tot('variable'));}
+document.addEventListener('input',e=>{const el=e.target;if(el.dataset.desg===undefined||!POP)return;const p=M.params.find(x=>x.k===POP.k);if(!p||!p.desglose)return;const d=p.desglose[+el.dataset.di];if(!d)return;d[el.dataset.desg]=el.dataset.desg==='monto'?(parseFloat(el.value)||0):el.value;desgCambio();});
+document.addEventListener('change',e=>{const el=e.target;if(el.dataset.desg!=='tipo'||!POP)return;const p=M.params.find(x=>x.k===POP.k);const d=p&&p.desglose&&p.desglose[+el.dataset.di];if(d){d.tipo=el.value;desgCambio();}});
+document.addEventListener('click',e=>{
+  const b=e.target.closest('#pop button');if(!b||!POP)return;
+  const p=M.params.find(x=>x.k===POP.k);if(!p)return;
+  if(b.dataset.desgStart){p.desglose=[{id:uid(),nombre:'Total actual',monto:p.valor||0,tipo:'fijo'}];syncDesg(p);dirty=true;renderList('params');renderPop();scheduleSave();return;}
+  if(b.dataset.desgAdd){(p.desglose=p.desglose||[]).push({id:uid(),nombre:'',monto:0,tipo:'fijo'});dirty=true;renderPop();const ins=$('pop').querySelectorAll('[data-desg="nombre"]');const l=ins[ins.length-1];if(l)l.focus();return;}
+  if(b.dataset.desgDel!==undefined){p.desglose.splice(+b.dataset.desgDel,1);if(!p.desglose.length)delete p.desglose;else syncDesg(p);dirty=true;renderList('params');compute();scheduleSave();renderPop();return;}
+});
+
 /* ---------- eventos ---------- */
 document.addEventListener('input',e=>{
   const el=e.target;
@@ -1812,7 +1845,7 @@ function adoptar(k){
   const pl=M.palancas.find(p=>p.k===k);if(!pl)return;
   const mx=aplicarPalanca(M,pl);if(!mx)return;
   const antes=[],despues=[];
-  for(const p of mx.params){const o=M.params.find(x=>x.k===p.k);if(o&&o.valor!==p.valor){antes.push({k:p.k,v:o.valor});despues.push({k:p.k,v:p.valor});o.valor=p.valor;}}
+  for(const p of mx.params){const o=M.params.find(x=>x.k===p.k);if(o&&o.valor!==p.valor){antes.push({k:p.k,v:o.valor});despues.push({k:p.k,v:p.valor});setParamValor(o,p.valor);}}
   for(const s of mx.stocks){const o=M.stocks.find(x=>x.k===s.k);if(o&&o.inicial!==s.inicial){antes.push({k:s.k,v:o.inicial});despues.push({k:s.k,v:s.inicial});o.inicial=s.inicial;}}
   M.activas=(M.activas||[]).filter(x=>x!==k);
   M.decisiones=M.decisiones||[];
@@ -1832,7 +1865,7 @@ function avanzar(n){
 function deshacer(id){
   const D=M.decisiones||[];const i=D.findIndex(d=>d.id===id);if(i<0)return;
   // deshace esta y todas las posteriores, en orden inverso
-  for(let j=D.length-1;j>=i;j--){for(const {k,v} of D[j].antes){if(k==='__t0'){M.t0=v;continue;}const p=M.params.find(x=>x.k===k);if(p)p.valor=v;const s=M.stocks.find(x=>x.k===k);if(s)s.inicial=v;}}
+  for(let j=D.length-1;j>=i;j--){for(const {k,v} of D[j].antes){if(k==='__t0'){M.t0=v;continue;}const p=M.params.find(x=>x.k===k);if(p)setParamValor(p,v);const s=M.stocks.find(x=>x.k===k);if(s)s.inicial=v;}}
   D.splice(i);renderList('params');renderList('stocks');dirty=true;compute();scheduleSave();
 }
 function renderDecisiones(){
