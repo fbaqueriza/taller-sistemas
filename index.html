@@ -244,6 +244,9 @@ details.sub>summary{cursor:pointer;font-weight:600;font-size:14px}
 .pop-foot{display:flex;justify-content:flex-end;padding-top:6px;border-top:1px solid var(--line)}
 .pop .btns{gap:6px}
 .pop .btns select{width:auto;font-size:12.5px;padding:4px 6px}
+.mesbtns{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.mesbtns button{font-size:12px;padding:4px 0;border-radius:4px}
+.mesbtns button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .strip{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
 .strip-k{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);min-width:72px}
 .chipx{font-size:12.5px;padding:3px 10px;border-radius:14px;background:var(--surface);color:var(--fg2);border:1px solid var(--line)}
@@ -436,6 +439,7 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
     <div class="fields">
       <div class="field"><label for="m-nombre">Nombre del sistema</label><input type="text" id="m-nombre" data-m="nombre"></div>
       <div class="field"><label for="m-horizonte">Horizonte (pasos)</label><input type="number" id="m-horizonte" data-m="horizonte" min="2" max="240" step="1"></div>
+      <div class="field"><label for="m-inicio">Empieza en</label><input type="month" id="m-inicio" data-m="inicio"><span class="hint">el paso 0; sirve para los montos que caen en ciertos meses</span></div>
       <div class="field adv"><label for="m-unidad">Unidad de tiempo</label><input type="text" id="m-unidad" data-m="unidad" placeholder="mes"></div>
       <div class="field"><label for="m-objetivo">Indicador objetivo</label><select id="m-objetivo" data-m="objetivo"></select><span class="hint">lo que las palancas intentan mejorar</span></div>
       <div class="field"><label for="m-maximizar">Sentido</label><select id="m-maximizar" data-m="maximizar"><option value="1">Cuanto más, mejor</option><option value="0">Cuanto menos, mejor</option></select></div>
@@ -460,7 +464,7 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
     <summary><span>Flujos <small>lo que mueve los stocks por paso</small></span><b id="n-flujos"></b></summary>
     <div class="grp-body">
       <p class="hint-p">Un flujo sale de un stock (o de afuera) y entra a otro stock (o se va afuera). La fórmula puede usar claves de stocks, parámetros y <code>t</code>, el paso actual. <b>Factor</b> (opcional) es cuánto cambia el destino por cada unidad que sale: vacío es 1; <code>-1</code> para pagar una deuda, porque bajan las dos; <code>1 / tipo_cambio</code> para pasar pesos a dólares.</p>
-      <div class="row row-head" style="grid-template-columns:minmax(0,1fr) minmax(100px,.7fr) minmax(100px,.7fr) minmax(0,1.6fr) minmax(64px,.45fr) 28px"><span>Nombre</span><span>Desde</span><span>Hacia</span><span>Fórmula</span><span title="cuánto cambia el destino por cada unidad que sale">Factor</span><span></span></div>
+      <div class="row row-head" style="grid-template-columns:minmax(0,1fr) minmax(100px,.7fr) minmax(100px,.7fr) minmax(0,1.6fr) minmax(64px,.45fr) minmax(96px,.6fr) minmax(60px,.4fr) 28px"><span>Nombre</span><span>Desde</span><span>Hacia</span><span>Fórmula</span><span title="cuánto cambia el destino por cada unidad que sale">Factor</span><span>Cada</span><span title="para montos en ciertos meses: 1 = enero, 12 = diciembre">Meses</span><span></span></div>
       <div class="rows" id="flujos"></div>
       <button class="add" data-add="flujos">+ agregar flujo</button>
     </div>
@@ -624,6 +628,8 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
       <li><b>Listá las palancas.</b> Cada decisión que podrías tomar, escrita como un cambio concreto a un parámetro o a un stock inicial. Asignale su fuerza según Meadows.</li>
       <li><b>Escribí reglas de lectura.</b> Condiciones que te importan: "si la caja mínima baja de cero", "si la deuda supera la liquidez". El motor las evalúa y las convierte en alertas y pasos del camino.</li>
     </ol>
+    <h3>Montos anuales</h3>
+    <p>Cada flujo dice cada cuánto se mueve su monto. <b>Cada mes</b> es lo normal. <b>Anual, repartido</b>: escribís el monto del año y cada mes se mueve la doceava parte. <b>En ciertos meses</b>: escribís el monto de cada vez y marcás los meses, por ejemplo vacaciones en enero o aguinaldo en junio y diciembre. Para que los meses caigan bien, el modelo tiene un mes de inicio en Describir.</p>
     <h3>Fórmulas</h3>
     <p>Un flujo puede tener un <b>factor</b>: cuánto cambia el destino por cada unidad que sale del origen. Con <code>-1</code>, pagar una deuda baja los pesos y la deuda en un solo flujo. Con <code>1 / tipo_cambio</code>, comprar dólares saca pesos y suma dólares.</p>
     <p>No hace falta escribirlas de memoria: al tocar cualquier campo de fórmula aparece debajo un ayudante con todos los stocks, parámetros, flujos e indicadores del modelo. Tocás uno y entra en la fórmula; arriba la ves leída en palabras y con su valor de hoy, o el error si algo no cierra.</p>
@@ -757,6 +763,7 @@ function tplFinanzas(){return {id:uid(),nombre:'Finanzas personales',horizonte:2
     {k:'tasa_liquida',nombre:'Rendimiento de los pesos líquidos',valor:0.015,unidad:'%',nota:'mensual · cuenta remunerada o fondo de liquidez · supuesto, ajustalo'},
     {k:'tasa_fondo',nombre:'Rendimiento del fondo',valor:0.024,unidad:'%',nota:'mensual · plazo fijo o fondo a plazo · supuesto, ajustalo'},
     {k:'pago_deuda',nombre:'Cuota de la deuda',valor:50000,nota:'por mes'},
+    {k:'vacaciones',nombre:'Vacaciones',valor:2000000,nota:'por año, a precios de hoy; se pagan en enero'},
     {k:'tasa_deuda',nombre:'Interés de la tarjeta',valor:0.08,unidad:'%',nota:'mensual'},
     {k:'inflacion',nombre:'Inflación mensual',valor:0.019,unidad:'%',nota:'INDEC sep-2026',externo:true},
     {k:'tipo_cambio',nombre:'Tipo de cambio hoy',valor:1535,unidad:'$',nota:'oficial venta 13-oct-2026',externo:true},
@@ -769,6 +776,7 @@ function tplFinanzas(){return {id:uid(),nombre:'Finanzas personales',horizonte:2
     {k:'rinde_fondo',nombre:'Rendimiento del fondo',desde:'',hacia:'fondo',formula:'fondo * tasa_fondo'},
     {k:'a_usd',nombre:'Compra de dólares',desde:'pesos',hacia:'dolares',formula:'max(0, pesos - colchon_meses * gastos * (1 + inflacion) ^ t) * a_dolares',factor:'1 / (tipo_cambio * ((1 + inflacion) * (1 + deval_extra)) ^ t)'},
     {k:'interes',nombre:'Interés de la deuda',desde:'',hacia:'deuda',formula:'deuda * tasa_deuda'},
+    {k:'vaca',nombre:'Vacaciones',desde:'pesos',hacia:'',formula:'vacaciones * (1 + inflacion) ^ t',cada:'puntual',meses:[1]},
     {k:'paga',nombre:'Pago de la deuda',desde:'pesos',hacia:'deuda',formula:'min(deuda * (1 + tasa_deuda), pago_deuda, pesos)',factor:'-1'}],
   indicadores:[
     {k:'dolares_en_pesos',nombre:'Dólares en pesos',formula:'dolares * tipo_cambio * ((1 + inflacion) * (1 + deval_extra)) ^ t',unidad:'$'},
@@ -813,7 +821,7 @@ function normalize(m){
   const b=tplVacio();const out={...b,...m};
   for(const k of ['stocks','flujos','params','indicadores','palancas','reglas','activas','decisiones','info','normas','plan'])if(!Array.isArray(out[k]))out[k]=[];
   for(const k of ['auto','meta','paradigma','trascender'])if(typeof out[k]!=='string')out[k]='';
-  if(!out.id)out.id=uid();out.horizonte=Math.max(2,Math.min(240,Math.round(out.horizonte||24)));out.t0=Math.max(0,Math.round(out.t0||0));
+  if(!out.id)out.id=uid();out.horizonte=Math.max(2,Math.min(240,Math.round(out.horizonte||24)));out.t0=Math.max(0,Math.round(out.t0||0));if(!/^\d{4}-\d{2}$/.test(out.inicio||''))out.inicio=hoyYM();
   return out;
 }
 
@@ -832,7 +840,7 @@ function simular(m){
     const t=t0+i;
     if(m._pert)for(const q of m._pert)if(q.t===t&&st[q.k]!==undefined)st[q.k]=st[q.k]*q.f;
     const sc={...base,...st,t,H};
-    const fv={};for(const f of fl){fv[f.k]=safe(f.c,sc,'flujo "'+(f.nombre||f.k)+'"');}
+    const fv={};for(const f of fl){fv[f.k]=safe(f.c,sc,'flujo "'+(f.nombre||f.k)+'"')*cadaMul(f,t,m);}
     Object.assign(sc,fv);
     const iv={};for(const x of ind){iv[x.k]=safe(x.c,sc,'indicador "'+(x.nombre||x.k)+'"');sc[x.k]=iv[x.k];}
     const row={t,i,...st,...fv,...iv,_clamp:[]};rows.push(row);
@@ -869,7 +877,7 @@ function aplicarPalanca(m,pl){
 /* ---------- render: editor ---------- */
 const COLS={
   stocks:{grid:'minmax(0,1.3fr) minmax(90px,.8fr) minmax(110px,.9fr) minmax(70px,.5fr) minmax(90px,.8fr) 90px 28px',cols:[['nombre','text','nombre'],['k','key','clave'],['inicial','number','0'],['unidad','text','unidad'],['carril','carril','opcional'],['min0','check','']]},
-  flujos:{grid:'minmax(0,1fr) minmax(100px,.7fr) minmax(100px,.7fr) minmax(0,1.6fr) minmax(64px,.45fr) 28px',cols:[['nombre','text','nombre'],['desde','stocksel',''],['hacia','stocksel',''],['formula','formula','fórmula'],['factor','formula','1']]},
+  flujos:{grid:'minmax(0,1fr) minmax(100px,.7fr) minmax(100px,.7fr) minmax(0,1.6fr) minmax(64px,.45fr) minmax(96px,.6fr) minmax(60px,.4fr) 28px',cols:[['nombre','text','nombre'],['desde','stocksel',''],['hacia','stocksel',''],['formula','formula','fórmula'],['factor','formula','1'],['cada','cadasel',''],['meses','text','1, 6, 12']]},
   params:{grid:'minmax(0,1.3fr) minmax(90px,.8fr) minmax(110px,.9fr) minmax(60px,.4fr) minmax(0,1fr) 70px 28px',cols:[['nombre','text','nombre'],['k','key','clave'],['valor','number','0'],['unidad','text','unidad'],['nota','text','nota'],['externo','check','']]},
   indicadores:{grid:'minmax(0,1fr) minmax(90px,.7fr) minmax(0,1.8fr) minmax(60px,.4fr) 28px',cols:[['nombre','text','nombre'],['k','key','clave'],['formula','formula','fórmula'],['unidad','text','unidad']]},
   palancas:{grid:'minmax(0,1.2fr) 60px minmax(90px,.7fr) minmax(90px,.8fr) minmax(90px,.8fr) minmax(0,1.3fr) 28px',cols:[['nombre','text','nombre'],['fuerza','fuerza',''],['tipo','tiposel',''],['campo','camposel',''],['valor','formula','nuevo valor'],['descripcion','text','por qué']]},
@@ -881,6 +889,7 @@ function cell(list,r,[f,type,ph]){
   const a=`data-list="${list}" data-id="${r.id}" data-field="${f}"`;const v=r[f];
   switch(type){
     case 'text':return `<input type="text" ${a} value="${esc(v)}" placeholder="${ph}">`;
+    case 'cadasel':return `<select ${a}><option value=""${!v?' selected':''}>cada ${esc(M.unidad||'paso')}</option><option value="anual"${v==='anual'?' selected':''}>anual, repartido</option><option value="puntual"${v==='puntual'?' selected':''}>en ciertos meses</option></select>`;
     case 'carril':return `<input type="text" list="dl-carril" ${a} value="${esc(v)}" placeholder="${ph}">`;
     case 'key':return `<input type="text" class="f" ${a} value="${esc(v)}" placeholder="${ph}" pattern="[a-z_][a-z0-9_]*">`;
     case 'number':return `<input type="number" ${a} value="${v??''}" placeholder="${ph}" step="any">`;
@@ -906,7 +915,7 @@ function renderList(list){
 function renderEditor(){
   for(const r of ['stocks','flujos','params','indicadores','palancas','reglas','info','normas']){for(const x of M[r])if(!x.id)x.id=uid();renderList(r);}
   $('n-diseno').textContent=`${M.info.length} señales · ${M.normas.length} reglas`;
-  $('m-nombre').value=M.nombre||'';$('m-horizonte').value=M.horizonte;$('m-unidad').value=M.unidad||'';$('m-maximizar').value=M.maximizar?'1':'0';$('m-moneda').value=M.formato||'num';$('m-contexto').value=M.contexto||'';
+  $('m-nombre').value=M.nombre||'';$('m-inicio').value=M.inicio||hoyYM();$('m-horizonte').value=M.horizonte;$('m-unidad').value=M.unidad||'';$('m-maximizar').value=M.maximizar?'1':'0';$('m-moneda').value=M.formato||'num';$('m-contexto').value=M.contexto||'';
   $('d-auto').value=M.auto||'';$('i-meta').value=M.meta||'';$('i-metaValor').value=M.metaValor??'';$('i-metaPlazo').value=M.metaPlazo??'';$('i-paradigma').value=M.paradigma||'';$('i-trascender').value=M.trascender||'';
   $('n-intencion').textContent=[M.meta&&'meta',M.paradigma&&'paradigma',M.trascender&&'trascender'].filter(Boolean).join(' · ')||'vacía';
   renderObjetivo();
@@ -1051,7 +1060,7 @@ function renderVivo(){
   lastLoops=bucles(ME,r);
   renderDiagram(sim,TCUR,lastLoops);renderStrips(sim,TCUR);renderKpis(base,sim,TCUR);renderChart(base,sim,TCUR);
   const t0=M.t0||0,H=M.horizonte,u=M.unidad||'paso';
-  $('vivo-t').textContent=`${u} ${t0+TCUR} · paso ${TCUR} de ${H}`;
+  $('vivo-t').textContent=`${u} ${t0+TCUR}${fechaDe(t0+TCUR)?' · '+fechaDe(t0+TCUR):''} · paso ${TCUR} de ${H}`;
   $('btn-quedarme').disabled=TCUR===0;
   $('vivo-play').textContent=RUN?'❚❚':'▶';
   const o=M.objetivo;let manda='';
@@ -1175,7 +1184,7 @@ function bucles(ME,r0){
       const fk=f.fc?ev(f.fc,sc0):1;
       for(const [T,sign2,mul] of [[f.hacia,fk<0?-1:1,Math.abs(fk)],[f.desde,-1,1]]){
         if(!T||!st.includes(T))continue;
-        edges.push({from:S,via:f,to:T,s1:sign1,s2:sign2,sign:sign1*sign2,g:Math.abs(d)*mul});
+        edges.push({from:S,via:f,to:T,s1:sign1,s2:sign2,sign:sign1*sign2,g:Math.abs(d)*mul*promCada(f,ME)});
       }
     }
   }
@@ -1243,7 +1252,7 @@ function renderDiagram(sim,tc,loops){
     pipes+=`<line class="pipe${a}${dd}${hlA?' hl':''}" style="stroke-width:${w}" x1="${sx.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${p1x.toFixed(1)}" y2="${p1y.toFixed(1)}"/><line class="pipe${a}${dd}${hlB?' hl':''}" style="stroke-width:${w}" x1="${p2x.toFixed(1)}" y1="${p2y.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" marker-end="url(#ahp)"/>`;
     const nrm=(x1,y1,x2,y2)=>{const dx=x2-x1,dy=y2-y1,d=Math.max(1,Math.hypot(dx,dy));return [dx/d,dy/d];};
     if(B&&f.factor&&String(f.factor).trim()){let fk=1;try{const sc2={...r,H:M.horizonte};for(const p of (lastME||M).params)sc2[p.k]=p.valor||0;fk=compile(f.factor).fn(sc2);}catch(e){}const [ux,uy]=nrm(vx,vy,ex,ey);const ua=(M.stocks.find(q=>q.k===f.desde)||{}).unidad||'',ub=(M.stocks.find(q=>q.k===f.hacia)||{}).unidad||'';if(fk<0)marks+=sg(ex-ux*20-uy*11,ey-uy*20+ux*11,'−',' neg'+dd);else if(ua&&ub&&ua!==ub)marks+=`<text class="conv${dd}" x="${(ex-ux*26-uy*12).toFixed(1)}" y="${(ey-uy*26+ux*12+3).toFixed(1)}">${esc(ua+'→'+ub)}</text>`;}
-    nodes+=`<g class="vnode${dd}${nodeOn(f.k)?' hl':''}" data-node="${esc(f.k)}"><title>${esc((f.nombre||f.k)+': '+fmtV(v,f.k)+'\n= '+f.formula)}</title><circle cx="${vx.toFixed(1)}" cy="${vy.toFixed(1)}" r="11"/><path d="M${(vx-6).toFixed(1)} ${(vy-6).toFixed(1)} L${(vx+6).toFixed(1)} ${(vy+6).toFixed(1)} L${(vx+6).toFixed(1)} ${(vy-6).toFixed(1)} L${(vx-6).toFixed(1)} ${(vy+6).toFixed(1)}Z"/>${(()=>{let ls=wrapTxt(f.nombre||f.k,18);if(ls.length>2)ls=[ls[0],cut(ls.slice(1).join(' '),18)];return ls.map((l,j)=>`<text class="vn" x="${vx.toFixed(1)}" y="${(vy+25+j*12).toFixed(1)}">${esc(l)}</text>`).join('')+`<text class="vv" x="${vx.toFixed(1)}" y="${(vy+26+ls.length*12).toFixed(1)}">${fmtV(v,f.k)}</text>`;})()}</g>`;
+    nodes+=`<g class="vnode${dd}${nodeOn(f.k)?' hl':''}" data-node="${esc(f.k)}"><title>${esc((f.nombre||f.k)+': '+fmtV(v,f.k)+'\n= '+f.formula)}</title><circle cx="${vx.toFixed(1)}" cy="${vy.toFixed(1)}" r="11"/><path d="M${(vx-6).toFixed(1)} ${(vy-6).toFixed(1)} L${(vx+6).toFixed(1)} ${(vy+6).toFixed(1)} L${(vx+6).toFixed(1)} ${(vy-6).toFixed(1)} L${(vx-6).toFixed(1)} ${(vy+6).toFixed(1)}Z"/>${(()=>{let ls=wrapTxt(f.nombre||f.k,18);if(ls.length>2)ls=[ls[0],cut(ls.slice(1).join(' '),18)];return ls.map((l,j)=>`<text class="vn" x="${vx.toFixed(1)}" y="${(vy+25+j*12).toFixed(1)}">${esc(l)}</text>`).join('')+`<text class="vv" x="${vx.toFixed(1)}" y="${(vy+26+ls.length*12).toFixed(1)}">${fmtV(v,f.k)}${tagCada(f)}</text>`;})()}</g>`;
   }
   for(const l of links){if(!P[l.from]||!P[l.to]||l.sign===0)continue;
     const sx0=X(l.from),sy0=Y(l.from),tx=X(l.to),ty=Y(l.to),dx=tx-sx0,dy=ty-sy0,d=Math.max(1,Math.hypot(dx,dy)),nx=-dy/d,ny=dx/d,bend=bendOf(l.from,l.to);
@@ -1494,7 +1503,7 @@ function renderPop(){
     let cuerpo='';
     if(tipo==='formula')cuerpo=`<input type="text" class="f" data-list="flujos" data-id="${f.id}" data-field="formula" value="${esc(f.formula||'')}" placeholder="tocá los elementos que aparecen abajo" spellcheck="false">`;
     else cuerpo=`<div class="pop-op"><span>${lab[0]}</span>${opSel('a',a,tipo==='parte'?'':'')}</div>`+(lab[1]?`<div class="pop-op"><span>${lab[1]}</span>${opSel('b',b,'sinstock')}</div>`:'')+`<input type="hidden" data-list="flujos" data-id="${f.id}" data-field="formula" value="${esc(f.formula||'')}">`;
-    let lectura='';try{const v=compile(f.formula||'0').fn(sc);lectura=`<div class="pop-read">${fxLeer(f.formula||'')||'<span class="muted">sin fórmula</span>'} <b>= ${fmtV(v,f.hacia||f.desde)} hoy</b></div>`;}catch(e){lectura=`<div class="pop-read fx-err">${esc(e.message)}</div>`;}
+    let lectura='';try{const v=compile(f.formula||'0').fn(sc);lectura=`<div class="pop-read">${fxLeer(f.formula||'')||'<span class="muted">sin fórmula</span>'} <b>= ${fmtV(v,f.hacia||f.desde)} hoy</b>${lecturaCada(f,v)}</div>`;}catch(e){lectura=`<div class="pop-read fx-err">${esc(e.message)}</div>`;}
     const usados=[...new Set((()=>{try{return compile(f.formula||'').vars;}catch(e){return [];}})())].filter(k=>M.params.some(p=>p.k===k));
     const pars=usados.map(k=>{const p=M.params.find(x=>x.k===k);return `<div class="pop-par"><span>${esc(p.nombre||p.k)}</span><input type="number" step="any" data-list="params" data-id="${p.id}" data-field="valor" value="${p.valor??''}"><button type="button" class="small" style="margin:0" data-pop-acc="${esc(p.k)}" title="crear una acción que cambie este número">acción</button></div>`;}).join('');
     const uA=(M.stocks.find(s=>s.k===f.desde)||{}).unidad||'',uB=(M.stocks.find(s=>s.k===f.hacia)||{}).unidad||'';
@@ -1502,7 +1511,7 @@ function renderPop(){
     pop.innerHTML=`<div class="pop-h"><span class="pop-k">Válvula</span><button type="button" class="pop-x" data-pop-close aria-label="cerrar">×</button></div>
       <div class="pop-f"><input type="text" class="big" data-list="flujos" data-id="${f.id}" data-field="nombre" value="${esc(f.nombre||'')}" placeholder="nombre del flujo"></div>
       <div class="pop-g2"><label>Desde${sel('desde',f.desde)}</label><label>Hacia${sel('hacia',f.hacia)}</label></div>
-      <div class="pop-s"><span class="pop-k">Cuánto por ${esc(M.unidad||'paso')}</span><select data-pop-tipo>${TIPOS_F.map(([k,t])=>`<option value="${k}"${k===tipo?' selected':''}>${t}</option>`).join('')}</select>${cuerpo}${lectura}</div>
+      <div class="pop-s"><span class="pop-k">${cuantoLabel(f)}</span><select data-pop-tipo>${TIPOS_F.map(([k,t])=>`<option value="${k}"${k===tipo?' selected':''}>${t}</option>`).join('')}</select>${cuerpo}${lectura}</div>${cadaHtml(f)}
       ${pars?`<div class="pop-s"><span class="pop-k">Números que usa</span>${pars}</div>`:''}
       ${f.desde&&f.hacia?`<div class="pop-s"><span class="pop-k">Factor <small>opcional</small></span><input type="text" class="f" data-list="flujos" data-id="${f.id}" data-field="factor" value="${esc(f.factor||'')}" placeholder="${esc(factorHint)}" spellcheck="false"></div>`:''}
       <div class="pop-foot"><button type="button" class="del" data-pop-del="flujo" style="font-size:13px">Borrar válvula</button></div>`;
@@ -1570,7 +1579,7 @@ function popRefrescarLectura(){
   if(!POP)return;const n=nodoDe(POP.k);if(!n)return;
   if(n.kind==='stock'||n.kind==='param'){if(lastSim.length){renderDiagram(lastSim,TCUR,lastLoops);renderStrips(lastSim,TCUR);}return;}
   const f=n.it;const box=$('pop').querySelector('.pop-read');if(!box)return;const sc=fxScope();
-  try{const v=compile(f.formula||'0').fn(sc);box.className='pop-read';box.innerHTML=`${fxLeer(f.formula||'')||'<span class="muted">sin fórmula</span>'} <b>= ${fmtV(v,n.kind==='ind'?f.k:(f.hacia||f.desde))} hoy</b>`;}catch(e){box.className='pop-read fx-err';box.textContent=e.message;}
+  try{const v=compile(f.formula||'0').fn(sc);box.className='pop-read';box.innerHTML=`${fxLeer(f.formula||'')||'<span class="muted">sin fórmula</span>'} <b>= ${fmtV(v,n.kind==='ind'?f.k:(f.hacia||f.desde))} hoy</b>${n.kind==='flujo'?lecturaCada(f,v):''}`;}catch(e){box.className='pop-read fx-err';box.textContent=e.message;}
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&POP)popClose();});
 
@@ -1650,6 +1659,32 @@ document.addEventListener('change',e=>{
   const el=e.target;if(!el.closest('#pop'))return;
   if(el.dataset.field==='nombre'&&(el.dataset.list==='params'||el.dataset.list==='indicadores')){const L=M[el.dataset.list];const it=L.find(x=>x.id===el.dataset.id);if(it&&it._fresh&&it.nombre){const nk=keyLibre(it.nombre);renombrarClave(it.k,nk);it.k=nk;delete it._fresh;POP.k=nk;renderList('params');renderList('indicadores');renderList('palancas');renderObjetivo();dirty=true;compute();scheduleSave();renderPop();}return;}
 });
+
+/* ---------- periodicidad: montos por paso, por año repartidos, o en ciertos meses ---------- */
+const PPA={mes:12,meses:12,semana:52,semanas:52,'día':365,dia:365,'días':365,dias:365,quincena:24,quincenas:24,trimestre:4,trimestres:4,'año':1,'años':1,anio:1};
+const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+function pasosPorAnio(m){return PPA[String((m||M).unidad||'mes').trim().toLowerCase()]||12;}
+function esMensual(m){return pasosPorAnio(m)===12;}
+function hoyYM(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+function mesDe(m,t){const mo=+String((m||M).inicio||hoyYM()).split('-')[1]||1;return (((mo-1+t)%12)+12)%12+1;}
+function anioDe(m,t){const [y,mo]=String((m||M).inicio||hoyYM()).split('-').map(Number);return (y||2026)+Math.floor(((mo||1)-1+t)/12);}
+function mesesDe(f){const ms=Array.isArray(f.meses)?f.meses:String(f.meses||'').split(/[\s,;]+/);return [...new Set(ms.map(Number).filter(x=>x>=1&&x<=12))].sort((a,b)=>a-b);}
+function cadaMul(f,t,m){if(f.cada==='anual')return 1/pasosPorAnio(m);if(f.cada==='puntual'&&esMensual(m))return mesesDe(f).includes(mesDe(m,t))?1:0;return 1;}
+function promCada(f,m){if(f.cada==='anual')return 1/pasosPorAnio(m);if(f.cada==='puntual'&&esMensual(m))return mesesDe(f).length/12;return 1;}
+function mesesTxt(f){const ms=mesesDe(f);return ms.length?ms.map(x=>MESES[x-1]).join(' · '):'ningún mes';}
+function fechaDe(t){return esMensual()?`${MESES[mesDe(M,t)-1]} ${anioDe(M,t)}`:'';}
+function cuantoLabel(f){return f.cada==='anual'?'Cuánto por año':f.cada==='puntual'?'Cuánto cada vez':'Cuánto por '+esc(M.unidad||'paso');}
+function lecturaCada(f,v){const u=f.hacia||f.desde;if(f.cada==='anual')return ` <span class="muted">por año → ${fmtV(v/pasosPorAnio(),u)} por ${esc(M.unidad||'paso')}</span>`;if(f.cada==='puntual')return ` <span class="muted">cada vez, en ${mesesTxt(f)}</span>`;return '';}
+function tagCada(f){return f.cada==='anual'?' · anual':f.cada==='puntual'?' · '+mesesTxt(f):'';}
+function cadaHtml(f){
+  const u=esc(M.unidad||'paso');const men=esMensual();
+  const opts=[['',`cada ${u}`],['anual','un monto anual, repartido'],...(men?[['puntual','un monto que se paga en ciertos meses']]:[])];
+  const mesBtns=f.cada==='puntual'&&men?`<div class="mesbtns">${MESES.map((n,i)=>`<button type="button" data-mes="${i+1}" class="${mesesDe(f).includes(i+1)?'on':''}">${n}</button>`).join('')}</div>`:'';
+  const ayuda=f.cada==='anual'?`El monto de arriba es por año; cada ${u} se mueve la parte que corresponde.`:f.cada==='puntual'?'El monto de arriba se mueve entero en cada mes marcado; los demás meses, nada.':'';
+  return `<div class="pop-s"><span class="pop-k">Cada cuánto</span><select data-list="flujos" data-id="${f.id}" data-field="cada">${opts.map(([k,t])=>`<option value="${k}"${(f.cada||'')===k?' selected':''}>${t}</option>`).join('')}</select>${mesBtns}${ayuda?`<p class="hint-p">${ayuda}</p>`:''}</div>`;
+}
+document.addEventListener('change',e=>{const el=e.target;if(!el.closest('#pop')||el.dataset.field!=='cada')return;const f=M.flujos.find(x=>x.id===el.dataset.id);if(!f)return;f.cada=el.value;if(f.cada==='puntual'&&!mesesDe(f).length)f.meses=[12];renderList('flujos');dirty=true;compute();scheduleSave();renderPop();});
+document.addEventListener('click',e=>{const b=e.target.closest('#pop [data-mes]');if(!b||!POP)return;const f=M.flujos.find(x=>x.k===POP.k);if(!f)return;const ms=new Set(mesesDe(f));const m=+b.dataset.mes;ms.has(m)?ms.delete(m):ms.add(m);f.meses=[...ms].sort((a,c)=>a-c);renderList('flujos');dirty=true;compute();scheduleSave();renderPop();});
 
 /* ---------- eventos ---------- */
 document.addEventListener('input',e=>{
