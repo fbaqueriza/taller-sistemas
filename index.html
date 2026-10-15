@@ -37,7 +37,7 @@
 }
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5}
-.page{max-width:1080px;margin:0 auto;padding-inline:16px;padding-block:24px 64px;display:grid;gap:20px}
+.page{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:8px 64px;display:grid;gap:14px}
 header h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,4.5vw,36px);line-height:1.05;margin:4px 0 6px;letter-spacing:-.01em;text-wrap:balance}
 .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);margin:0}
 .lede{max-width:64ch;color:var(--fg2);margin:0}
@@ -45,6 +45,25 @@ h2{font-family:var(--display);font-weight:700;font-size:20px;margin:0 0 4px;lett
 h2 small,summary small{font-family:var(--mono);font-weight:400;font-size:12px;color:var(--muted);margin-left:8px;letter-spacing:.04em}
 h3{font-family:var(--display);font-size:15px;font-weight:700;margin:0 0 6px}
 .sec-head p{margin:0;color:var(--fg2);max-width:70ch}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:7;display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;background:var(--bg);border-bottom:1px solid var(--line);padding:8px 0}
+.brand{font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:-.01em}
+.model-btn{font-weight:600;font-size:14px;padding:5px 12px;border-radius:16px;background:var(--surface);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.model-btn.on{border-color:var(--accent);background:var(--accent-soft)}
+.top .tabs{position:static;border:none;padding:0;background:none;display:flex;gap:2px}
+.top .status{margin-left:auto}
+.drop{position:absolute;z-index:8;left:16px;right:16px;max-width:760px;margin:0 auto;top:52px;background:var(--surface);border:1px solid var(--accent);border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.2);padding:16px;display:grid;gap:12px}
+.drop[hidden]{display:none}
+.drop-h{display:flex;justify-content:space-between;align-items:center}
+.drop-h b{font-family:var(--display);font-size:16px}
+.page{position:relative}
+.scrub{flex:1;min-width:140px;accent-color:var(--accent);padding:0;background:none;border:none}
+.speed{font-family:var(--mono);font-size:13px;min-width:44px}
+.vivo-bar .btns{flex-wrap:nowrap}
+@media (max-width:760px){.vivo-bar .btns{flex-wrap:wrap}}
+#loopchips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding-bottom:4px;margin-bottom:6px}
+.lc{white-space:nowrap;flex:none}
+.strip-k.tog{border:none;background:none;padding:0;cursor:pointer;color:var(--muted)}
+.strip-k.tog:hover{color:var(--accent-ink)}
 .tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;gap:4px;align-items:center;background:var(--bg);border-bottom:1px solid var(--line);padding:6px 0;flex-wrap:wrap}
 .tabs [role=tab]{border:none;background:none;padding:8px 14px;border-radius:4px;font-weight:500;color:var(--fg2);font-size:15px;cursor:pointer}
 .tabs [role=tab]:hover{background:var(--surface-2)}
@@ -113,7 +132,7 @@ button.del:hover{color:var(--crit)}
 .diagram .eye .pupila{fill:var(--fg)}
 .diagram .clock circle{fill:var(--surface);stroke:var(--warn);stroke-width:2}
 .diagram .clock path{stroke:var(--fg2);stroke-width:1.6;stroke-linecap:round}
-.vivo-bar{position:sticky;top:calc(env(safe-area-inset-top,0px) + 46px);z-index:4;padding:10px 14px}
+.vivo-bar{position:sticky;top:calc(env(safe-area-inset-top,0px) + 50px);z-index:4;padding:8px 12px}
 .vivo-bar .btns{gap:10px}
 #vivo-play{font-size:16px;width:44px;height:36px;padding:0}
 .vivo-t{font-family:var(--mono);font-size:13px;color:var(--fg2);min-width:150px}
@@ -431,31 +450,23 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 </style>
 
 <main class="page">
-<header>
-  <p class="eyebrow">Pensamiento sistémico · Donella Meadows</p>
-  <h1>Taller de sistemas</h1>
-  <p class="lede">Describí cualquier sistema con stocks, flujos y parámetros. El taller lo simula, mide qué palanca mueve más, detecta patrones y arma un camino de acción.</p>
-</header>
-
-<nav class="tabs" role="tablist" aria-label="Secciones">
-  <button role="tab" data-tab="modelos" aria-selected="true">Modelos</button>
-  <button role="tab" data-tab="describir" aria-selected="false">Describir</button>
-  <button role="tab" data-tab="jugar" aria-selected="false">Jugar</button>
-  <button role="tab" data-tab="analisis" aria-selected="false">Análisis</button>
-  <button role="tab" data-tab="guia" aria-selected="false">Guía</button>
+<nav class="top" aria-label="Secciones">
+  <span class="brand">Taller de sistemas</span>
+  <button type="button" id="model-btn" class="model-btn" aria-haspopup="true" title="Cambiar de modelo, crear uno nuevo, importar o exportar"><span id="model-name">Modelo</span> ▾</button>
+  <span class="tabs" role="tablist">
+    <button role="tab" data-tab="jugar" aria-selected="true">Mapa</button>
+    <button role="tab" data-tab="analisis" aria-selected="false">Análisis</button>
+    <button role="tab" data-tab="describir" aria-selected="false">Tablas</button>
+    <button role="tab" data-tab="guia" aria-selected="false">Guía</button>
+  </span>
   <span class="status" id="status">Cargando…</span>
 </nav>
 
-<section class="tab" id="tab-modelos">
-  <div class="pasos">
-    <div><i>1</i><b>Elegí un modelo</b><span>o creá uno desde una plantilla, acá abajo.</span></div>
-    <div><i>2</i><b>Describilo</b><span>qué se acumula, qué lo mueve, qué podés cambiar.</span></div>
-    <div><i>3</i><b>Jugá</b><span>prendé palancas, adoptá decisiones, avanzá el tiempo.</span></div>
-  </div>
-  <div class="sec-head"><h2>Tus modelos</h2><p>Tocá uno para abrirlo.</p></div>
+<section class="drop" id="tab-modelos" hidden>
+  <div class="drop-h"><b>Tus modelos</b><button type="button" class="pop-x" id="model-close" aria-label="cerrar">×</button></div>
   <div class="lib" id="lib"></div>
   <div class="panel">
-    <h3>Nuevo modelo</h3>
+    <h3 style="font-size:14px">Nuevo, desde una plantilla</h3>
     <div class="btns" id="tpl-btns"></div>
     <details class="plain" style="margin-top:12px"><summary>Importar o exportar en JSON</summary>
       <p class="hint-p" style="margin:8px 0">Para compartir un modelo o guardarlo fuera de acá. Pegá un JSON y cargalo, o copiá el actual.</p>
@@ -580,11 +591,11 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
   <div class="panel vivo-bar">
     <div class="btns">
       <button id="vivo-play" class="primary" aria-label="Correr o pausar" title="Correr el tiempo">▶</button>
-      <button id="vivo-reset" title="Volver al inicio">Al inicio</button>
-      <span class="seg" id="vivo-vel"><button data-v="600">lento</button><button data-v="250" class="on">normal</button><button data-v="80">rápido</button></span>
+      <button id="vivo-speed" class="speed" title="Velocidad">1×</button>
+      <input type="range" id="vivo-scrub" class="scrub" min="0" max="24" step="1" value="0" aria-label="Momento en el tiempo">
       <span class="vivo-t" id="vivo-t"></span>
       <span class="seg" id="vivo-modo" title="Qué escenario corre"><button data-modo="base">Base</button><button data-modo="activo" class="on">Con lo activo</button><button data-modo="plan">Plan completo</button></span>
-      <button id="btn-quedarme" title="Mover el modelo hasta este punto del tiempo">Quedarme acá</button>
+      <button id="btn-quedarme" class="small" style="margin:0" title="Mover el modelo hasta este punto del tiempo: lo que ves pasa a ser el presente">Quedarme acá</button>
     </div>
     <p class="note" id="vivo-manda"></p>
   </div>
@@ -595,7 +606,7 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
         <div class="loopchips" id="loopchips"></div>
         <div class="mapwrap" id="mapwrap"><div class="diagram" id="diagram"></div><div class="strip" id="strip-med"></div><div class="strip" id="strip-par"></div><div class="pop" id="pop" hidden></div></div>
         <div class="btns" style="justify-content:space-between;margin-top:6px">
-          <p class="hint-p">Tocá cualquier cosa para editarla: una caja, una válvula, un medidor o una perilla. Una R o una B muestra ese bucle solo. Arrastrá para acomodar.</p>
+          <p class="hint-p">Tocá cualquier cosa para editarla. Arrastrá para acomodar.</p>
           <div class="btns"><button id="btn-nueva-caja" class="primary" style="margin:0;font-size:13px;padding:4px 10px">+ caja</button><button id="btn-relayout" class="small" style="margin:0">Reacomodar</button></div>
         </div>
       </div>
@@ -613,7 +624,7 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 
       <div class="panel side-p" id="side-acc">
         <p class="note" id="esc-lede"></p>
-        <div class="btns" style="margin:8px 0"><button id="btn-nueva-pal" class="small" style="margin:0">+ nueva acción</button><button id="btn-adopt-all" class="small primary" style="margin:0">Adoptar las activas</button><button id="btn-reset" class="small" style="margin:0">Apagar todas</button></div>
+        <div class="btns" style="margin:8px 0"><button id="btn-nueva-pal" class="small" style="margin:0">+ nueva acción</button><button id="btn-adopt-all" class="small primary" style="margin:0" hidden>Adoptar las activas</button><button id="btn-reset" class="small" style="margin:0" hidden>Apagar todas</button></div>
         <div id="pal-rows"></div>
         <form id="pal-form" class="pal-form" hidden>
           <h3 id="pal-form-t" style="margin:0 0 8px">Nueva acción</h3>
@@ -661,6 +672,8 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 
 <section class="tab" id="tab-guia" hidden>
   <div class="panel guide">
+    <p class="eyebrow">Pensamiento sistémico · Donella Meadows</p>
+    <p>Describí cualquier sistema con stocks, flujos y parámetros. El taller lo simula, mide qué palanca mueve más, detecta patrones y arma un camino de acción. Arriba elegís el modelo; en <b>Mapa</b> lo jugás, en <b>Análisis</b> ves lo que el motor detecta, y en <b>Tablas</b> está todo el modelo en forma de tabla.</p>
     <h2>Cómo describir un sistema</h2>
     <ol>
       <li><b>Nombrá los stocks.</b> Lo que se acumula y podés medir en un instante: plata en caja, gente en un equipo, clientes activos, agua en un tanque, deuda. Dales un valor inicial.</li>
@@ -972,6 +985,7 @@ function renderObjetivo(){
   sel.innerHTML='<option value="">(elegí uno)</option>'+opts.map(([k,n])=>`<option value="${esc(k)}"${k===M.objetivo?' selected':''}>${esc(n)}</option>`).join('');
 }
 function renderLib(){
+  {const n=$('model-name');if(n&&M)n.textContent=M.nombre||'Sin nombre';}
   $('lib').innerHTML=LIB.map(m=>`<div class="mcard${m.id===M.id?' cur':''}" data-open="${m.id}" role="button" tabindex="0"><b>${esc(m.nombre||'Sin nombre')}${m.id===M.id?' <small style="font-weight:400">· abierto</small>':''}</b><span>${esc((m.contexto||'').slice(0,110))}${(m.contexto||'').length>110?'…':''}</span><small>${m.stocks.length} stocks · ${m.flujos.length} flujos · ${m.palancas.length} palancas</small><div class="btns"><button class="small" style="margin:0" data-dup="${m.id}">Duplicar</button><button data-delm="${m.id}" class="del" style="font-size:13px;padding:4px 6px">Borrar</button></div></div>`).join('');
   $('tpl-btns').innerHTML=TPL.map((t,i)=>`<button data-tpl="${i}" title="${esc(t.d)}">${esc(t.n)}</button>`).join('');
 }
@@ -1107,7 +1121,7 @@ function compute(){
   renderProbar();renderShocks();renderTable(sim);
   renderVivo();
   const box=$('errores');const u=[...new Set(errs)];box.hidden=!u.length;box.innerHTML=u.map(e=>'• '+esc(e)).join('<br>');
-  document.querySelectorAll('.tabs [data-tab="describir"]').forEach(b=>b.textContent=u.length?`Describir (${u.length} ${u.length===1?'error':'errores'})`:'Describir');
+  document.querySelectorAll('.tabs [data-tab="describir"]').forEach(b=>b.textContent=u.length?`Tablas (${u.length} ${u.length===1?'error':'errores'})`:'Tablas');
   if(u.length&&$('tab-describir').classList.contains('basic')&&u.some(e=>/^(indicador|regla)/.test(e)))setAdv(true);
   $('vivo-modo').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.modo===MODO));
 }
@@ -1118,9 +1132,10 @@ function renderVivo(){
   lastLoops=bucles(ME,r);
   renderDiagram(sim,TCUR,lastLoops);renderStrips(sim,TCUR);renderKpis(base,sim,TCUR);renderChart(base,sim,TCUR);
   const t0=M.t0||0,H=M.horizonte,u=M.unidad||'paso';
-  $('vivo-t').textContent=`${u} ${t0+TCUR}${fechaDe(t0+TCUR)?' · '+fechaDe(t0+TCUR):''} · paso ${TCUR} de ${H}`;
+  $('vivo-t').textContent=fechaDe(t0+TCUR)||`${u} ${t0+TCUR}`;
   $('btn-quedarme').disabled=TCUR===0;
   $('vivo-play').textContent=RUN?'❚❚':'▶';
+  {const sc=$('vivo-scrub');if(sc){sc.max=H;if(document.activeElement!==sc)sc.value=TCUR;}}
   const o=M.objetivo;let manda='';
   const maxSt=Math.max(1e-9,...M.stocks.map(s=>Math.abs(r[s.k]||0)));
   if(lastLoops.length&&lastLoops[0].peso>maxSt*0.002){const b=lastLoops[0];manda=`<b>Manda ${esc(nombreDe(b.edges[0].from))}</b>: ${b.tipo==='R'?'se refuerza':'corrige'} al ${nf1.format(b.g*100)} % por ${u}.`;}
@@ -1363,7 +1378,8 @@ function renderKpis(base,sim,tc){
 
 function renderSens(list){
   const H=M.horizonte,o=M.objetivo;const actS=new Set(M.activas||[]);
-  $('esc-lede').textContent=!M.palancas.length?'Todavía no hay acciones. Creá una con "+ nueva acción".':!o?'Elegí un objetivo en Describir para medir cada acción.':`${actS.size?actS.size+(actS.size===1?' activa':' activas'):'Ninguna activa'}. La barra es el efecto en ${nombreDe(o)} a ${H} ${plural(M.unidad)}.`;
+  {const ha=(M.activas||[]).length>0;$('btn-adopt-all').hidden=!ha;$('btn-reset').hidden=!ha;}
+  $('esc-lede').textContent=!M.palancas.length?'Todavía no hay acciones. Creá una con "+ nueva acción".':!o?'Elegí un objetivo en Describir para medir cada acción.':`Prendé una para probarla. La barra es su efecto en ${nombreDe(o)} a ${H} ${plural(M.unidad)}.`;
   const by={};for(const x of list)by[x.pl.k]=x;
   const maxAbs=Math.max(1e-9,...list.map(x=>Math.abs(x.delta)));
   const best=list.filter(x=>!x.on&&x.delta>0).sort((a,b)=>b.delta-a.delta)[0];
@@ -1646,12 +1662,14 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&POP)popClose();});
 /* ---------- perillas y medidores: fichas bajo el mapa ---------- */
 let SEL_PARAM='';
 function usosDe(k){const re=new RegExp('\\b'+k+'\\b');const out=[];for(const f of M.flujos)if(re.test(f.formula||'')||re.test(f.factor||''))out.push({k:f.k,n:f.nombre||f.k,kind:'flujo'});for(const x of M.indicadores)if(re.test(x.formula||''))out.push({k:x.k,n:x.nombre||x.k,kind:'ind'});for(const r of M.reglas)if(re.test(r.cuando||''))out.push({k:r.k,n:r.titulo||r.cuando,kind:'regla'});for(const p of M.palancas)if(p.campo===k||re.test(p.valor||''))out.push({k:p.k,n:p.nombre||p.k,kind:'accion'});return out;}
+let PER_OPEN=false;try{PER_OPEN=localStorage.getItem('taller-per')==='1';}catch(e){}
 function renderStrips(sim,tc){
   const r=sim[tc]||{};const o=M.objetivo;
   const med=M.indicadores.map(x=>`<button type="button" class="chipx med${x.k===o?' obj':''}${POP&&POP.k===x.k?' on':''}" data-chip="${esc(x.k)}">${x.k===o?'★ ':''}${esc(x.nombre||x.k)} <b>${fmtV(r[x.k],x.k)}</b></button>`).join('');
   $('strip-med').innerHTML=`<span class="strip-k">Medidores</span>${med}<button type="button" class="chipx add" id="btn-nuevo-med">+ medidor</button>`;
   const par=M.params.map(p=>`<button type="button" class="chipx par${p.externo?' ext':''}${POP&&POP.k===p.k?' on':''}" data-chip="${esc(p.k)}" title="${esc(p.nota||'')}">${esc(p.nombre||p.k)} <b>${fmtV(OVR[p.k]??p.valor,p.k)}</b></button>`).join('');
-  $('strip-par').innerHTML=`<span class="strip-k">Perillas</span>${par}<button type="button" class="chipx add" id="btn-nueva-per">+ perilla</button>`;
+  const abierta=PER_OPEN||(POP&&POP.kind==='param');
+  $('strip-par').innerHTML=`<button type="button" class="strip-k tog" id="per-tog" aria-expanded="${abierta}">Perillas · ${M.params.length} ${abierta?'▾':'▸'}</button>${abierta?par+'<button type="button" class="chipx add" id="btn-nueva-per">+ perilla</button>':''}`;
 }
 function nodoDe(k){
   let it;
@@ -1750,6 +1768,20 @@ document.addEventListener('click',e=>{const b=e.target.closest('#pop [data-mes]'
 function setSide(n){document.querySelectorAll('#side-tabs [data-side]').forEach(b=>b.classList.toggle('on',b.dataset.side===n));for(const k of ['acc','plan','num'])$('side-'+k).hidden=k!==n;try{localStorage.setItem(KEY+'-side',n);}catch(e){}}
 document.addEventListener('click',e=>{const b=e.target.closest('#side-tabs [data-side]');if(b)setSide(b.dataset.side);});
 document.addEventListener('DOMContentLoaded',()=>{});
+
+/* ---------- barra superior, menú de modelos, tiempo ---------- */
+function modelMenu(on){const d=$('tab-modelos');if(on===undefined)on=d.hidden;d.hidden=!on;$('model-btn').classList.toggle('on',on);}
+const SPEEDS=[[250,'1×'],[110,'2×'],[50,'4×']];let SPI=0;
+document.addEventListener('click',e=>{
+  const t=e.target;
+  if(t.closest('#model-btn')){modelMenu();return;}
+  if(t.closest('#model-close')){modelMenu(false);return;}
+  if(!$('tab-modelos').hidden&&!t.closest('#tab-modelos'))modelMenu(false);
+  if(t.closest('#vivo-speed')){SPI=(SPI+1)%SPEEDS.length;VEL=SPEEDS[SPI][0];$('vivo-speed').textContent=SPEEDS[SPI][1];if(RUN){stopRun();playRun();}return;}
+  if(t.closest('#per-tog')){PER_OPEN=!PER_OPEN;try{localStorage.setItem('taller-per',PER_OPEN?'1':'0');}catch(_){}if(lastSim.length)renderStrips(lastSim,TCUR);return;}
+});
+document.addEventListener('input',e=>{if(e.target.id==='vivo-scrub'){TCUR=+e.target.value;stopRun();renderVivo();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('tab-modelos').hidden)modelMenu(false);});
 
 /* ---------- eventos ---------- */
 document.addEventListener('input',e=>{
@@ -1885,7 +1917,7 @@ document.addEventListener('click',e=>{
     const L=b.dataset.add;const id=uid();const base={info:{senal:M.stocks[0]?M.stocks[0].k:'',quien:'',cada:'',retardo:0},normas:{texto:'',afecta:''},stocks:{nombre:'',k:'',inicial:0,unidad:'',min0:true},flujos:{nombre:'',k:'f_'+id,desde:'',hacia:M.stocks[0]?M.stocks[0].k:'',formula:''},params:{nombre:'',k:'',valor:0,nota:''},indicadores:{nombre:'',k:'',formula:''},palancas:{nombre:'',k:'pl_'+id,fuerza:12,tipo:'param',campo:M.params[0]?M.params[0].k:'',valor:'',descripcion:''},reglas:{k:'r_'+id,cuando:'',nivel:'atencion',fuerza:12,titulo:'',texto:''}}[L];
     M[L].push({id,...base});renderList(L);const first=$(L).querySelector(`[data-id="${id}"] input`);if(first)first.focus();
   }else if(b.dataset.del){const L=M[b.dataset.del];const i=L.findIndex(x=>x.id===b.dataset.id);if(i>=0)L.splice(i,1);renderEditor();}
-  else if(b.dataset.tpl!==undefined){const m=normalize(TPL[+b.dataset.tpl].f());LIB.push(m);setCurrent(m);showTab('describir');}
+  else if(b.dataset.tpl!==undefined){const m=normalize(TPL[+b.dataset.tpl].f());LIB.push(m);setCurrent(m);modelMenu(false);showTab('jugar');}
   else if(b.dataset.dup){const src=LIB.find(x=>x.id===b.dataset.dup);if(!src)return;const m=structuredClone(src);m.id=uid();m.nombre=(src.nombre||'Modelo')+' (copia)';LIB.push(m);setCurrent(m);e.stopPropagation();}
   else if(b.dataset.delm){const i=LIB.findIndex(x=>x.id===b.dataset.delm);if(i<0)return;const gone=LIB[i];if(!b.dataset.sure){b.dataset.sure='1';b.textContent='¿Seguro? Borrar';e.stopPropagation();return;}LIB.splice(i,1);deleteRemote(gone.id);if(!LIB.length)LIB.push(normalize(tplFinanzas()));if(gone.id===M.id)setCurrent(LIB[0]);else renderLib();saveLocal();e.stopPropagation();return;}
   else if(b.dataset.toggleBtn){toggleLever(b.dataset.toggleBtn,true);return;}
@@ -1917,7 +1949,7 @@ document.addEventListener('click',e=>{
   else if(b.id==='btn-adv'){setAdv(!$('tab-describir').classList.contains('basic')?false:true);return;}
   else if(b.dataset.addsug){const p=M.params.find(x=>x.k===b.dataset.addsug);if(!p)return;const f=b.dataset.f;M.palancas.push({id:uid(),k:'pl_'+uid(),nombre:`${p.nombre||p.k} ${f==='1.1'?'+10 %':'−10 %'}`,fuerza:12,tipo:'param',campo:p.k,valor:`${p.k} * ${f}`,descripcion:'Sugerida por el motor: parámetro sensible. Convertila en algo concreto o subila de fuerza si implica una regla o una estructura.'});renderList('palancas');dirty=true;compute();scheduleSave();return;}
   else if(b.id==='btn-reset'){M.activas=[];dirty=true;compute();scheduleSave();return;}
-  else if(b.dataset.open){const m=LIB.find(x=>x.id===b.dataset.open);if(m&&m.id!==M.id)setCurrent(m);return;}
+  else if(b.dataset.open){const m=LIB.find(x=>x.id===b.dataset.open);if(m&&m.id!==M.id)setCurrent(m);modelMenu(false);showTab('jugar');return;}
   else if(b.id==='btn-export'){const txt=JSON.stringify(M,null,2);$('json-io').value=txt;navigator.clipboard?.writeText(txt).then(()=>$('io-msg').textContent='Copiado al portapapeles.',()=>{$('json-io').select();$('io-msg').textContent='Seleccionado: copialo con Ctrl+C.';});return;}
   else if(b.id==='btn-import'){try{const m=normalize(JSON.parse($('json-io').value));m.id=uid();LIB.push(m);setCurrent(m);$('io-msg').textContent='Modelo cargado.';}catch(err){$('io-msg').textContent='No es un JSON válido: '+err.message;}return;}
   else return;
@@ -1969,8 +2001,8 @@ loadLocal();
 if(!LIB.length)LIB=[normalize(tplFinanzas()),normalize(tplNegocio())];
 let cur=null;try{cur=localStorage.getItem(KEY+'-cur');}catch(e){}
 M=LIB.find(x=>x.id===cur)||LIB[0];
-let tab0='modelos';try{tab0=localStorage.getItem(KEY+'-tab')||'modelos';}catch(e){}
-if(!$('tab-'+tab0))tab0='modelos';showTab(tab0);
+let tab0='jugar';try{tab0=localStorage.getItem(KEY+'-tab')||'jugar';}catch(e){}
+if(!['jugar','analisis','describir','guia'].includes(tab0))tab0='jugar';showTab(tab0);
 let side0='acc';try{side0=localStorage.getItem(KEY+'-side')||'acc';}catch(e){}if(!['acc','plan','num'].includes(side0))side0='acc';setSide(side0);
 let adv0=false;try{adv0=localStorage.getItem(KEY+'-adv')==='1';}catch(e){}setAdv(adv0);
 renderLib();renderEditor();compute();setStatus('Los cambios se guardan solos');initDb();
