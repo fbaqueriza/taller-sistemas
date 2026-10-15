@@ -247,7 +247,7 @@ details.sub>summary{cursor:pointer;font-weight:600;font-size:14px}
 .mesbtns{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
 .mesbtns button{font-size:12px;padding:4px 0;border-radius:4px}
 .mesbtns button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-.board{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:start}
+.board{display:grid;grid-template-columns:minmax(0,1fr) clamp(270px,32%,340px);gap:12px;align-items:start}
 .board-main{display:grid;gap:14px;min-width:0}
 .board-side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 168px);display:grid;gap:10px;align-content:start;min-width:0;padding-bottom:4px}
 .side-tiles{grid-template-columns:1fr 1fr}
@@ -266,7 +266,7 @@ details.sub>summary{cursor:pointer;font-weight:600;font-size:14px}
 .board-side .pal.on{margin:0 -12px;padding-inline:12px}
 .board-side .paso{grid-template-columns:34px minmax(0,1fr)}.board-side .paso-a{grid-column:2;justify-content:flex-start}
 .board-side .probar{grid-template-columns:1fr}
-@media (max-width:900px){.board{grid-template-columns:1fr}.board-side{position:static}.side-p{max-height:none}}
+@media (max-width:760px){.board{grid-template-columns:1fr}.board-side{position:static}.side-p{max-height:none}}
 .strip{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
 .strip-k{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);min-width:72px}
 .chipx{font-size:12.5px;padding:3px 10px;border-radius:14px;background:var(--surface);color:var(--fg2);border:1px solid var(--line)}
