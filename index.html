@@ -311,6 +311,16 @@ details.sub>summary{cursor:pointer;font-weight:600;font-size:14px}
 .pop .fls{display:flex;flex-wrap:wrap;gap:4px}
 .pop .fl.static{display:inline-block;padding:5px 8px;border-radius:6px;background:var(--surface-2);font-size:13px}
 .pop-foot{gap:8px}
+.av{display:grid;grid-template-columns:10px minmax(0,1.15fr) minmax(0,1fr) 22px;grid-template-areas:"d c s x" ". v n .";gap:4px 6px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line)}
+.av>.av-dot{grid-area:d}.av>[data-av="cuando"]{grid-area:c}.av>[data-av="dir"]{grid-area:s}.av>[data-av="v"]{grid-area:v}.av>[data-av="nivel"]{grid-area:n}.av>.del{grid-area:x}
+.av select,.av input{padding:4px 5px;font-size:12.5px;min-width:0}
+.av.av-x{grid-template-columns:10px minmax(0,1fr) 22px;grid-template-areas:"d t x"}.av.av-x>.av-t{grid-area:t}
+.av-t{font-size:13px;display:grid}.av-t small{color:var(--muted);font-size:11px}
+.av-dot{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--line-strong,var(--muted));box-sizing:border-box}
+.av-dot.atencion{background:var(--warn);border-color:var(--warn)}.av-dot.critico{background:var(--crit);border-color:var(--crit)}.av-dot.ok{background:var(--good);border-color:var(--good)}
+.chipx.avisa{box-shadow:inset 0 0 0 1.5px var(--warn)}
+.chipx.avisa::after{content:"!";font-family:var(--mono);font-weight:700;color:var(--warn);margin-left:4px}
+.diagram .snode.avisa .box{stroke:var(--warn);stroke-width:2.2;stroke-dasharray:4 2}
 .desg{display:grid;grid-template-columns:minmax(0,1fr) 96px 78px 22px;gap:4px;align-items:center}
 .desg input,.desg select{padding:4px 6px;font-size:12.5px}
 .desg-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
@@ -412,9 +422,6 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
 .step.ahora i{background:var(--accent);color:#fff}
 .step.ahora em{color:var(--accent-ink)}
 .muted{color:var(--muted);margin:0}
-#tab-describir.basic .adv{display:none}
-#btn-adv{white-space:nowrap}
-#btn-adv.on{background:var(--accent-soft);color:var(--accent-ink);border-color:var(--accent)}
 .capas{display:grid;gap:8px}
 .capa{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;padding:14px 16px;border-radius:6px;border:1px solid var(--line);background:var(--surface);border-left-width:5px}
 .capa.intencion{border-left-color:var(--c-int)}.capa.diseno{border-left-color:var(--c-dis)}.capa.retro{border-left-color:var(--c-ret)}
@@ -480,38 +487,38 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
   </div>
 </section>
 
-<section class="tab basic" id="tab-describir" hidden>
-  <div class="btns" style="justify-content:space-between;align-items:flex-start">
-    <p class="note">Tres cosas definen un sistema: qué se acumula (stocks), qué lo mueve (flujos) y los números que usan (parámetros). Las palancas son lo que podés cambiar.</p>
-    <button id="btn-adv" title="indicadores, diseño, intención, reglas de lectura, formato">Mostrar avanzado</button>
+<section class="tab" id="tab-describir" hidden>
+  <div class="btns" style="justify-content:space-between;align-items:center">
+    <p class="note" style="margin:0">Todo el modelo en forma de tabla. Lo normal es armarlo y editarlo tocando el mapa; acá está el detalle, para revisar o ajustar fino.</p>
+    <button type="button" data-ir="jugar">Ir al mapa</button>
   </div>
   <div class="panel">
     <div class="fields">
       <div class="field"><label for="m-nombre">Nombre del sistema</label><input type="text" id="m-nombre" data-m="nombre"></div>
       <div class="field"><label for="m-horizonte">Horizonte (pasos)</label><input type="number" id="m-horizonte" data-m="horizonte" min="2" max="240" step="1"></div>
       <div class="field"><label for="m-inicio">Empieza en</label><input type="month" id="m-inicio" data-m="inicio"><span class="hint">el paso 0; sirve para los montos que caen en ciertos meses</span></div>
-      <div class="field adv"><label for="m-unidad">Unidad de tiempo</label><input type="text" id="m-unidad" data-m="unidad" placeholder="mes"></div>
+      <div class="field"><label for="m-unidad">Unidad de tiempo</label><input type="text" id="m-unidad" data-m="unidad" placeholder="mes"></div>
       <div class="field"><label for="m-objetivo">Indicador objetivo</label><select id="m-objetivo" data-m="objetivo"></select><span class="hint">lo que las palancas intentan mejorar</span></div>
       <div class="field"><label for="m-maximizar">Sentido</label><select id="m-maximizar" data-m="maximizar"><option value="1">Cuanto más, mejor</option><option value="0">Cuanto menos, mejor</option></select></div>
-      <div class="field adv"><label for="m-moneda">Formato de valores</label><select id="m-moneda" data-m="formato"><option value="num">Número</option><option value="ars">Pesos ($)</option><option value="pct">Porcentaje</option></select></div>
+      <div class="field"><label for="m-moneda">Formato de valores</label><select id="m-moneda" data-m="formato"><option value="num">Número</option><option value="ars">Pesos ($)</option><option value="pct">Porcentaje</option></select></div>
     </div>
-    <div class="field adv" style="margin-top:10px"><label for="m-contexto">Contexto <small>qué es este sistema, para quién, qué lo rodea</small></label><textarea id="m-contexto" data-m="contexto" rows="3" placeholder="Notas libres. No se simulan, pero quedan con el modelo."></textarea></div>
+    <div class="field" style="margin-top:10px"><label for="m-contexto">Contexto <small>qué es este sistema, para quién, qué lo rodea</small></label><textarea id="m-contexto" data-m="contexto" rows="3" placeholder="Notas libres. No se simulan, pero quedan con el modelo."></textarea></div>
   </div>
   <div id="errores" class="errbox" hidden></div>
 
-  <details class="grp" open>
-    <summary><span>Stocks <small>lo que se acumula</small></span><b id="n-stocks"></b></summary>
+  <details class="grp" data-grp="stocks">
+    <summary><span>Cajas <small>stocks: lo que se acumula</small></span><b id="n-stocks"></b></summary>
     <div class="grp-body">
       <p class="hint-p">Cada stock tiene una clave corta para usar en fórmulas. "Carril" agrupa stocks en el dibujo: por ejemplo, lo que tengo y lo que debo. "No negativo" frena las salidas cuando llega a cero.</p>
       <datalist id="dl-carril"></datalist>
       <div class="row row-head" style="grid-template-columns:minmax(0,1.3fr) minmax(90px,.8fr) minmax(110px,.9fr) minmax(70px,.5fr) minmax(90px,.8fr) 90px 90px 28px"><span>Nombre</span><span>Clave</span><span>Valor inicial</span><span>Unidad</span><span>Carril</span><span>No negativo</span><span title="una deuda, un problema: llegar a cero es bueno">Mejor si baja</span><span></span></div>
       <div class="rows" id="stocks"></div>
-      <button class="add" data-add="stocks">+ agregar stock</button>
+      <button class="add" data-add="stocks">+ agregar caja</button>
     </div>
   </details>
 
-  <details class="grp" open>
-    <summary><span>Flujos <small>lo que mueve los stocks por paso</small></span><b id="n-flujos"></b></summary>
+  <details class="grp" data-grp="flujos">
+    <summary><span>Flujos <small>lo que entra y sale de las cajas por paso</small></span><b id="n-flujos"></b></summary>
     <div class="grp-body">
       <p class="hint-p">Un flujo sale de un stock (o de afuera) y entra a otro stock (o se va afuera). La fórmula puede usar claves de stocks, parámetros y <code>t</code>, el paso actual. <b>Factor</b> (opcional) es cuánto cambia el destino por cada unidad que sale: vacío es 1; <code>-1</code> para pagar una deuda, porque bajan las dos; <code>1 / tipo_cambio</code> para pasar pesos a dólares.</p>
       <div class="row row-head" style="grid-template-columns:minmax(0,1fr) minmax(100px,.7fr) minmax(100px,.7fr) minmax(0,1.6fr) minmax(64px,.45fr) minmax(96px,.6fr) minmax(60px,.4fr) 28px"><span>Nombre</span><span>Desde</span><span>Hacia</span><span>Fórmula</span><span title="cuánto cambia el destino por cada unidad que sale">Factor</span><span>Cada</span><span title="para montos en ciertos meses: 1 = enero, 12 = diciembre">Meses</span><span></span></div>
@@ -520,37 +527,47 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
     </div>
   </details>
 
-  <details class="grp" open>
-    <summary><span>Parámetros <small>constantes del sistema</small></span><b id="n-params"></b></summary>
+  <details class="grp" data-grp="params">
+    <summary><span>Perillas <small>parámetros: los números que usan las fórmulas</small></span><b id="n-params"></b></summary>
     <div class="grp-body">
       <p class="hint-p">Todo número que aparece en una fórmula. "Externo" es lo que no controlás, como la inflación o el tipo de cambio: no se sugiere como acción y sirve para probar escenarios adversos.</p>
       <div class="row row-head" style="grid-template-columns:minmax(0,1.3fr) minmax(90px,.8fr) minmax(110px,.9fr) minmax(60px,.4fr) minmax(0,1fr) 70px 28px"><span>Nombre</span><span>Clave</span><span>Valor</span><span>Unidad</span><span>Nota</span><span>Externo</span><span></span></div>
       <div class="rows" id="params"></div>
-      <button class="add" data-add="params">+ agregar parámetro</button>
+      <button class="add" data-add="params">+ agregar perilla</button>
     </div>
   </details>
 
-  <details class="grp adv">
-    <summary><span>Indicadores <small>medidas derivadas</small></span><b id="n-indicadores"></b></summary>
+  <details class="grp" data-grp="indicadores">
+    <summary><span>Medidores <small>indicadores calculados</small></span><b id="n-indicadores"></b></summary>
     <div class="grp-body">
       <p class="hint-p">Fórmulas sobre stocks, parámetros, flujos y <code>t</code>. Uno de ellos es el objetivo del sistema.</p>
       <div class="row row-head" style="grid-template-columns:minmax(0,1fr) minmax(90px,.7fr) minmax(0,1.8fr) minmax(60px,.4fr) 28px"><span>Nombre</span><span>Clave</span><span>Fórmula</span><span>Unidad</span><span></span></div>
       <div class="rows" id="indicadores"></div>
-      <button class="add" data-add="indicadores">+ agregar indicador</button>
+      <button class="add" data-add="indicadores">+ agregar medidor</button>
     </div>
   </details>
 
-  <details class="grp" open>
-    <summary><span>Palancas <small>movimientos que podés hacer</small></span><b id="n-palancas"></b></summary>
+  <details class="grp" data-grp="palancas">
+    <summary><span>Acciones <small>palancas: movimientos que podés hacer</small></span><b id="n-palancas"></b></summary>
     <div class="grp-body">
       <p class="hint-p">Una palanca cambia un parámetro o el valor inicial de un stock. El nuevo valor puede ser una fórmula sobre parámetros y stocks iniciales. Para mover varias cosas a la vez, escribí asignaciones separadas por punto y coma: <code>pesos = 3 * gastos; dolares = dolares + (pesos - 3 * gastos) / tipo_cambio</code>. La fuerza es el lugar en la lista de Meadows: 12 es la más débil (parámetros), 1 la más fuerte (trascender el paradigma).</p>
       <div class="row row-head" style="grid-template-columns:minmax(0,1.2fr) 60px minmax(90px,.7fr) minmax(90px,.8fr) minmax(90px,.8fr) minmax(0,1.3fr) 28px"><span>Nombre</span><span>Fuerza</span><span>Cambia</span><span>Clave</span><span>Nuevo valor</span><span>Descripción</span><span></span></div>
       <div class="rows" id="palancas"></div>
-      <button class="add" data-add="palancas">+ agregar palanca</button>
+      <button class="add" data-add="palancas">+ agregar acción</button>
     </div>
   </details>
 
-  <details class="grp adv" open>
+  <details class="grp" data-grp="reglas">
+    <summary><span>Avisos <small>reglas de lectura: cuándo avisarte</small></span><b id="n-reglas"></b></summary>
+    <div class="grp-body">
+      <p class="hint-p">Lo simple se arma desde el mapa: en la tarjeta de una caja o de un medidor, <b>Avisame si…</b>. Acá podés escribir condiciones más elaboradas. Una condición sobre el estado inicial o final. Además de las claves normales, podés usar <code>clave_fin</code>, <code>clave_min</code> y <code>clave_max</code> (valor al final, mínimo y máximo en el horizonte) y <code>H</code>. En el texto, <code>{clave}</code> se reemplaza por el valor.</p>
+      <div class="row row-head" style="grid-template-columns:minmax(0,1.4fr) 100px 60px minmax(0,1fr) minmax(0,1.6fr) 28px"><span>Condición</span><span>Nivel</span><span>Fuerza</span><span>Título</span><span>Texto</span><span></span></div>
+      <div class="rows" id="reglas"></div>
+      <button class="add" data-add="reglas">+ agregar aviso</button>
+    </div>
+  </details>
+
+  <details class="grp" data-grp="diseno">
     <summary><span>Diseño <small>información · reglas · auto-organización</small></span><b id="n-diseno"></b></summary>
     <div class="grp-body">
       <p class="hint-p">La capa de diseño de Meadows: quién ve qué y cuándo, qué reglas gobiernan el sistema, y cómo puede cambiar su propia estructura. No se simula, pero se visualiza y entra en el camino.</p>
@@ -566,7 +583,7 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
     </div>
   </details>
 
-  <details class="grp adv" open>
+  <details class="grp" data-grp="intencion">
     <summary><span>Intención <small>meta · paradigma · trascender</small></span><b id="n-intencion"></b></summary>
     <div class="grp-body">
       <p class="hint-p">Las capas más fuertes. La meta le da referencia al bucle de balance; el paradigma decide qué meta vale la pena; trascender es saber que ese paradigma es uno entre varios.</p>
@@ -580,15 +597,7 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
     </div>
   </details>
 
-  <details class="grp adv">
-    <summary><span>Reglas de lectura <small>cuándo avisar</small></span><b id="n-reglas"></b></summary>
-    <div class="grp-body">
-      <p class="hint-p">Una condición sobre el estado inicial o final. Además de las claves normales, podés usar <code>clave_fin</code>, <code>clave_min</code> y <code>clave_max</code> (valor al final, mínimo y máximo en el horizonte) y <code>H</code>. En el texto, <code>{clave}</code> se reemplaza por el valor.</p>
-      <div class="row row-head" style="grid-template-columns:minmax(0,1.4fr) 100px 60px minmax(0,1fr) minmax(0,1.6fr) 28px"><span>Condición</span><span>Nivel</span><span>Fuerza</span><span>Título</span><span>Texto</span><span></span></div>
-      <div class="rows" id="reglas"></div>
-      <button class="add" data-add="reglas">+ agregar regla</button>
-    </div>
-  </details>
+
 </section>
 
 <section class="tab" id="tab-jugar" hidden>
@@ -687,6 +696,8 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
       <li><b>Listá las palancas.</b> Cada decisión que podrías tomar, escrita como un cambio concreto a un parámetro o a un stock inicial. Asignale su fuerza según Meadows.</li>
       <li><b>Escribí reglas de lectura.</b> Condiciones que te importan: "si la caja mínima baja de cero", "si la deuda supera la liquidez". El motor las evalúa y las convierte en alertas y pasos del camino.</li>
     </ol>
+    <h3>Avisos</h3>
+    <p>En la tarjeta de una caja o de un medidor, <b>Avisame si…</b> crea un aviso sin escribir fórmulas: en algún momento, al final o hoy; si baja de o supera un valor. El punto de color muestra si salta ahora. Cuando salta, la caja o el medidor se marcan en el mapa y el aviso aparece en Análisis. Las condiciones más elaboradas se escriben en Tablas → Avisos.</p>
     <h3>Stocks que conviene que bajen</h3>
     <p>Una deuda, una merma o una lista de reclamos son stocks donde menos es mejor. Marcalos como <b>mejor si baja</b> en la tarjeta de la caja. Con esa marca, llegar a cero se lee como un logro, crecer acelerando es un bucle vicioso, y el bucle de refuerzo que lo alimenta se pinta en rojo. Las cajas que se llaman deuda, préstamo o pasivo vienen marcadas.</p>
     <h3>Montos anuales</h3>
@@ -916,6 +927,7 @@ function simular(m){
   }
   return rows;
 }
+let AVISA=new Set();
 function scopeReglas(m,sim){
   const H=m.horizonte,r0=sim[0],rH=sim[sim.length-1];
   const sc={...r0,H};
@@ -1038,11 +1050,12 @@ function patrones(sim){
   return C;
 }
 function reglas(sim,ME){
-  const C=[];const sc=scopeReglas(ME||M,sim);
+  const C=[];const sc=scopeReglas(ME||M,sim);AVISA=new Set();
   for(const r of M.reglas){
     if(!r.cuando)continue;
     let ok;try{ok=compile(r.cuando).fn(sc);}catch(e){errs.push('regla "'+(r.titulo||r.k)+'": '+e.message);continue;}
     if(!ok)continue;
+    for(const v of (()=>{try{return compile(r.cuando).vars;}catch(e){return [];}})())AVISA.add(v.replace(/_(fin|min|max)$/,''));
     const texto=String(r.texto||'').replace(/\{([a-zA-Z0-9_]+)\}/g,(m,k)=>sc[k]!==undefined?fmtV(sc[k],k.replace(/_(fin|min|max)$/,'')):m);
     C.push({tipo:'regla',nivel:r.nivel||'atencion',titulo:r.titulo||r.cuando,texto,fuerza:+r.fuerza||null});
   }
@@ -1127,7 +1140,6 @@ function compute(){
   renderVivo();
   const box=$('errores');const u=[...new Set(errs)];box.hidden=!u.length;box.innerHTML=u.map(e=>'• '+esc(e)).join('<br>');
   document.querySelectorAll('.tabs [data-tab="describir"]').forEach(b=>b.textContent=u.length?`Tablas (${u.length} ${u.length===1?'error':'errores'})`:'Tablas');
-  if(u.length&&$('tab-describir').classList.contains('basic')&&u.some(e=>/^(indicador|regla)/.test(e)))setAdv(true);
   $('vivo-modo').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.modo===MODO));
 }
 /* lo que depende del reloj */
@@ -1344,7 +1356,7 @@ function renderDiagram(sim,tc,loops){
     const cx=X(st.k),cy=Y(st.k),x=cx-NW/2,y=cy-NH/2,v=r[st.k];
     const vals=sim.map(q=>q[st.k]);const mx=Math.max(1e-9,...vals.map(Math.abs));const lvl=Math.max(0,Math.min(1,Math.abs(v)/mx))*(NH-4);
     const vacio=st.min0&&Math.abs(v)<1e-9&&vals.some(q=>Math.abs(q)>1e-9);
-    nodes+=`<g class="snode${vacio?(st.menos?' logro':' vacio'):''}${st.menos?' menos':''}${dim(st.k)}${nodeOn(st.k)?' hl':''}" data-node="${esc(st.k)}"><title>${esc(st.nombre||st.k)}</title><rect class="box" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${NW}" height="${NH}" rx="6"/><rect class="fill" x="${(x+2).toFixed(1)}" y="${(y+NH-2-lvl).toFixed(1)}" width="${NW-4}" height="${lvl.toFixed(1)}" rx="4"/><text class="nm" x="${cx.toFixed(1)}" y="${(y+22).toFixed(1)}">${esc(cut(st.nombre||st.k,20))}</text><text class="vl" x="${cx.toFixed(1)}" y="${(y+42).toFixed(1)}">${fmtV(v,st.k)}</text>`;
+    nodes+=`<g class="snode${vacio?(st.menos?' logro':' vacio'):''}${st.menos?' menos':''}${AVISA.has(st.k)?' avisa':''}${dim(st.k)}${nodeOn(st.k)?' hl':''}" data-node="${esc(st.k)}"><title>${esc(st.nombre||st.k)}</title><rect class="box" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${NW}" height="${NH}" rx="6"/><rect class="fill" x="${(x+2).toFixed(1)}" y="${(y+NH-2-lvl).toFixed(1)}" width="${NW-4}" height="${lvl.toFixed(1)}" rx="4"/><text class="nm" x="${cx.toFixed(1)}" y="${(y+22).toFixed(1)}">${esc(cut(st.nombre||st.k,20))}</text><text class="vl" x="${cx.toFixed(1)}" y="${(y+42).toFixed(1)}">${fmtV(v,st.k)}</text>`;
     const inf=M.info.find(i=>i.senal===st.k);
     if(inf){const ex=x+NW-2,ey=y+2;nodes+=`<g class="eye"><title>${esc('lo ve '+(inf.quien||'?')+(inf.cada?' · '+inf.cada:'')+(inf.retardo>0?' · con '+inf.retardo+' de retardo':''))}</title><circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="8"/><path d="M${(ex-5).toFixed(1)} ${ey.toFixed(1)} Q${ex.toFixed(1)} ${(ey-4.5).toFixed(1)} ${(ex+5).toFixed(1)} ${ey.toFixed(1)} Q${ex.toFixed(1)} ${(ey+4.5).toFixed(1)} ${(ex-5).toFixed(1)} ${ey.toFixed(1)}Z"/><circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="1.6" class="pupila"/></g>`;
       if(inf.retardo>0){const c2=ex-20;nodes+=`<g class="clock"><circle cx="${c2.toFixed(1)}" cy="${ey.toFixed(1)}" r="8"/><path d="M${c2.toFixed(1)} ${(ey-4.5).toFixed(1)} L${c2.toFixed(1)} ${ey.toFixed(1)} L${(c2+3).toFixed(1)} ${(ey+2.2).toFixed(1)}" fill="none"/></g>`;}}
@@ -1576,6 +1588,7 @@ function renderPop(){
       <label class="check"><input type="checkbox" data-list="stocks" data-id="${s.id}" data-field="menos" ${s.menos?'checked':''}> Mejor si baja (una deuda, un problema)</label>
       <div class="pop-s"><span class="pop-k">Entra</span>${ins.map(f=>li(f,'in')).join('')||'<span class="muted">nada</span>'}<button type="button" class="small" style="margin:0" data-pop-new="in">+ algo que entra</button></div>
       <div class="pop-s"><span class="pop-k">Sale</span>${outs.map(f=>li(f,'out')).join('')||'<span class="muted">nada</span>'}<div class="btns"><button type="button" class="small" style="margin:0" data-pop-new="out">+ algo que sale</button>${otros.length?`<select data-pop-new-to><option value="">+ pasa a otra caja…</option>${otros.map(x=>`<option value="${esc(x.k)}">${esc(x.nombre||x.k)}</option>`).join('')}</select>`:''}</div></div>
+      ${avisosHtml(s.k)}
       <div class="pop-foot"><button type="button" class="del" data-pop-del="stock" style="font-size:13px">Borrar caja</button></div>`;
   }else{
     const f=n.it;const det=detectar(f.formula);const tipo=POP.tipo||det.tipo;const a=POP.a??det.a??'',b=POP.b??det.b??'';
@@ -1670,7 +1683,7 @@ function usosDe(k){const re=new RegExp('\\b'+k+'\\b');const out=[];for(const f o
 let PER_OPEN=false;try{PER_OPEN=localStorage.getItem('taller-per')==='1';}catch(e){}
 function renderStrips(sim,tc){
   const r=sim[tc]||{};const o=M.objetivo;
-  const med=M.indicadores.map(x=>`<button type="button" class="chipx med${x.k===o?' obj':''}${POP&&POP.k===x.k?' on':''}" data-chip="${esc(x.k)}">${x.k===o?'★ ':''}${esc(x.nombre||x.k)} <b>${fmtV(r[x.k],x.k)}</b></button>`).join('');
+  const med=M.indicadores.map(x=>`<button type="button" class="chipx med${x.k===o?' obj':''}${AVISA.has(x.k)?' avisa':''}${POP&&POP.k===x.k?' on':''}" data-chip="${esc(x.k)}">${x.k===o?'★ ':''}${esc(x.nombre||x.k)} <b>${fmtV(r[x.k],x.k)}</b></button>`).join('');
   $('strip-med').innerHTML=`<span class="strip-k">Medidores</span>${med}<button type="button" class="chipx add" id="btn-nuevo-med">+ medidor</button>`;
   const par=M.params.map(p=>`<button type="button" class="chipx par${p.externo?' ext':''}${POP&&POP.k===p.k?' on':''}" data-chip="${esc(p.k)}" title="${esc(p.nota||'')}">${esc(p.nombre||p.k)} <b>${fmtV(OVR[p.k]??p.valor,p.k)}</b></button>`).join('');
   const abierta=PER_OPEN||(POP&&POP.kind==='param');
@@ -1725,6 +1738,7 @@ function popInd(x){
     <div class="pop-g2"><label>Unidad<input type="text" data-list="indicadores" data-id="${x.id}" data-field="unidad" value="${esc(x.unidad||'')}" placeholder="$, %, meses"></label><label>Es<select data-pop-tipo>${TIPOS_I.map(([k,t])=>`<option value="${k}"${k===tipo?' selected':''}>${t}</option>`).join('')}</select></label></div>
     <div class="pop-s">${cuerpo}${lectura}</div>
     <div class="pop-s"><span class="pop-k">Objetivo</span><div class="btns">${esObj?`<span class="chip good">★ es el objetivo del sistema</span><select data-m="maximizar"><option value="1"${M.maximizar?' selected':''}>cuanto más, mejor</option><option value="0"${!M.maximizar?' selected':''}>cuanto menos, mejor</option></select>`:`<button type="button" class="small" style="margin:0" data-pop-obj="${esc(x.k)}">Hacerlo el objetivo</button>`}</div></div>
+    ${avisosHtml(x.k)}
     <div class="pop-foot"><button type="button" class="del" data-pop-del="ind" style="font-size:13px" ${usos.length?'disabled title="primero sacalo de donde se usa"':''}>Borrar</button></div>`;
 }
 function nuevaPerilla(){const p={id:uid(),k:keyLibre('perilla'),nombre:'',valor:0,unidad:'',nota:'',_fresh:1};M.params.push(p);renderList('params');renderList('palancas');dirty=true;compute();scheduleSave();POP={k:p.k,kind:'param'};renderPop();const i=$('pop').querySelector('.big');if(i)i.focus();}
@@ -1816,6 +1830,57 @@ document.addEventListener('click',e=>{
   if(b.dataset.desgAdd){(p.desglose=p.desglose||[]).push({id:uid(),nombre:'',monto:0,tipo:'fijo'});dirty=true;renderPop();const ins=$('pop').querySelectorAll('[data-desg="nombre"]');const l=ins[ins.length-1];if(l)l.focus();return;}
   if(b.dataset.desgDel!==undefined){p.desglose.splice(+b.dataset.desgDel,1);if(!p.desglose.length)delete p.desglose;else syncDesg(p);dirty=true;renderList('params');compute();scheduleSave();renderPop();return;}
 });
+
+/* ---------- avisos desde el mapa ---------- */
+function avParse(r,k){
+  const m=String(r.cuando||'').match(/^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*(<=?|>=?)\s*(-?\d+(?:\.\d+)?)\s*$/);if(!m)return null;
+  let base=m[1],suf='';const sm=base.match(/_(fin|min|max)$/);if(sm&&base.slice(0,-sm[0].length)===k){suf=sm[1];base=k;}
+  if(base!==k)return null;
+  const dir=m[2][0]==='<'?'baja':'sube';
+  if((suf==='min'&&dir!=='baja')||(suf==='max'&&dir!=='sube'))return null;
+  return {cuando:suf==='fin'?'fin':suf===''?'hoy':'algun',dir,v:+m[3]};
+}
+function avCuando(k,o){const suf=o.cuando==='fin'?'_fin':o.cuando==='hoy'?'':(o.dir==='baja'?'_min':'_max');return k+suf+(o.dir==='baja'?' < ':' > ')+o.v;}
+function avTitulo(k,o){const n=nombreDe(k);return n+(o.dir==='baja'?' baja de ':' supera ')+fmtV(o.v,k)+(o.cuando==='fin'?' al final':o.cuando==='hoy'?' hoy':'');}
+function avTexto(k,o){const s=o.cuando==='fin'?'_fin':o.cuando==='hoy'?'':(o.dir==='baja'?'_min':'_max');return (o.cuando==='fin'?'Termina en ':o.cuando==='hoy'?'Hoy está en ':o.dir==='baja'?'Llega a un mínimo de ':'Llega a un máximo de ')+'{'+k+s+'}.';}
+function avDe(k){const re=new RegExp('\\b'+k+'(_fin|_min|_max)?\\b');return M.reglas.filter(r=>re.test(r.cuando||''));}
+function avisosHtml(k){
+  const L=avDe(k);let sc=null;try{if(lastSim.length)sc=scopeReglas(lastME||M,lastSim);}catch(e){}
+  const row=r=>{
+    let salta=null;if(sc)try{salta=!!compile(r.cuando).fn(sc);}catch(e){}
+    const dot=`<span class="av-dot${salta?' '+(r.nivel||'atencion'):''}" title="${salta===null?'':salta?'salta ahora':'no salta ahora'}"></span>`;
+    const o=avParse(r,k);
+    const niv=`<select data-av="nivel" data-av-id="${r.id}" title="qué tan grave"><option value="atencion"${r.nivel!=='critico'&&r.nivel!=='ok'?' selected':''}>atención</option><option value="critico"${r.nivel==='critico'?' selected':''}>grave</option><option value="ok"${r.nivel==='ok'?' selected':''}>buena noticia</option></select>`;
+    const del=`<button type="button" class="del" data-av-del="${r.id}" aria-label="quitar aviso">×</button>`;
+    if(!o)return `<div class="av av-x">${dot}<span class="av-t" title="${esc(r.cuando)}">${esc(r.titulo||r.cuando)}<small>se edita en Tablas → Avisos</small></span>${del}</div>`;
+    return `<div class="av">${dot}<select data-av="cuando" data-av-id="${r.id}"><option value="algun"${o.cuando==='algun'?' selected':''}>en algún momento</option><option value="fin"${o.cuando==='fin'?' selected':''}>al final</option><option value="hoy"${o.cuando==='hoy'?' selected':''}>hoy</option></select><select data-av="dir" data-av-id="${r.id}"><option value="baja"${o.dir==='baja'?' selected':''}>baja de</option><option value="sube"${o.dir==='sube'?' selected':''}>supera</option></select><input type="number" step="any" data-av="v" data-av-id="${r.id}" value="${o.v}">${niv}${del}</div>`;
+  };
+  return `<div class="pop-s"><span class="pop-k">Avisame si…</span>${L.map(row).join('')}<button type="button" class="small" style="margin:0;justify-self:start" data-av-new="${esc(k)}">+ aviso</button></div>`;
+}
+function avCambio(r,k){
+  const box=$('pop');const g=f=>{const el=box.querySelector(`[data-av="${f}"][data-av-id="${r.id}"]`);return el?el.value:'';};
+  const o={cuando:g('cuando')||'algun',dir:g('dir')||'baja',v:parseFloat(g('v'))||0};
+  const viejo=avParse(r,k);const auto=!r.titulo||(viejo&&r.titulo===avTitulo(k,viejo));const autoT=!r.texto||(viejo&&r.texto===avTexto(k,viejo));
+  r.cuando=avCuando(k,o);if(auto)r.titulo=avTitulo(k,o);if(autoT)r.texto=avTexto(k,o);
+  dirty=true;renderList('reglas');compute();scheduleSave();
+}
+document.addEventListener('change',e=>{
+  const el=e.target;if(!el.dataset.av||!POP)return;const r=M.reglas.find(x=>x.id===el.dataset.avId);if(!r)return;
+  if(el.dataset.av==='nivel'){r.nivel=el.value;dirty=true;renderList('reglas');compute();scheduleSave();renderPop();return;}
+  avCambio(r,POP.k);renderPop();
+});
+document.addEventListener('click',e=>{
+  const b=e.target.closest('#pop [data-av-new],#pop [data-av-del]');if(!b||!POP)return;
+  if(b.dataset.avNew){const k=b.dataset.avNew;const st=M.stocks.find(s=>s.k===k);const o={cuando:'algun',dir:st&&st.menos?'sube':'baja',v:0};
+    M.reglas.push({id:uid(),k:'r_'+uid(),cuando:avCuando(k,o),nivel:'atencion',fuerza:'',titulo:avTitulo(k,o),texto:avTexto(k,o)});}
+  else{const i=M.reglas.findIndex(x=>x.id===b.dataset.avDel);if(i>=0)M.reglas.splice(i,1);}
+  dirty=true;renderList('reglas');compute();scheduleSave();renderPop();
+  if(b.dataset.avNew){const ins=$('pop').querySelectorAll('[data-av="v"]');const l=ins[ins.length-1];if(l){l.focus();l.select();}}
+});
+/* ---------- grupos de Tablas ---------- */
+function grpInit(){let o={};try{o=JSON.parse(localStorage.getItem(KEY+'-grp')||'{}');}catch(e){}document.querySelectorAll('#tab-describir details[data-grp]').forEach(d=>{d.open=!!o[d.dataset.grp];});}
+document.addEventListener('toggle',e=>{const d=e.target;if(!d.dataset||!d.dataset.grp)return;let o={};try{o=JSON.parse(localStorage.getItem(KEY+'-grp')||'{}');}catch(x){}o[d.dataset.grp]=d.open;try{localStorage.setItem(KEY+'-grp',JSON.stringify(o));}catch(x){}},true);
+document.addEventListener('click',e=>{const b=e.target.closest('[data-ir]');if(b)showTab(b.dataset.ir);});
 
 /* ---------- eventos ---------- */
 document.addEventListener('input',e=>{
@@ -1980,7 +2045,6 @@ document.addEventListener('click',e=>{
   else if(b.dataset.planDel){M.plan=(M.plan||[]).filter(p=>p.id!==b.dataset.planDel);dirty=true;compute();scheduleSave();return;}
   else if(b.id==='btn-nueva-pal'){abrirPalForm();return;}
   else if(b.id==='np-cancel'){$('pal-form').hidden=true;return;}
-  else if(b.id==='btn-adv'){setAdv(!$('tab-describir').classList.contains('basic')?false:true);return;}
   else if(b.dataset.addsug){const p=M.params.find(x=>x.k===b.dataset.addsug);if(!p)return;const f=b.dataset.f;M.palancas.push({id:uid(),k:'pl_'+uid(),nombre:`${p.nombre||p.k} ${f==='1.1'?'+10 %':'−10 %'}`,fuerza:12,tipo:'param',campo:p.k,valor:`${p.k} * ${f}`,descripcion:'Sugerida por el motor: parámetro sensible. Convertila en algo concreto o subila de fuerza si implica una regla o una estructura.'});renderList('palancas');dirty=true;compute();scheduleSave();return;}
   else if(b.id==='btn-reset'){M.activas=[];dirty=true;compute();scheduleSave();return;}
   else if(b.dataset.open){const m=LIB.find(x=>x.id===b.dataset.open);if(m&&m.id!==M.id)setCurrent(m);modelMenu(false);showTab('jugar');return;}
@@ -1998,11 +2062,6 @@ document.addEventListener('change',e=>{
   if(el.dataset.planEstado){const p=(M.plan||[]).find(x=>x.id===el.dataset.planEstado);if(p){p.estado=el.value;dirty=true;compute();scheduleSave();}}
 });
 document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)showTab(b.dataset.tab);});
-function setAdv(on){
-  const t=$('tab-describir'),b=$('btn-adv');
-  t.classList.toggle('basic',!on);b.classList.toggle('on',on);b.textContent=on?'Ocultar avanzado':'Mostrar avanzado';
-  try{localStorage.setItem(KEY+'-adv',on?'1':'0');}catch(e){}
-}
 function showTab(n){document.querySelectorAll('.tab').forEach(s=>{s.hidden=s.id!=='tab-'+n;});document.querySelectorAll('.tabs [role=tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===n)));try{localStorage.setItem(KEY+'-tab',n);}catch(e){}if(n==='jugar'&&lastSim.length)renderVivo();}
 function updCarriles(){const dl=$('dl-carril');if(!dl||!M)return;const cs=[...new Set(M.stocks.map(s=>(s.carril||'').trim()).filter(Boolean))];dl.innerHTML=cs.map(c=>`<option value="${esc(c)}">`).join('');}
 function setCurrent(m){M=m;vis=null;try{localStorage.setItem(KEY+'-cur',m.id);}catch(e){}renderLib();renderEditor();compute();dirty=true;scheduleSave();}
@@ -2038,7 +2097,7 @@ M=LIB.find(x=>x.id===cur)||LIB[0];
 let tab0='jugar';try{tab0=localStorage.getItem(KEY+'-tab')||'jugar';}catch(e){}
 if(!['jugar','analisis','describir','guia'].includes(tab0))tab0='jugar';showTab(tab0);
 let side0='acc';try{side0=localStorage.getItem(KEY+'-side')||'acc';}catch(e){}if(!['acc','plan','num'].includes(side0))side0='acc';setSide(side0);
-let adv0=false;try{adv0=localStorage.getItem(KEY+'-adv')==='1';}catch(e){}setAdv(adv0);
+grpInit();
 renderLib();renderEditor();compute();setStatus('Los cambios se guardan solos');initDb();
 })();
 </script>
