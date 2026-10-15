@@ -818,7 +818,7 @@ function tplFinanzas(){return {id:uid(),nombre:'Finanzas personales',horizonte:2
   stocks:[{k:'pesos',nombre:'Pesos líquidos',inicial:400000,unidad:'$',min0:true,carril:'Lo que tengo'},{k:'fondo',nombre:'Fondo de inversión',inicial:0,unidad:'$',min0:true,carril:'Lo que tengo'},{k:'dolares',nombre:'Dólares',inicial:5000,unidad:'USD',min0:true,carril:'Lo que tengo'},{k:'deuda',nombre:'Deuda de tarjeta',inicial:300000,unidad:'$',min0:true,menos:true,carril:'Lo que debo'}],
   params:[
     {k:'ingreso',nombre:'Ingreso mensual',valor:3000000,nota:'típico'},
-    {k:'gastos',nombre:'Gastos mensuales',valor:1235000,nota:'suma del desglose',desglose:desgInicial()},
+    {k:'gastos',nombre:'Gastos mensuales',valor:1235000,nota:'suma del desglose',desglose:desgInicial(),desgV:2},
     {k:'ajuste_anual',nombre:'Crecimiento anual del ingreso',valor:0.21,unidad:'%',nota:'10 % cada 6 meses'},
     {k:'colchon_meses',nombre:'Colchón en pesos',valor:3,unidad:'meses',nota:'meses de gasto que quedan líquidos antes de ahorrar'},
     {k:'a_fondo',nombre:'Parte del ahorro al fondo',valor:0,unidad:'%',nota:'de lo que pasa el colchón'},
@@ -883,7 +883,7 @@ let LIB=[],M=null,DB=null,dirty=false,saveT=null,saving=false,pending=false,errs
 function normalize(m){
   const b=tplVacio();const out={...b,...m};
   for(const k of ['stocks','flujos','params','indicadores','palancas','reglas','activas','decisiones','info','normas','plan'])if(!Array.isArray(out[k]))out[k]=[];
-  for(const p of out.params){if(p.k==='gastos'&&!Array.isArray(p.desglose)&&Math.round(p.valor||0)===1135000){p.desglose=desgInicial();p.nota='suma del desglose';}syncDesg(p);}
+  for(const p of out.params){if(p.k==='gastos'&&!Array.isArray(p.desglose)&&Math.round(p.valor||0)===1135000){p.desglose=desgInicial();p.nota='suma del desglose';}if(p.k==='gastos'&&Array.isArray(p.desglose)&&p.desgV!==2){const tiene=new Set(p.desglose.map(d=>(d.nombre||'').trim().toLowerCase()));for(const d of desgInicial())if(!tiene.has(d.nombre.toLowerCase()))p.desglose.push(d);p.desgV=2;}syncDesg(p);}
   for(const s of out.stocks)if(s.menos===undefined)s.menos=/deuda|debo|pasivo|pr[eé]stamo|hipoteca|atraso|faltante|merma|reclamo/i.test((s.nombre||'')+' '+(s.k||''));
   for(const k of ['auto','meta','paradigma','trascender'])if(typeof out[k]!=='string')out[k]='';
   if(!out.id)out.id=uid();out.horizonte=Math.max(2,Math.min(240,Math.round(out.horizonte||24)));out.t0=Math.max(0,Math.round(out.t0||0));if(!/^\d{4}-\d{2}$/.test(out.inicio||''))out.inicio=hoyYM();
@@ -1791,7 +1791,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('tab-modelos').h
 
 /* ---------- desglose de una perilla ---------- */
 const mm=v=>"$ "+nf.format(Math.round(v||0));
-function desgInicial(){return [['Alquiler depto Retiro',900000,'fijo'],['Expensas depto Congreso',120000,'fijo'],['ABL Retiro',35000,'fijo'],['ABL Congreso',20000,'fijo'],['Luz y agua Retiro',40000,'fijo'],['Luz y agua Congreso',15000,'fijo'],['Gas Retiro',5000,'fijo'],['Yoga',100000,'fijo']].map(([nombre,monto,tipo])=>({id:uid(),nombre,monto,tipo}));}
+function desgInicial(){return [['Alquiler depto Retiro',900000,'fijo'],['Expensas depto Congreso',120000,'fijo'],['ABL Retiro',35000,'fijo'],['ABL Congreso',20000,'fijo'],['Luz y agua Retiro',40000,'fijo'],['Luz y agua Congreso',15000,'fijo'],['Gas Retiro',5000,'fijo'],['Yoga',100000,'fijo'],['Acuarela',0,'fijo'],['Carpintería',0,'fijo'],['Fútbol (2 por semana)',0,'fijo'],['Obra social',0,'fijo'],['Telefonía',0,'fijo'],['Claude',0,'fijo'],['Proyecto Nudo',0,'fijo'],['Lavadero',0,'fijo'],['Supermercado',0,'variable'],['Salir a comer',0,'variable'],['Kiosco',0,'variable'],['Farmacia',0,'variable'],['Transporte',0,'variable']].map(([nombre,monto,tipo])=>({id:uid(),nombre,monto,tipo}));}
 function syncDesg(p){if(!Array.isArray(p.desglose)||!p.desglose.length)return;for(const d of p.desglose){if(!d.id)d.id=uid();d.monto=+d.monto||0;if(!d.tipo)d.tipo='fijo';}p.valor=Math.round(p.desglose.reduce((a,d)=>a+d.monto,0)*100)/100;}
 function setParamValor(p,v){
   if(!(Array.isArray(p.desglose)&&p.desglose.length)){p.valor=v;return;}
