@@ -247,6 +247,26 @@ details.sub>summary{cursor:pointer;font-weight:600;font-size:14px}
 .mesbtns{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
 .mesbtns button{font-size:12px;padding:4px 0;border-radius:4px}
 .mesbtns button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.board{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:start}
+.board-main{display:grid;gap:14px;min-width:0}
+.board-side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 168px);display:grid;gap:10px;align-content:start;min-width:0;padding-bottom:4px}
+.side-tiles{grid-template-columns:1fr 1fr}
+.side-tiles .tile{padding:10px 12px}
+.side-tiles .tile .v{font-size:17px}
+.side-tabs{display:flex}
+.side-tabs button{flex:1}
+.side-p{padding:12px;max-height:calc(100vh - 330px);min-height:220px;overflow:auto}
+.board-side #pal-rows .pal-t>span{display:none}
+.board-side #pal-rows .pal-t b{font-size:13.5px;line-height:1.3}
+.board-side #pal-rows .pal-t .pal-n{font-size:10px;height:18px;padding:0 6px}
+.board-side #pal-rows .pal-bar{margin-top:4px}
+.board-side .fields{grid-template-columns:1fr}
+.board-side #pal-rows .pal.acc{grid-template-columns:42px minmax(0,1fr) auto;grid-template-areas:"n t v" "n ed ed";padding:8px 0}
+.board-side #pal-rows .pal.acc>.sw{grid-area:n}.board-side #pal-rows .pal-t{grid-area:t}.board-side #pal-rows .pal-v{grid-area:v;font-size:13px}.board-side .pal-ed{grid-area:ed}
+.board-side .pal.on{margin:0 -12px;padding-inline:12px}
+.board-side .paso{grid-template-columns:34px minmax(0,1fr)}.board-side .paso-a{grid-column:2;justify-content:flex-start}
+.board-side .probar{grid-template-columns:1fr}
+@media (max-width:900px){.board{grid-template-columns:1fr}.board-side{position:static}.side-p{max-height:none}}
 .strip{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
 .strip-k{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);min-width:72px}
 .chipx{font-size:12.5px;padding:3px 10px;border-radius:14px;background:var(--surface);color:var(--fg2);border:1px solid var(--line)}
@@ -407,6 +427,7 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
   <button role="tab" data-tab="modelos" aria-selected="true">Modelos</button>
   <button role="tab" data-tab="describir" aria-selected="false">Describir</button>
   <button role="tab" data-tab="jugar" aria-selected="false">Jugar</button>
+  <button role="tab" data-tab="analisis" aria-selected="false">Análisis</button>
   <button role="tab" data-tab="guia" aria-selected="false">Guía</button>
   <span class="status" id="status">Cargando…</span>
 </nav>
@@ -554,66 +575,73 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
     <p class="note" id="vivo-manda"></p>
   </div>
 
-  <div class="panel">
-    <div class="loopchips" id="loopchips"></div>
-    <div class="mapwrap" id="mapwrap"><div class="diagram" id="diagram"></div><div class="strip" id="strip-med"></div><div class="strip" id="strip-par"></div><div class="pop" id="pop" hidden></div></div>
-    <div class="btns" style="justify-content:space-between;margin-top:6px">
-      <p class="hint-p">Caja: lo que se acumula. Válvula: lo que la llena o la vacía. Línea fina: de qué depende cada válvula ahora, con + si se mueven juntos y − si al revés. Tocá cualquier cosa para editarla: una caja, una válvula, un medidor o una perilla. Una R o una B muestra ese bucle solo. Arrastrá para acomodar.</p>
-      <div class="btns"><button id="btn-nueva-caja" class="primary" style="margin:0;font-size:13px;padding:4px 10px">+ caja</button><button id="btn-relayout" class="small" style="margin:0">Reacomodar</button></div>
-    </div>
-  </div>
-
-  <div class="tiles" id="tiles"></div>
-  <div class="chart-wrap">
-    <div class="legend" id="legend"></div>
-    <div id="chart"></div>
-    <div class="tip" id="tip"></div>
-    <p class="note" id="sim-lede" style="margin-top:8px"></p>
-  </div>
-
-  <div class="panel">
-    <div class="btns" style="justify-content:space-between;align-items:flex-start">
-      <div><h2 style="margin:0">Acciones</h2><p class="note" id="esc-lede"></p></div>
-      <div class="btns"><button id="btn-nueva-pal">+ nueva acción</button><button id="btn-adopt-all" class="primary">Adoptar las activas</button><button id="btn-reset">Apagar todas</button></div>
-    </div>
-    <div id="pal-rows" style="margin-top:6px"></div>
-    <form id="pal-form" class="pal-form" hidden>
-      <h3 id="pal-form-t" style="margin:0 0 8px">Nueva acción</h3>
-      <input type="hidden" id="np-id">
-      <div class="fields">
-        <div class="field"><label for="np-nombre">Nombre</label><input type="text" id="np-nombre" placeholder="qué hacés, en pocas palabras" required></div>
-        <div class="field"><label for="np-campo">Qué cambia</label><select id="np-campo"></select></div>
-        <div class="field"><label for="np-fuerza">Fuerza (Meadows)</label><select id="np-fuerza"></select></div>
-        <div class="field" style="grid-column:1/-1"><label for="np-valor">Nuevo valor</label><input type="text" id="np-valor" class="f" placeholder="tocá los elementos de abajo, o escribí un número" required autocomplete="off" spellcheck="false"></div>
-        <div class="field" style="grid-column:1/-1"><label for="np-desc">Por qué</label><input type="text" id="np-desc" placeholder="opcional"></div>
+  <div class="board">
+    <div class="board-main">
+      <div class="panel">
+        <div class="loopchips" id="loopchips"></div>
+        <div class="mapwrap" id="mapwrap"><div class="diagram" id="diagram"></div><div class="strip" id="strip-med"></div><div class="strip" id="strip-par"></div><div class="pop" id="pop" hidden></div></div>
+        <div class="btns" style="justify-content:space-between;margin-top:6px">
+          <p class="hint-p">Tocá cualquier cosa para editarla: una caja, una válvula, un medidor o una perilla. Una R o una B muestra ese bucle solo. Arrastrá para acomodar.</p>
+          <div class="btns"><button id="btn-nueva-caja" class="primary" style="margin:0;font-size:13px;padding:4px 10px">+ caja</button><button id="btn-relayout" class="small" style="margin:0">Reacomodar</button></div>
+        </div>
       </div>
-      <div class="btns" style="margin-top:10px"><button type="submit" id="np-submit" class="primary">Agregar y activar</button><button type="button" id="np-cancel">Cancelar</button></div>
-    </form>
-    <details class="sub"><summary>Mover un número</summary>
-      <p class="hint-p" style="margin:8px 0">Cada parámetro con "hoy" al lado. Los marcados como externos, como la inflación o el dólar, sirven para probar otro contexto. Lo que muevas corre hasta que lo adoptes o vuelvas a hoy.</p>
-      <div class="probar" id="probar"></div>
-      <div class="btns" id="probar-btns" style="margin-top:8px" hidden><button id="btn-ovr-adopt" class="primary">Adoptar estos valores</button><button id="btn-ovr-reset">Volver a hoy</button></div>
-    </details>
-    <details class="sub"><summary>Pasa algo</summary>
-      <p class="hint-p" style="margin:8px 0">Un sacudón en el paso donde está el reloj: un stock pierde o gana un 20 % de golpe.</p>
-      <div class="btns" id="shocks"></div>
-    </details>
-  </div>
+      <div class="chart-wrap">
+        <div class="legend" id="legend"></div>
+        <div id="chart"></div>
+        <div class="tip" id="tip"></div>
+        <p class="note" id="sim-lede" style="margin-top:8px"></p>
+      </div>
+    </div>
 
-  <div class="panel">
-    <h2 style="margin:0">Plan de mejora</h2><p class="note" id="plan-lede"></p>
-    <ol class="plan" id="plan"></ol>
-    <form id="plan-form" class="btns" style="margin-top:10px"><input type="text" id="plan-nuevo" placeholder="un paso propio, en una frase" style="flex:1;min-width:200px"><button type="submit">Agregar al plan</button></form>
-    <details class="sub"><summary>Para sumar al plan</summary><div id="plan-sug" style="margin-top:8px"></div></details>
-  </div>
+    <aside class="board-side">
+      <div class="tiles side-tiles" id="tiles"></div>
+      <div class="seg side-tabs" id="side-tabs"><button data-side="acc" class="on">Acciones</button><button data-side="plan">Plan</button><button data-side="num">Números</button></div>
 
+      <div class="panel side-p" id="side-acc">
+        <p class="note" id="esc-lede"></p>
+        <div class="btns" style="margin:8px 0"><button id="btn-nueva-pal" class="small" style="margin:0">+ nueva acción</button><button id="btn-adopt-all" class="small primary" style="margin:0">Adoptar las activas</button><button id="btn-reset" class="small" style="margin:0">Apagar todas</button></div>
+        <div id="pal-rows"></div>
+        <form id="pal-form" class="pal-form" hidden>
+          <h3 id="pal-form-t" style="margin:0 0 8px">Nueva acción</h3>
+          <input type="hidden" id="np-id">
+          <div class="fields">
+            <div class="field"><label for="np-nombre">Nombre</label><input type="text" id="np-nombre" placeholder="qué hacés, en pocas palabras" required></div>
+            <div class="field"><label for="np-campo">Qué cambia</label><select id="np-campo"></select></div>
+            <div class="field"><label for="np-fuerza">Fuerza (Meadows)</label><select id="np-fuerza"></select></div>
+            <div class="field" style="grid-column:1/-1"><label for="np-valor">Nuevo valor</label><input type="text" id="np-valor" class="f" placeholder="tocá los elementos de abajo, o escribí un número" required autocomplete="off" spellcheck="false"></div>
+            <div class="field" style="grid-column:1/-1"><label for="np-desc">Por qué</label><input type="text" id="np-desc" placeholder="opcional"></div>
+          </div>
+          <div class="btns" style="margin-top:10px"><button type="submit" id="np-submit" class="primary">Agregar y activar</button><button type="button" id="np-cancel">Cancelar</button></div>
+        </form>
+      </div>
+
+      <div class="panel side-p" id="side-plan" hidden>
+        <p class="note" id="plan-lede"></p>
+        <ol class="plan" id="plan"></ol>
+        <form id="plan-form" class="btns" style="margin-top:10px"><input type="text" id="plan-nuevo" placeholder="un paso propio" style="flex:1;min-width:140px"><button type="submit" class="small" style="margin:0">Agregar</button></form>
+        <details class="sub"><summary>Para sumar al plan</summary><div id="plan-sug" style="margin-top:8px"></div></details>
+      </div>
+
+      <div class="panel side-p" id="side-num" hidden>
+        <p class="hint-p">Cada número con "hoy" al lado. Los externos, como la inflación o el dólar, sirven para probar otro contexto. Lo que muevas corre hasta que lo adoptes o vuelvas a hoy.</p>
+        <div class="probar" id="probar"></div>
+        <div class="btns" id="probar-btns" style="margin-top:8px" hidden><button id="btn-ovr-adopt" class="small primary" style="margin:0">Adoptar estos valores</button><button id="btn-ovr-reset" class="small" style="margin:0">Volver a hoy</button></div>
+        <h3 style="margin-top:14px">Pasa algo</h3>
+        <p class="hint-p" style="margin-bottom:8px">Un sacudón en el paso donde está el reloj: un stock pierde o gana un 20 % de golpe.</p>
+        <div class="btns" id="shocks"></div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<section class="tab" id="tab-analisis" hidden>
+  <div class="sec-head"><h2>Alertas</h2><p>Lo que el motor ve en el escenario que está corriendo en Jugar: patrones, reglas y la meta.</p></div>
   <div class="cards" id="cards"></div>
-
   <details class="plain"><summary>Lo que está bien <span id="ok-count"></span></summary><div class="cards" id="cards-ok" style="margin-top:10px"></div></details>
-  <details class="plain" id="dec-box"><summary>Decisiones y avances <span id="dec-count"></span></summary><div id="decisiones" style="margin-top:8px"></div></details>
-  <details class="plain"><summary>Las tres capas</summary><div class="capas" id="capas" style="margin-top:10px"></div></details>
-  <details class="plain"><summary>Escenarios adversos <span id="estres-count"></span></summary><div id="estres-rows" style="margin-top:8px"></div></details>
-  <details class="plain"><summary>Acciones que sugiere el motor <span id="sug-count"></span></summary><div id="sug-rows" style="margin-top:8px"></div></details>
+  <details class="plain" id="dec-box" open><summary>Decisiones y avances <span id="dec-count"></span></summary><div id="decisiones" style="margin-top:8px"></div></details>
+  <details class="plain" open><summary>Las tres capas</summary><div class="capas" id="capas" style="margin-top:10px"></div></details>
+  <details class="plain"><summary>Escenarios adversos <span id="estres-count"></span></summary><p class="hint-p" style="margin:8px 0">Qué pasa si lo que no controlás se mueve un 20 % en tu contra.</p><div id="estres-rows"></div></details>
+  <details class="plain"><summary>Acciones que sugiere el motor <span id="sug-count"></span></summary><p class="hint-p" style="margin:8px 0">Parámetros que controlás, movidos un 10 % a favor. Son palancas débiles; las fuertes las escribís vos.</p><div id="sug-rows"></div></details>
   <details class="plain"><summary>Tabla paso a paso</summary><div class="tbl" id="tbl"></div></details>
 </section>
 
@@ -664,6 +692,8 @@ button.small{font-size:13px;padding:4px 10px;margin-top:6px;color:var(--accent-i
     <p>El motor busca circuitos en tus fórmulas: un flujo que depende de un stock y a la vez lo mueve. Mide, sobre el estado actual, cómo cambia cada flujo cuando el stock sube un 1 %, y arma las vueltas de hasta tres stocks. <b>R</b> es un bucle de refuerzo: el producto de los signos es positivo y el stock se alimenta a sí mismo. <b>B</b> es un bucle de balance: el producto es negativo y el flujo lo empuja de vuelta. El porcentaje es la ganancia por paso: cuánto del stock vuelve a entrar o salir en una vuelta. Un flujo con umbral, como "si hay plata, comprá", no aparece hasta que el estado está cerca del umbral.</p>
     <h3>Plan de mejora</h3>
     <p>Es tu lista. Se arma con lo que el motor sugiere (alertas y palancas con efecto positivo que todavía no están en el plan) y con pasos propios. Cada paso tiene estado; los que son palancas se activan o adoptan desde el plan, y al adoptarlos quedan hechos solos. Una sugerencia desaparece cuando la agregás, así nada se repite.</p>
+    <h3>El tablero</h3>
+    <p>En Jugar, el mapa ocupa el centro y a su lado queda un panel fijo con el objetivo ahora y al final, y tres pestañas: <b>Acciones</b> para prender, adoptar, editar o crear; <b>Plan</b> para ordenar los pasos; <b>Números</b> para mover cualquier parámetro o meter un sacudón. Lo que tocás ahí se ve enseguida en el mapa y en el gráfico. Todo el análisis (alertas, decisiones, capas, escenarios adversos, sugerencias y la tabla) está en la pestaña <b>Análisis</b>.</p>
     <h3>Jugar: correr, probar, decidir</h3>
     <p><b>▶</b> corre el tiempo sobre la simulación: el dibujo, los números, el gráfico y los bucles muestran cada paso. Tocar el gráfico lleva el reloj a ese punto. Los tres modos comparan escenarios: <b>Base</b> es el modelo sin tocar, <b>Con lo activo</b> incluye las palancas prendidas y los números que moviste, <b>Plan completo</b> prende además todas las palancas pendientes del plan. <b>Activar</b> una palanca es probarla; <b>adoptar</b> es decidir: pasa al modelo y queda registrada. Los <b>deslizadores</b> mueven cualquier parámetro propio mientras ves "hoy" al lado; se adoptan o se vuelven atrás. <b>Pasa algo</b> mete un sacudón en el paso donde está el reloj. <b>Quedarme acá</b> mueve el modelo hasta ese momento: los stocks pasan a lo que ves y el reloj del modelo avanza; desde ahí volvés a decidir. Todo queda en "Decisiones y avances", con deshacer. Los <b>parámetros externos</b> (inflación, tipo de cambio) no se sugieren como acciones: alimentan los escenarios adversos.</p>
     <h3>Qué detecta el motor por su cuenta</h3>
@@ -1046,6 +1076,7 @@ function compute(){
   const me=metaEstado(sim);
   if(me)C.push(me.ok?{tipo:'meta',nivel:'ok',titulo:'La meta llega',texto:`"${M.meta}": ${fmtV(me.v,M.objetivo)} en el ${M.unidad||'paso'} ${(M.t0||0)+me.plazo}, contra ${fmtV(M.metaValor,M.objetivo)} que te propusiste.`}:{tipo:'meta',nivel:'atencion',titulo:'La meta no llega',texto:`"${M.meta}": ${fmtV(me.v,M.objetivo)} en el ${M.unidad||'paso'} ${(M.t0||0)+me.plazo}, contra ${fmtV(M.metaValor,M.objetivo)}.${me.hit>=0?` Llega recién en el ${M.unidad||'paso'} ${(M.t0||0)+me.hit}.`:' No llega dentro del horizonte.'} Mirá qué palanca acorta más la brecha.`,fuerza:3});
   renderCards(C);renderPlan(C,sens);renderCapas(C,sim);
+  {const na=C.filter(x=>x.nivel!=='ok').length;const tb=document.querySelector('.tabs [data-tab="analisis"]');if(tb)tb.textContent=na?`Análisis (${na})`:'Análisis';}
   renderProbar();renderShocks();renderTable(sim);
   renderVivo();
   const box=$('errores');const u=[...new Set(errs)];box.hidden=!u.length;box.innerHTML=u.map(e=>'• '+esc(e)).join('<br>');
@@ -1319,7 +1350,7 @@ function renderSens(list){
 }
 const ES_ASG=src=>/(^|;)\s*[A-Za-z_][A-Za-z0-9_]*\s*=(?!=)/.test(String(src||''));
 function abrirPalForm(k){
-  const f=$('pal-form');f.hidden=false;const pl=k?M.palancas.find(p=>p.k===k):null;
+  setSide('acc');const f=$('pal-form');f.hidden=false;const pl=k?M.palancas.find(p=>p.k===k):null;
   $('np-id').value=pl?pl.k:'';
   $('np-campo').innerHTML=[...M.params.filter(p=>!p.externo||(pl&&pl.campo===p.k)).map(p=>[p.k,'parámetro: '+(p.nombre||p.k)]),...M.stocks.map(s=>[s.k,'stock inicial: '+(s.nombre||s.k)])].map(([kk,n])=>`<option value="${esc(kk)}">${esc(n)}</option>`).join('');
   $('np-fuerza').innerHTML=Object.keys(FUERZA).sort((a,b)=>b-a).map(n=>`<option value="${n}">${n} · ${FUERZA[n]}</option>`).join('');
@@ -1686,6 +1717,11 @@ function cadaHtml(f){
 document.addEventListener('change',e=>{const el=e.target;if(!el.closest('#pop')||el.dataset.field!=='cada')return;const f=M.flujos.find(x=>x.id===el.dataset.id);if(!f)return;f.cada=el.value;if(f.cada==='puntual'&&!mesesDe(f).length)f.meses=[12];renderList('flujos');dirty=true;compute();scheduleSave();renderPop();});
 document.addEventListener('click',e=>{const b=e.target.closest('#pop [data-mes]');if(!b||!POP)return;const f=M.flujos.find(x=>x.k===POP.k);if(!f)return;const ms=new Set(mesesDe(f));const m=+b.dataset.mes;ms.has(m)?ms.delete(m):ms.add(m);f.meses=[...ms].sort((a,c)=>a-c);renderList('flujos');dirty=true;compute();scheduleSave();renderPop();});
 
+/* ---------- panel lateral del tablero ---------- */
+function setSide(n){document.querySelectorAll('#side-tabs [data-side]').forEach(b=>b.classList.toggle('on',b.dataset.side===n));for(const k of ['acc','plan','num'])$('side-'+k).hidden=k!==n;try{localStorage.setItem(KEY+'-side',n);}catch(e){}}
+document.addEventListener('click',e=>{const b=e.target.closest('#side-tabs [data-side]');if(b)setSide(b.dataset.side);});
+document.addEventListener('DOMContentLoaded',()=>{});
+
 /* ---------- eventos ---------- */
 document.addEventListener('input',e=>{
   const el=e.target;
@@ -1906,6 +1942,7 @@ let cur=null;try{cur=localStorage.getItem(KEY+'-cur');}catch(e){}
 M=LIB.find(x=>x.id===cur)||LIB[0];
 let tab0='modelos';try{tab0=localStorage.getItem(KEY+'-tab')||'modelos';}catch(e){}
 if(!$('tab-'+tab0))tab0='modelos';showTab(tab0);
+let side0='acc';try{side0=localStorage.getItem(KEY+'-side')||'acc';}catch(e){}if(!['acc','plan','num'].includes(side0))side0='acc';setSide(side0);
 let adv0=false;try{adv0=localStorage.getItem(KEY+'-adv')==='1';}catch(e){}setAdv(adv0);
 renderLib();renderEditor();compute();setStatus('Los cambios se guardan solos');initDb();
 })();
