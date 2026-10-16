@@ -185,7 +185,7 @@ textarea{resize:vertical}
 .chartpanel svg{width:100%;height:auto;display:block}
 .tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:6px 8px;font-family:var(--mono);font-size:12px;line-height:1.4;box-shadow:0 2px 8px rgba(0,0,0,.12);white-space:nowrap;display:none}
 .col>.panel{min-width:0}
-.lev{min-width:0;margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
+.lev{min-width:0}
 .lev-h{display:flex;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 .lev-row{display:grid;grid-template-columns:repeat(12,minmax(44px,1fr));gap:4px;overflow-x:auto;scrollbar-width:thin}
 .lv{display:grid;justify-items:center;gap:2px;padding:6px 2px 5px;border-radius:6px;border:1px solid transparent;background:none;color:var(--muted)}
@@ -218,7 +218,8 @@ textarea{resize:vertical}
   </header>
 
   <div class="panel help" id="help" hidden style="margin-bottom:14px">
-    <b>Un sistema, según Donella Meadows, se arma con pocas piezas.</b> Todo se crea tocando el mapa.
+    <div class="lev" id="lev"></div>
+    <p style="margin:14px 0 0"><b>Cómo se arma.</b> Todo se crea tocando el mapa.</p>
     <ul>
       <li><b>Cajas:</b> lo que se acumula (plata, gente, agua, temperatura). Botón "+ caja".</li>
       <li><b>Flujos:</b> lo que entra y sale de una caja. Tocá una caja y agregá uno.</li>
@@ -227,7 +228,6 @@ textarea{resize:vertical}
       <li><b>Flujos de información:</b> las líneas punteadas, qué caja mira cada flujo. Con retardo, el flujo ve el dato tarde (el número en amarillo).</li>
       <li><b>Reglas:</b> en la tarjeta de un flujo, "solo si…" o "como máximo…".</li>
       <li><b>Meta y paradigma:</b> al costado. Con una meta, el motor recomienda qué mover para llegar.</li>
-      <li><b>Las 12 palancas:</b> debajo del mapa, de la más débil a la más fuerte. Tocá una para ver dónde está en tu sistema.</li>
       <li><b>Copiar y pegar:</b> "Copiar" en la tarjeta de una caja o un flujo (o Ctrl+C) y "Pegar" debajo del mapa (o Ctrl+V). Si tenés otra caja abierta al pegar un flujo, el flujo va hacia ella.</li>
     </ul>
   </div>
@@ -237,7 +237,6 @@ textarea{resize:vertical}
       <div class="panel">
         <div class="loopchips" id="loopchips"></div>
         <div class="mapwrap" id="mapwrap"><div class="diagram" id="diagram"></div><div class="pop" id="pop" hidden></div></div>
-        <div class="lev" id="lev"></div>
         <div class="maptools"><span class="hint">Tocá cualquier cosa para editarla. Arrastrá para acomodar.</span><span class="btns"><button id="add-caja" class="primary sm">+ caja</button><button id="paste" class="sm" hidden title="Ctrl+V">Pegar</button><button id="relayout" class="sm">Reacomodar</button></span></div>
       </div>
       <div class="panel chartpanel"><div id="chart"></div><div class="tip" id="tip"></div></div>
@@ -861,7 +860,7 @@ function levSet(){
 function renderLev(){
   const el=$('lev');if(!el)return;
   const sel=LEV.find(x=>x[0]===SEL_LEV);
-  el.innerHTML=`<div class="lev-h"><span>Palancas de Meadows</span><span>más débil → más fuerte</span></div><div class="lev-row">${LEV.map(([n,corto,largo])=>{const c=levCuenta(n);const fuera=n===4||n===1;return `<button class="lv${c?' on':''}${fuera?' fuera':''}${SEL_LEV===n?' sel':''}" data-lev="${n}" title="${n} · ${esc(largo)}"><span class="lv-b"><i style="height:${5+(13-n)*3}px"></i></span>${LEV.find(x=>x[0]===n)[4]}<span class="lv-n">${n}</span><span class="lv-t">${esc(corto)}</span><span class="lv-c">${fuera?'·':c||'—'}</span></button>`;}).join('')}</div>${sel?`<p class="lev-d"><b>${sel[0]} · ${esc(sel[2])}.</b> ${esc(sel[3])} ${levEnEste(sel[0])}</p>`:'<p class="lev-d muted">Tocá una palanca para verla en tu sistema.</p>'}`;
+  el.innerHTML=`<div class="lev-h"><span>Las 12 palancas de Meadows</span><span>más débil → más fuerte</span></div><div class="lev-row">${LEV.map(([n,corto,largo])=>{const c=levCuenta(n);const fuera=n===4||n===1;return `<button class="lv${c?' on':''}${fuera?' fuera':''}${SEL_LEV===n?' sel':''}" data-lev="${n}" title="${n} · ${esc(largo)}"><span class="lv-b"><i style="height:${5+(13-n)*3}px"></i></span>${LEV.find(x=>x[0]===n)[4]}<span class="lv-n">${n}</span><span class="lv-t">${esc(corto)}</span><span class="lv-c">${fuera?'·':c||'—'}</span></button>`;}).join('')}</div>${sel?`<p class="lev-d"><b>${sel[0]} · ${esc(sel[2])}.</b> ${esc(sel[3])} ${levEnEste(sel[0])}</p>`:'<p class="lev-d muted">Donella Meadows ordenó en 12 palancas los lugares donde intervenir un sistema. Tocá una para ver qué es y dónde está en el tuyo.</p>'}`;
 }
 function levEnEste(n){
   const c=levCuenta(n);
@@ -948,7 +947,7 @@ document.addEventListener('click',e=>{
   const t=e.target,b=t.closest('button');
   if(t.closest('#model-btn')){const d=$('model-menu');d.hidden=!d.hidden;MDEL=false;if(!d.hidden)renderMenu();return;}
   if(!t.closest('.mwrap'))$('model-menu').hidden=true;
-  if(t.closest('#help-btn')){const h=$('help');h.hidden=!h.hidden;$('help-btn').setAttribute('aria-expanded',String(!h.hidden));try{localStorage.setItem(KEY+'-help',h.hidden?'0':'1');}catch(x){}return;}
+  if(t.closest('#help-btn')){const h=$('help');h.hidden=!h.hidden;if(h.hidden&&SEL_LEV){SEL_LEV=0;renderLev();renderDiagram();}$('help-btn').setAttribute('aria-expanded',String(!h.hidden));try{localStorage.setItem(KEY+'-help',h.hidden?'0':'1');}catch(x){}return;}
   if(t.closest('#play')){playRun();return;}
   if(t.closest('#speed')){SPI=(SPI+1)%SPEEDS.length;$('speed').textContent=SPEEDS[SPI][1];if(RUN){stopRun();playRun();}return;}
   if(t.closest('#add-caja')||(b&&b.dataset.act==='caja')){nuevaCaja();return;}
