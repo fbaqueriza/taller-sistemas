@@ -202,6 +202,12 @@ textarea{resize:vertical}
 .lvtag{font-family:var(--mono);font-weight:400;font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-left:4px}
 @keyframes flash{0%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
 .flash{animation:flash 1.2s ease-out}
+.gchips{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:8px}
+.gchips .hint{margin-right:2px}
+.gc{font-size:12px;padding:2px 9px;border-radius:12px;color:var(--fg2);display:inline-flex;align-items:center;gap:5px}
+.gc i{width:9px;height:9px;border-radius:50%;border:1px solid var(--line);display:inline-block}
+.gc.on{color:var(--fg);border-color:var(--fg2)}
+.gc.on i{border-color:transparent}
 </style>
 
 <div class="app">
@@ -235,7 +241,7 @@ textarea{resize:vertical}
         <div class="mapwrap" id="mapwrap"><div class="diagram" id="diagram"></div><div class="pop" id="pop" hidden></div></div>
         <div class="maptools"><span class="hint">Tocá cualquier cosa para editarla. Arrastrá para acomodar.</span><span class="btns"><button id="add-caja" class="primary sm">+ caja</button><button id="paste" class="sm" hidden title="Ctrl+V">Pegar</button><button id="relayout" class="sm">Reacomodar</button></span></div>
       </div>
-      <div class="panel chartpanel"><div id="chart"></div><div class="tip" id="tip"></div></div>
+      <div class="panel chartpanel"><div class="gchips" id="gchips"></div><div id="chart"></div><div class="tip" id="tip"></div></div>
     </section>
     <aside class="col">
       <div class="panel" id="meta-p"></div>
@@ -561,12 +567,32 @@ function renderDiagram(){
 /* ---------- gráfico ---------- */
 const COLORS=['var(--s1)','var(--s2)','var(--s3)','var(--s4)','var(--s5)','var(--s6)'];
 function nice(raw){if(raw<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(raw)));const f=raw/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p;}
+function serieOpts(){
+  const mt=M.meta,out=[];
+  if(mt.cajas.length)out.push({k:'_meta',name:mt.cajas.length>1?'Meta (suma)':'Meta',get:r=>r._meta,u:metaUni()});
+  for(const c of M.cajas)out.push({k:c.k,name:c.nombre,get:r=>r[c.k],u:c.unidad||''});
+  for(const f of M.flujos)out.push({k:f.k,name:f.nombre,get:r=>r[f.k],u:uniDe(f.k),flujo:true});
+  return out;
+}
+function serieSel(){
+  const ops=serieOpts();let s=Array.isArray(M.grafico)?M.grafico.filter(k=>ops.some(o=>o.k===k)):[];
+  if(!s.length&&!(Array.isArray(M.grafico)&&M.grafico[0]==='__nada')){const mt=M.meta;if(mt.cajas.length)s.push('_meta');for(const c of M.cajas)if(!(mt.cajas.length===1&&mt.cajas[0]===c.k)&&s.length<6)s.push(c.k);}
+  return s;
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-serie]');if(!b)return;const k=b.dataset.serie,ops=serieOpts();let s=serieSel();
+  if(s.includes(k))s=s.filter(x=>x!==k);
+  else{const u=(ops.find(o=>o.k===k)||{}).u;s=s.filter(x=>(ops.find(o=>o.k===x)||{}).u===u);s.push(k);}
+  M.grafico=s.length?s:['__nada'];renderChart();scheduleSave();
+});
 function renderChart(){
   const n=ROWS.length-1;if(n<1||!M.cajas.length){$('chart').innerHTML='<p class="hint">Acá vas a ver cómo evoluciona el sistema.</p>';return;}
-  const mt=M.meta,metaOn=mt.cajas.length>0,u=metaOn?metaUni():'';
-  const ser=[];
-  if(metaOn)ser.push({name:mt.cajas.length>1?'Meta (suma)':nombre(mt.cajas[0]),get:r=>r._meta,c:'var(--accent)',w:3,u});
-  M.cajas.filter(c=>!(metaOn&&mt.cajas.length===1&&mt.cajas[0]===c.k)).slice(0,5).forEach((c,i)=>ser.push({name:c.nombre,get:r=>r[c.k],c:COLORS[i],w:1.6,u:c.unidad}));
+  const mt=M.meta,u=mt.cajas.length?metaUni():'';
+  const ops=serieOpts(),sel=serieSel();const color=(k,i)=>k==='_meta'?'var(--accent)':COLORS[i%COLORS.length];
+  $('gchips').innerHTML='<span class="hint">Ver:</span>'+ops.map(o=>{const i=sel.indexOf(o.k);return `<button class="gc${i>=0?' on':''}" data-serie="${esc(o.k)}" title="${o.flujo?'flujo':o.k==='_meta'?'meta':'caja'}"><i style="background:${i>=0?color(o.k,i):'transparent'}"></i>${esc(o.name)}</button>`;}).join('');
+  const ser=sel.map((k,i)=>({...ops.find(x=>x.k===k),c:color(k,i),w:k==='_meta'?3:1.8}));
+  if(!ser.length){$('chart').innerHTML='<p class="hint">Elegí arriba qué querés ver.</p>';return;}
+  const metaOn=sel.includes('_meta');
   const mismo=ser.filter(s=>s.u===ser[0].u);
   const W=720,Hh=260,pl=64,pr=175,pt=14,pb=28;
   let lo=0,hi=0;for(const s of mismo)for(const r of ROWS){const v=s.get(r);lo=Math.min(lo,v);hi=Math.max(hi,v);}
