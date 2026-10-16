@@ -184,6 +184,28 @@ textarea{resize:vertical}
 .chartpanel{position:relative}
 .chartpanel svg{width:100%;height:auto;display:block}
 .tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:6px 8px;font-family:var(--mono);font-size:12px;line-height:1.4;box-shadow:0 2px 8px rgba(0,0,0,.12);white-space:nowrap;display:none}
+.col>.panel{min-width:0}
+.lev{min-width:0;margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
+.lev-h{display:flex;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.lev-row{display:grid;grid-template-columns:repeat(12,minmax(44px,1fr));gap:4px;overflow-x:auto;scrollbar-width:thin}
+.lv{display:grid;justify-items:center;gap:2px;padding:6px 2px 5px;border-radius:6px;border:1px solid transparent;background:none;color:var(--muted)}
+.lv:hover{border-color:var(--line)}
+.lv.on{color:var(--fg)}
+.lv.sel{border-color:var(--fg);background:var(--surface-2)}
+.lv-b{height:42px;display:flex;align-items:flex-end}
+.lv-b i{display:block;width:10px;border:1.4px solid currentColor;border-radius:1px}
+.lv.on .lv-b i{background:currentColor}
+.lv.fuera .lv-b i{border-style:dashed}
+.lv-g{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.lv-g .f{fill:currentColor}
+.lv-n{font-family:var(--mono);font-size:11px;font-weight:500}
+.lv-t{font-family:var(--mono);font-size:8.5px;letter-spacing:.02em;text-transform:uppercase;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.lv-c{font-family:var(--mono);font-size:10.5px;color:var(--fg2)}
+.lev-d{font-size:13px;color:var(--fg2);margin:8px 0 0;min-height:1.5em}
+.lev-d b{color:var(--fg)}
+.lvtag{font-family:var(--mono);font-weight:400;font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-left:4px}
+@keyframes flash{0%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+.flash{animation:flash 1.2s ease-out}
 </style>
 
 <div class="app">
@@ -205,6 +227,8 @@ textarea{resize:vertical}
       <li><b>Flujos de información:</b> las líneas punteadas, qué caja mira cada flujo. Con retardo, el flujo ve el dato tarde (el número en amarillo).</li>
       <li><b>Reglas:</b> en la tarjeta de un flujo, "solo si…" o "como máximo…".</li>
       <li><b>Meta y paradigma:</b> al costado. Con una meta, el motor recomienda qué mover para llegar.</li>
+      <li><b>Las 12 palancas:</b> debajo del mapa, de la más débil a la más fuerte. Tocá una para ver dónde está en tu sistema.</li>
+      <li><b>Copiar y pegar:</b> "Copiar" en la tarjeta de una caja o un flujo (o Ctrl+C) y "Pegar" debajo del mapa (o Ctrl+V). Si tenés otra caja abierta al pegar un flujo, el flujo va hacia ella.</li>
     </ul>
   </div>
 
@@ -213,7 +237,8 @@ textarea{resize:vertical}
       <div class="panel">
         <div class="loopchips" id="loopchips"></div>
         <div class="mapwrap" id="mapwrap"><div class="diagram" id="diagram"></div><div class="pop" id="pop" hidden></div></div>
-        <div class="maptools"><span class="hint">Tocá cualquier cosa para editarla. Arrastrá para acomodar.</span><span class="btns"><button id="add-caja" class="primary sm">+ caja</button><button id="relayout" class="sm">Reacomodar</button></span></div>
+        <div class="lev" id="lev"></div>
+        <div class="maptools"><span class="hint">Tocá cualquier cosa para editarla. Arrastrá para acomodar.</span><span class="btns"><button id="add-caja" class="primary sm">+ caja</button><button id="paste" class="sm" hidden title="Ctrl+V">Pegar</button><button id="relayout" class="sm">Reacomodar</button></span></div>
       </div>
       <div class="panel chartpanel"><div id="chart"></div><div class="tip" id="tip"></div></div>
     </section>
@@ -487,8 +512,9 @@ function renderDiagram(){
   const r=ROWS[TCUR]||ROWS[0];const {s,ox,oy,W,H}=LAY.T,P=LAY.pos;const X=k=>ox+s*P[k].x,Y=k=>oy+s*P[k].y;
   const F=M.flujos.filter(f=>P[f.k]);
   const L=LOOPS.slice(0,6),sel=L.find(b=>b.key===SEL_LOOP)||null;
-  const on=k=>sel?sel.edges.some(e=>e.from===k||e.via.k===k||e.to===k):false;
-  const dim=k=>sel&&!on(k)?' dim':'';
+  const LV=sel?null:levSet();
+  const on=k=>sel?sel.edges.some(e=>e.from===k||e.via.k===k||e.to===k):LV?LV.has(k):false;
+  const dim=k=>(sel||LV)&&!on(k)?' dim':'';
   const cut=(t,mx)=>{t=String(t);return t.length>mx?t.slice(0,mx-1)+'…':t;};
   const maxF=Math.max(1e-9,...ROWS.flatMap(q=>F.map(f=>Math.abs(q[f.k]||0))));
   const ptS=(k,tx,ty)=>{const cx=X(k),cy=Y(k),dx=tx-cx,dy=ty-cy,q=Math.min((NW/2+3)/Math.max(1e-6,Math.abs(dx)),(NH/2+3)/Math.max(1e-6,Math.abs(dy)));return [cx+dx*q,cy+dy*q];};
@@ -510,7 +536,7 @@ function renderDiagram(){
     const sx0=X(l.from),sy0=Y(l.from),tx=X(l.to),ty=Y(l.to),dx=tx-sx0,dy=ty-sy0,d=Math.max(1,Math.hypot(dx,dy)),nx=-dy/d,ny=dx/d,bend=bendOf(l.from,l.to);
     const cx=(sx0+tx)/2+nx*bend,cy=(sy0+ty)/2+ny*bend;const [a1x,a1y]=ptS(l.from,cx,cy),[a2x,a2y]=ptV(l.to,cx,cy,15);
     const t=.7,qx=(1-t)**2*a1x+2*(1-t)*t*cx+t*t*a2x,qy=(1-t)**2*a1y+2*(1-t)*t*cy+t*t*a2y;
-    const hl=sel&&sel.edges.some(e=>e.from===l.from&&e.via.k===l.to);const dd=sel&&!hl?' dim':'';
+    const hl=sel?sel.edges.some(e=>e.from===l.from&&e.via.k===l.to):LV?!!(LV.links&&LV.links(l)):false;const dd=(sel||LV)&&!hl?' dim':'';
     infos+=`<path class="info${hl?' hl':''}${dd}" d="M${f1(a1x)} ${f1(a1y)} Q${f1(cx)} ${f1(cy)} ${f1(a2x)} ${f1(a2y)}" marker-end="url(#ahi)"/>`;
     if(l.sign)infos+=`<g class="sg${l.sign<0?' neg':''}${dd}"><circle cx="${f1(qx)}" cy="${f1(qy)}" r="7.5"/><text x="${f1(qx)}" y="${f1(qy+3.6)}">${l.sign>0?'+':'−'}</text></g>`;
     if(l.ret>0){const mx=(1-.4)**2*a1x+2*(1-.4)*.4*cx+.16*a2x,my=(1-.4)**2*a1y+2*(1-.4)*.4*cy+.16*a2y;infos+=`<g class="ret${dd}"><title>${esc(nombre(l.to)+' ve '+nombre(l.from)+' con '+l.ret+' '+(l.ret===1?M.unidad:plural(M.unidad))+' de retardo')}</title><circle cx="${f1(mx)}" cy="${f1(my)}" r="9"/><text x="${f1(mx)}" y="${f1(my+3.4)}">${l.ret}</text></g>`;}
@@ -524,7 +550,7 @@ function renderDiagram(){
     const ks=[...new Set(b.edges.flatMap(e=>[e.from,e.via.k]))].filter(k=>P[k]);if(!ks.length)continue;
     let mx_=ks.reduce((a,k)=>a+X(k),0)/ks.length,my_=ks.reduce((a,k)=>a+Y(k),0)/ks.length;
     if(b.edges.length===1){const e=b.edges[0];const sx0=X(e.from),sy0=Y(e.from),tx=X(e.via.k),ty=Y(e.via.k),dx=tx-sx0,dy=ty-sy0,d=Math.max(1,Math.hypot(dx,dy)),bd=bendOf(e.from,e.via.k),cx=(sx0+tx)/2-dy/d*bd,cy=(sy0+ty)/2+dx/d*bd;const [a1x,a1y]=ptS(e.from,cx,cy);const qx=(a1x+2*cx+tx)/4,qy=(a1y+2*cy+ty)/4;const [px,py]=ptS(e.from,tx,ty);mx_=(qx+(px+tx)/2)/2;my_=(qy+(py+ty)/2)/2;}
-    const c=b.tipo==='R'?'ref':'bal',onL=!sel||b.key===SEL_LOOP,rr=12,a0=-Math.PI*0.3,b0=Math.PI*1.2;
+    const c=b.tipo==='R'?'ref':'bal',onL=sel?b.key===SEL_LOOP:LV?LV.tipo===b.tipo:true,rr=12,a0=-Math.PI*0.3,b0=Math.PI*1.2;
     marks+=`<g class="lmark ${c}${onL?'':' dim'}" data-loop="${esc(b.key)}"><title>${esc((b.tipo==='R'?'Bucle de refuerzo':'Bucle de balance')+(b.ret?' con retardo':''))}</title><circle class="bg" cx="${f1(mx_)}" cy="${f1(my_)}" r="16"/><path d="M${f1(mx_+rr*Math.cos(a0))} ${f1(my_+rr*Math.sin(a0))} A${rr} ${rr} 0 1 1 ${f1(mx_+rr*Math.cos(b0))} ${f1(my_+rr*Math.sin(b0))}" marker-end="url(#ahl-${c})"/><text x="${f1(mx_)}" y="${f1(my_+4.5)}">${b.tipo}</text></g>`;
   }
   $('loopchips').innerHTML=L.length?`<button class="lc${sel?'':' on'}" data-loop="">Todo</button>`+L.map(b=>`<button class="lc ${b.tipo==='R'?'ref':'bal'}${b.key===SEL_LOOP?' on':''}" data-loop="${esc(b.key)}"><b>${b.tipo}</b>${esc(b.edges.map(e=>nombre(e.from)+' → '+(e.via.nombre||e.via.k)).join(' → '))}${b.ret?' · con retardo':''}</button>`).join(''):'<span class="hint">Todavía no hay bucles: aparecen cuando un flujo depende de su propia caja.</span>';
@@ -623,10 +649,10 @@ function recomendar(){
   out.sort((a,b)=>b.m/Math.abs(b.f-1)-a.m/Math.abs(a.f-1));
   const top=out.slice(0,3);
   let html=top.map(b=>{const p=M.datos.find(x=>x.k===b.k);const pct=Math.round(Math.abs(b.f-1)*100);const efecto=b.q.e.llega&&(!e0.llega||b.q.e.hit<e0.hit)?(e0.llega?`la meta llega ${e0.hit-b.q.e.hit} ${plural(M.unidad)} antes`:`la meta llega en ${b.q.e.hit} ${plural(M.unidad)}`):`al final ${fmtN(b.q.e.fin,u)} (${b.q.e.fin>=e0.fin?'+':'−'}${fmtN(Math.abs(b.q.e.fin-e0.fin),u)})`;
-    return `<div class="reco"><b>${b.f>1?'Subir':'Bajar'} ${esc(p.nombre)} ${pct} %</b><span>a ${fmtN(b.nv,p.unidad)}: ${efecto}</span><button class="sm" data-reco="${esc(b.k)}" data-v="${b.nv}">Aplicar</button></div>`;}).join('');
+    return `<div class="reco"><b>${b.f>1?'Subir':'Bajar'} ${esc(p.nombre)} ${pct} % <small class="lvtag">palanca 12</small></b><span>a ${fmtN(b.nv,p.unidad)}: ${efecto}</span><button class="sm" data-reco="${esc(b.k)}" data-v="${b.nv}">Aplicar</button></div>`;}).join('');
   if(!top.length){
     const c=M.meta.cajas[0];
-    html=`<p class="hint" style="margin-bottom:8px">Ningún parámetro que controlás mejora la meta moviéndolo un poco. Probá cambiar la estructura:</p><div class="reco"><b>Un bucle de ${M.meta.sentido==='mas'?'refuerzo':'balance'} en ${esc(nombre(c))}</b><span>${M.meta.sentido==='mas'?'que crezca en proporción a sí misma':'que se acerque sola a un nivel'}</span><button class="sm" data-bucle="${M.meta.sentido==='mas'?'R':'B'}" data-caja="${esc(c)}">Crear</button></div>`;
+    html=`<p class="hint" style="margin-bottom:8px">Ningún parámetro que controlás mejora la meta moviéndolo un poco. Probá cambiar la estructura:</p><div class="reco"><b>Un bucle de ${M.meta.sentido==='mas'?'refuerzo':'balance'} en ${esc(nombre(c))} <small class="lvtag">palanca ${M.meta.sentido==='mas'?7:8}</small></b><span>${M.meta.sentido==='mas'?'que crezca en proporción a sí misma':'que se acerque sola a un nivel'}</span><button class="sm" data-bucle="${M.meta.sentido==='mas'?'R':'B'}" data-caja="${esc(c)}">Crear</button></div>`;
   }
   box.innerHTML=head+html;
 }
@@ -672,7 +698,7 @@ function popCaja(s){
     <div class="sec"><span class="pop-k">Entra</span>${ins.map(f=>li(f,'in')).join('')||'<span class="hint">nada</span>'}<div class="btns"><button class="sm" data-nuevo="in">+ algo que entra</button></div></div>
     <div class="sec"><span class="pop-k">Sale</span>${outs.map(f=>li(f,'out')).join('')||'<span class="hint">nada</span>'}<div class="btns"><button class="sm" data-nuevo="out">+ algo que sale</button>${otros.length?`<select data-nuevo-a style="width:auto"><option value="">+ pasa a otra caja…</option>${otros.map(x=>`<option value="${esc(x.k)}">${esc(x.nombre)}</option>`).join('')}</select>`:''}</div></div>
     <div class="sec"><span class="pop-k">Bucles</span><div class="btns"><button class="sm" data-bucle="R" data-caja="${esc(s.k)}" title="un flujo que entra en proporción a lo que ya hay">+ de refuerzo (crece sobre sí misma)</button><button class="sm" data-bucle="B" data-caja="${esc(s.k)}" title="un flujo que la acerca a un nivel deseado">+ de balance (busca un nivel)</button></div></div>
-    <div class="sec">${POP.del?`<div class="confirm">Se borra la caja y los flujos que solo la conectaban a ella. <button class="sm" data-borrar-ok>Borrar</button> <button class="sm" data-borrar-no>Cancelar</button></div>`:`<div><button class="del" data-borrar>Borrar caja</button></div>`}</div>`;
+    <div class="sec">${POP.del?`<div class="confirm">Se borra la caja y los flujos que solo la conectaban a ella. <button class="sm" data-borrar-ok>Borrar</button> <button class="sm" data-borrar-no>Cancelar</button></div>`:`<div class="btns" style="justify-content:space-between"><button class="sm" data-copiar title="Ctrl+C · copia la caja con sus flujos hacia afuera">Copiar</button><button class="del" data-borrar>Borrar caja</button></div>`}</div>`;
 }
 function popFlujo(f){
   const det=detectar(f.formula),tipo=POP.tipo||det.tipo;const V=k=>POP[k]??det[k]??'';
@@ -689,7 +715,7 @@ function popFlujo(f){
     <div class="sec"><span class="pop-k">Cuánto por ${esc(M.unidad)}</span><select data-tipo>${TIPOS.map(([k,t])=>`<option value="${k}"${k===tipo?' selected':''}>${t}</option>`).join('')}</select>${cuerpo}${lectura}</div>
     <div class="sec" id="pop-mira">${miraHtml(f)}</div>
     <div class="sec"><span class="pop-k">Reglas</span>${reglas||'<span class="hint">Sin reglas.</span>'}<div class="btns"><button class="sm" data-rnew="si">+ solo si…</button><button class="sm" data-rnew="max">+ como máximo…</button></div></div>
-    <div class="sec"><div><button class="del" data-borrar>Borrar flujo</button></div></div>`;
+    <div class="sec"><div class="btns" style="justify-content:space-between"><button class="sm" data-copiar title="Ctrl+C">Copiar</button><button class="del" data-borrar>Borrar flujo</button></div></div>`;
 }
 function miraHtml(f){
   const mira=varsDe(f.formula).filter(k=>M.cajas.some(c=>c.k===k));
@@ -750,7 +776,7 @@ function stopRun(){if(RUN){clearInterval(RUN);RUN=null;}$('play').textContent='�
 function playRun(){if(RUN){stopRun();renderDiagram();return;}if(TCUR>=ROWS.length-1)TCUR=0;$('play').textContent='❚❚';RUN=setInterval(()=>{if(TCUR>=ROWS.length-1){stopRun();renderTiempo();return;}TCUR++;renderTiempo();},SPEEDS[SPI][0]);}
 function renderTiempo(){
   const sc=$('scrub');sc.max=ROWS.length-1;if(document.activeElement!==sc)sc.value=TCUR;$('tl').textContent=TCUR?M.unidad+' '+TCUR:'hoy';
-  LINKS=enlaces(ROWS[TCUR]);LOOPS=bucles(LINKS);renderDiagram();renderChart();if(POP&&M.flujos.some(f=>f.k===POP.k))popRead();
+  LINKS=enlaces(ROWS[TCUR]);LOOPS=bucles(LINKS);renderLev();renderDiagram();renderChart();if(POP&&M.flujos.some(f=>f.k===POP.k))popRead();
 }
 
 /* ---------- cálculo ---------- */
@@ -786,6 +812,137 @@ async function initDb(){
   }catch(e){}
 }
 
+/* ---------- las 12 palancas de Meadows ---------- */
+const G=d=>`<svg class="lv-g" viewBox="0 0 20 20" aria-hidden="true">${d}</svg>`;
+const LEV=[
+  [12,'parám.','Parámetros','Números: tasas, montos, límites. Es la palanca más débil y la más usada.',G('<line x1="3" y1="10" x2="17" y2="10"/><circle cx="12" cy="10" r="2.6" class="f"/>')],
+  [11,'buffers','Buffers','El tamaño de las cajas que amortiguan. Una caja grande aguanta sacudones, pero cambia lento.',G('<rect x="5" y="3.5" width="10" height="13" rx="1"/><rect x="6.5" y="10" width="7" height="5" class="f" stroke="none"/>')],
+  [10,'estruct.','Estructura','Cómo están conectadas cajas y flujos. Cambiarla cuesta, pero redefine todo lo demás.',G('<rect x="2" y="7" width="5" height="6"/><rect x="13" y="7" width="5" height="6"/><line x1="7" y1="10" x2="13" y2="10"/>')],
+  [9,'retardo','Retardos','Cuánto tarda la información en llegar. Con retardos, los bucles de balance se pasan y oscilan.',G('<circle cx="10" cy="10" r="7"/><path d="M10 5.5V10l3 2"/>')],
+  [8,'balance','Bucles de balance','Lo que corrige hacia un nivel. Tiene que ser tan fuerte como lo que intenta corregir.',G('<line x1="2.5" y1="9" x2="17.5" y2="9"/><path d="M10 9l-3.5 7h7z"/>')],
+  [7,'refuerzo','Bucles de refuerzo','Lo que crece o cae sobre sí mismo. Frenar uno desbocado suele valer más que acelerar otro.',G('<path d="M10 10.5a1 1 0 1 1 1-1a2.5 2.5 0 1 1-3.5-1.6a4.5 4.5 0 1 1-2 6.6a6.5 6.5 0 1 1 11-3"/>')],
+  [6,'info','Flujos de información','Quién ve qué. Mostrar algo que nadie miraba cambia el comportamiento sin tocar nada más.',G('<path d="M2 10q8-8 16 0q-8 8-16 0z"/><circle cx="10" cy="10" r="2.2" class="f"/>')],
+  [5,'reglas','Reglas','Incentivos, permisos, límites: cuándo corre un flujo y cuánto como máximo.',G('<path d="M5 17.5V3h10l-2.5 3.5L15 10H5"/>')],
+  [4,'autoorg.','Auto-organización','La capacidad del sistema de cambiar su propia estructura. No se simula: pensala desde el paradigma.',G('<circle cx="10" cy="4" r="1.8"/><path d="M10 6v4M10 10l-5.5 6M10 10l5.5 6M10 10v6"/>')],
+  [3,'meta','Meta','Para qué existe el sistema. Cambiarla reorienta todas las palancas de abajo.',G('<circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3.6"/><circle cx="10" cy="10" r="1.1" class="f"/>')],
+  [2,'paradigma','Paradigma','La idea de fondo de la que surge el sistema: qué es la plata, qué es el éxito.',G('<rect x="3" y="3" width="14" height="14"/><circle cx="10" cy="10" r="4"/>')],
+  [1,'trasc.','Trascender el paradigma','Saber que ningún paradigma es la verdad. Es la palanca más fuerte y no se simula.',G('<rect x="3" y="5" width="12" height="12" stroke-dasharray="2 2"/><path d="M9 11L17.5 2.5M12.5 2.5h5v5"/>')]
+];
+let SEL_LEV=0;
+function levCuenta(n){
+  switch(n){
+    case 12:return M.datos.length;
+    case 11:return M.cajas.length;
+    case 10:return M.flujos.length;
+    case 9:return LINKS.filter(l=>l.ret>0).length;
+    case 8:return LOOPS.filter(b=>b.tipo==='B').length;
+    case 7:return LOOPS.filter(b=>b.tipo==='R').length;
+    case 6:return LINKS.length;
+    case 5:return M.flujos.reduce((a,f)=>a+f.reglas.length,0);
+    case 3:return M.meta.cajas.length&&M.meta.valor!==null&&M.meta.valor!==''?1:0;
+    case 2:return String(M.paradigma||'').trim()?1:0;
+    default:return 0;
+  }
+}
+function levSet(){
+  const n=SEL_LEV;if(!n)return null;const S=new Set();let links=null,tipo=null;
+  const datos=new Set(M.datos.map(p=>p.k));
+  if(n===12)for(const f of M.flujos){if(varsDe(f.formula).some(v=>datos.has(v))||f.reglas.some(r=>datos.has(r.b)))S.add(f.k);}
+  else if(n===11)for(const c of M.cajas)S.add(c.k);
+  else if(n===10)for(const f of M.flujos)S.add(f.k);
+  else if(n===9){for(const l of LINKS)if(l.ret>0){S.add(l.from);S.add(l.to);}links=l=>l.ret>0;}
+  else if(n===8||n===7){tipo=n===8?'B':'R';const ks=new Set();for(const b of LOOPS)if(b.tipo===tipo)for(const e of b.edges){S.add(e.from);S.add(e.via.k);S.add(e.to);ks.add(e.from+'>'+e.via.k);}links=l=>ks.has(l.from+'>'+l.to);}
+  else if(n===6){for(const l of LINKS){S.add(l.from);S.add(l.to);}links=()=>true;}
+  else if(n===5){for(const f of M.flujos)if(f.reglas.length)S.add(f.k);links=l=>!!l.regla;}
+  else if(n===3)for(const k of M.meta.cajas)S.add(k);
+  else return null;
+  S.links=links;S.tipo=tipo;return S;
+}
+function renderLev(){
+  const el=$('lev');if(!el)return;
+  const sel=LEV.find(x=>x[0]===SEL_LEV);
+  el.innerHTML=`<div class="lev-h"><span>Palancas de Meadows</span><span>más débil → más fuerte</span></div><div class="lev-row">${LEV.map(([n,corto,largo])=>{const c=levCuenta(n);const fuera=n===4||n===1;return `<button class="lv${c?' on':''}${fuera?' fuera':''}${SEL_LEV===n?' sel':''}" data-lev="${n}" title="${n} · ${esc(largo)}"><span class="lv-b"><i style="height:${5+(13-n)*3}px"></i></span>${LEV.find(x=>x[0]===n)[4]}<span class="lv-n">${n}</span><span class="lv-t">${esc(corto)}</span><span class="lv-c">${fuera?'·':c||'—'}</span></button>`;}).join('')}</div>${sel?`<p class="lev-d"><b>${sel[0]} · ${esc(sel[2])}.</b> ${esc(sel[3])} ${levEnEste(sel[0])}</p>`:'<p class="lev-d muted">Tocá una palanca para verla en tu sistema.</p>'}`;
+}
+function levEnEste(n){
+  const c=levCuenta(n);
+  if(n===4||n===1)return '';
+  if(n===12)return c?`En tu sistema: ${c}. Movelos al costado.`:'Todavía no hay.';
+  if(n===3)return c?'Ya tenés una meta.':'Todavía no fijaste una meta: hacelo al costado.';
+  if(n===2)return c?'Ya escribiste uno.':'Escribilo al costado, debajo de la meta.';
+  if(n===9&&!c)return 'No hay: en la tarjeta de un flujo podés hacer que vea una caja con retardo.';
+  if(n===8&&!c)return 'No hay: la tarjeta de una caja crea uno con "+ de balance".';
+  if(n===7&&!c)return 'No hay: la tarjeta de una caja crea uno con "+ de refuerzo".';
+  if(n===5&&!c)return 'No hay: en la tarjeta de un flujo, "+ solo si…" o "+ como máximo…".';
+  return c?`En tu sistema: ${c}.`:'Todavía no hay.';
+}
+function flash(el){if(!el)return;el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');el.scrollIntoView({block:'nearest',behavior:'smooth'});}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-lev]');if(!b)return;const n=+b.dataset.lev;
+  SEL_LEV=SEL_LEV===n?0:n;SEL_LOOP='';renderLev();renderDiagram();
+  if(SEL_LEV===12)flash($('datos-p'));else if(SEL_LEV===3)flash($('meta-p'));else if(SEL_LEV===2){const t=$('paradigma');flash(t);}
+});
+
+/* ---------- copiar y pegar ---------- */
+let CLIP=null;try{CLIP=JSON.parse(localStorage.getItem(KEY+'-clip')||'null');}catch(e){}
+function refsDatos(fl){const s=new Set();for(const f of fl){for(const v of varsDe(f.formula))s.add(v);for(const r of f.reglas){if(r.a&&!esNum(r.a))s.add(r.a);if(r.b&&!esNum(r.b))s.add(r.b);}}return M.datos.filter(p=>s.has(p.k));}
+function copiar(){
+  if(!POP)return;const c=M.cajas.find(x=>x.k===POP.k),f=M.flujos.find(x=>x.k===POP.k);
+  if(c){const fl=M.flujos.filter(x=>(x.desde===c.k&&!x.hacia)||(x.hacia===c.k&&!x.desde));CLIP={tipo:'caja',modelo:M.id,caja:structuredClone(c),flujos:structuredClone(fl),datos:structuredClone(refsDatos(fl)),nombre:c.nombre};}
+  else if(f)CLIP={tipo:'flujo',modelo:M.id,flujos:[structuredClone(f)],datos:structuredClone(refsDatos([f])),nombre:f.nombre};
+  else return;
+  try{localStorage.setItem(KEY+'-clip',JSON.stringify(CLIP));}catch(e){}
+  setStatus('Copiado: '+CLIP.nombre);renderPaste();
+}
+function renderPaste(){const b=$('paste');if(!b)return;b.hidden=!CLIP;if(CLIP)b.textContent='Pegar «'+(CLIP.nombre.length>18?CLIP.nombre.slice(0,17)+'…':CLIP.nombre)+'»';}
+function remap(src,map){
+  let s=String(src||'');const ks=Object.keys(map).filter(k=>map[k]&&map[k]!==k);
+  ks.forEach((k,i)=>{s=s.replace(new RegExp('\\b'+k+'\\b','g'),'\u0001'+i+'\u0001');});
+  ks.forEach((k,i)=>{s=s.split('\u0001'+i+'\u0001').join(map[k]);});
+  return s;
+}
+function pegar(){
+  if(!CLIP)return;const C=structuredClone(CLIP);const map={};
+  const sel=POP?M.cajas.find(x=>x.k===POP.k):null;const existe=k=>!!k&&M.cajas.some(x=>x.k===k);
+  let nc=null;
+  if(C.tipo==='caja'){const nm=C.caja.nombre+' (copia)';nc={...C.caja,k:keyLibre(nm),nombre:nm};map[C.caja.k]=nc.k;M.cajas.push(nc);}
+  // parámetros: los que solo usa lo copiado se duplican; los compartidos se comparten; los que faltan se agregan
+  const propios=new Set(C.flujos.map(f=>f.k));
+  const usaOtro=k=>M.flujos.some(f=>!propios.has(f.k)&&(varsDe(f.formula).includes(k)||f.reglas.some(r=>r.a===k||r.b===k)));
+  for(const p of C.datos){
+    if(!M.datos.some(x=>x.k===p.k)){M.datos.push(p);continue;}
+    if(C.modelo===M.id&&!usaOtro(p.k)&&(nc||p.unidad==='%')){const nm=nc&&p.nombre.includes(C.caja.nombre)?p.nombre.split(C.caja.nombre).join(nc.nombre):p.nombre+' (copia)';const np={...p,k:keyLibre(nm),nombre:nm};M.datos.push(np);map[p.k]=np.k;}
+  }
+  let abrirK=nc?nc.k:null;
+  for(const f of C.flujos){
+    const fm={...map};let desde=f.desde,hacia=f.hacia;
+    if(nc){desde=map[desde]||desde;hacia=map[hacia]||hacia;}
+    else{
+      if(sel&&sel.k!==f.desde&&sel.k!==f.hacia){if(f.hacia){fm[f.hacia]=sel.k;hacia=sel.k;}else{fm[f.desde]=sel.k;desde=sel.k;}}
+      if(desde&&!existe(desde)){const n=(M.cajas.find(x=>x.k!==hacia)||{}).k||'';fm[f.desde]=n;desde=n;}
+      if(hacia&&!existe(hacia)){const n=(M.cajas.find(x=>x.k!==desde)||{}).k||'';fm[f.hacia]=n;hacia=n;}
+    }
+    if(!desde&&!hacia)continue;
+    const nm=nc?(f.nombre.includes(C.caja.nombre)?f.nombre.split(C.caja.nombre).join(nc.nombre):f.nombre+' · '+nc.nombre):f.nombre+' (copia)';
+    const nf={...f,k:keyLibre(nm),nombre:nm,desde,hacia,formula:remap(f.formula,fm),retardos:{},reglas:f.reglas.map(r=>({...r,id:uid(),a:fm[r.a]||r.a,b:fm[r.b]||r.b}))};
+    for(const S in f.retardos)nf.retardos[fm[S]||S]=f.retardos[S];
+    M.flujos.push(nf);if(!abrirK)abrirK=nf.k;
+  }
+  cambio(true);renderDatos();renderMeta();
+  if(abrirK)popOpen(abrirK);
+  setStatus('Pegado');
+}
+document.addEventListener('click',e=>{
+  if(e.target.closest('#paste')){pegar();return;}
+  const b=e.target.closest('#pop [data-copiar]');if(b)copiar();
+});
+document.addEventListener('keydown',e=>{
+  if(!(e.ctrlKey||e.metaKey))return;const tag=(document.activeElement||{}).tagName;
+  if(['INPUT','TEXTAREA','SELECT'].includes(tag)&&document.activeElement.type!=='checkbox'&&document.activeElement.type!=='range')return;
+  const k=e.key.toLowerCase();
+  if(k==='c'&&POP){e.preventDefault();copiar();}
+  else if(k==='v'&&CLIP){e.preventDefault();pegar();}
+});
+
 /* ---------- eventos ---------- */
 document.addEventListener('click',e=>{
   const t=e.target,b=t.closest('button');
@@ -796,7 +953,7 @@ document.addEventListener('click',e=>{
   if(t.closest('#speed')){SPI=(SPI+1)%SPEEDS.length;$('speed').textContent=SPEEDS[SPI][1];if(RUN){stopRun();playRun();}return;}
   if(t.closest('#add-caja')||(b&&b.dataset.act==='caja')){nuevaCaja();return;}
   if(t.closest('#relayout')){layout(true);renderDiagram();scheduleSave();return;}
-  const lc=t.closest('[data-loop]');if(lc){SEL_LOOP=SEL_LOOP===lc.dataset.loop?'':lc.dataset.loop;renderDiagram();return;}
+  const lc=t.closest('[data-loop]');if(lc){SEL_LOOP=SEL_LOOP===lc.dataset.loop?'':lc.dataset.loop;SEL_LEV=0;renderLev();renderDiagram();return;}
   if(!b){if(POP&&t.closest('#mapwrap')&&!t.closest('#pop')&&!t.closest('[data-node]'))popClose();return;}
   const d=b.dataset;
   // menú de modelos
@@ -863,7 +1020,7 @@ document.addEventListener('input',e=>{
   if(d.drange||d.dval){const k=d.drange||d.dval,p=M.datos.find(x=>x.k===k);if(!p||el.value==='')return;p.valor=d.dval&&d.pct?+el.value/100:+el.value;const other=document.querySelector(d.drange?`[data-dval="${k}"]`:`[data-drange="${k}"]`);if(other)other.value=d.drange?disp(p):p.valor;{const s=document.querySelector(`[data-dfmt="${k}"]`);if(s)s.textContent=fmtN(p.valor,p.unidad);}dirty=true;scheduleCompute();scheduleSave();return;}
   if(el.id==='scrub'){TCUR=+el.value;stopRun();renderTiempo();return;}
   if(d.fl==='formula'){const f=M.flujos.find(x=>x.k===POP?.k);if(f){f.formula=el.value.trim()||'0';popRead();popMira();dirty=true;LAY.key='';scheduleCompute();scheduleSave();}return;}
-  if(d.m==='paradigma'||d.meta==='texto'){if(d.m)M.paradigma=el.value;else M.meta.texto=el.value;scheduleSave();return;}
+  if(d.m==='paradigma'||d.meta==='texto'){if(d.m){M.paradigma=el.value;renderLev();}else M.meta.texto=el.value;scheduleSave();return;}
   if(d.c==='hoy'&&POP){const c=M.cajas.find(x=>x.k===POP.k);if(c&&el.value!==''){c.hoy=+el.value;scheduleCompute();scheduleSave();}return;}
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(POP)popClose();$('model-menu').hidden=true;}if(e.key==='Enter'&&e.target.matches('#pop input[type=text],#pop input[type=number]'))e.target.blur();});
@@ -878,7 +1035,7 @@ try{const r=localStorage.getItem(KEY);if(r){const L=JSON.parse(r);if(Array.isArr
 if(!LIB.length)LIB=EJ.map(([,f])=>{const m=normalize(f());return m;});
 let cur=null;try{cur=localStorage.getItem(KEY+'-cur');}catch(e){}
 try{if(localStorage.getItem(KEY+'-help')!=='0'&&!localStorage.getItem(KEY)){$('help').hidden=false;$('help-btn').setAttribute('aria-expanded','true');}}catch(e){}
-abrir(LIB.find(x=>x.id===cur)||LIB[0]);setStatus('');initDb();
+abrir(LIB.find(x=>x.id===cur)||LIB[0]);renderPaste();setStatus('');initDb();
 })();
 </script>
 </body>
