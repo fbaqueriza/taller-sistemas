@@ -192,10 +192,6 @@ textarea{resize:vertical}
 .lv:hover{border-color:var(--line)}
 .lv.on{color:var(--fg)}
 .lv.sel{border-color:var(--fg);background:var(--surface-2)}
-.lv-b{height:42px;display:flex;align-items:flex-end}
-.lv-b i{display:block;width:10px;border:1.4px solid currentColor;border-radius:1px}
-.lv.on .lv-b i{background:currentColor}
-.lv.fuera .lv-b i{border-style:dashed}
 .lv-g{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
 .lv-g .f{fill:currentColor}
 .lv-n{font-family:var(--mono);font-size:11px;font-weight:500}
@@ -860,7 +856,7 @@ function levSet(){
 function renderLev(){
   const el=$('lev');if(!el)return;
   const sel=LEV.find(x=>x[0]===SEL_LEV);
-  el.innerHTML=`<div class="lev-h"><span>Las 12 palancas de Meadows</span><span>más débil → más fuerte</span></div><div class="lev-row">${LEV.map(([n,corto,largo])=>{const c=levCuenta(n);const fuera=n===4||n===1;return `<button class="lv${c?' on':''}${fuera?' fuera':''}${SEL_LEV===n?' sel':''}" data-lev="${n}" title="${n} · ${esc(largo)}"><span class="lv-b"><i style="height:${5+(13-n)*3}px"></i></span>${LEV.find(x=>x[0]===n)[4]}<span class="lv-n">${n}</span><span class="lv-t">${esc(corto)}</span><span class="lv-c">${fuera?'·':c||'—'}</span></button>`;}).join('')}</div>${sel?`<p class="lev-d"><b>${sel[0]} · ${esc(sel[2])}.</b> ${esc(sel[3])} ${levEnEste(sel[0])}</p>`:'<p class="lev-d muted">Donella Meadows ordenó en 12 palancas los lugares donde intervenir un sistema. Tocá una para ver qué es y dónde está en el tuyo.</p>'}`;
+  el.innerHTML=`<div class="lev-h"><span>Las 12 palancas de Meadows</span><span>más débil → más fuerte</span></div><div class="lev-row">${LEV.map(([n,corto,largo])=>{const c=levCuenta(n);const fuera=n===4||n===1;return `<button class="lv${c?' on':''}${fuera?' fuera':''}${SEL_LEV===n?' sel':''}" data-lev="${n}" title="${n} · ${esc(largo)}">${LEV.find(x=>x[0]===n)[4]}<span class="lv-n">${n}</span><span class="lv-t">${esc(corto)}</span><span class="lv-c">${fuera?'·':c||'—'}</span></button>`;}).join('')}</div>${sel?`<p class="lev-d"><b>${sel[0]} · ${esc(sel[2])}.</b> ${esc(sel[3])} ${levEnEste(sel[0])}</p>`:'<p class="lev-d muted">Donella Meadows ordenó en 12 palancas los lugares donde intervenir un sistema. Tocá una para ver qué es y dónde está en el tuyo.</p>'}`;
 }
 function levEnEste(n){
   const c=levCuenta(n);
