@@ -208,6 +208,22 @@ textarea{resize:vertical}
 .gc i{width:9px;height:9px;border-radius:50%;border:1px solid var(--line);display:inline-block}
 .gc.on{color:var(--fg);border-color:var(--fg2)}
 .gc.on i{border-color:transparent}
+#io-p svg{width:100%;height:auto;display:block;margin-top:10px}
+.io-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.io-t{background:var(--surface-2);border-radius:6px;padding:8px 10px;display:grid;gap:2px}
+.io-t span{font-size:12px;color:var(--fg2)}
+.io-t b{font-family:var(--mono);font-size:17px;font-weight:500}
+.io-t b.good{color:var(--good)}.io-t b.crit{color:var(--crit)}
+.io-t.ok{background:var(--good-soft)}.io-t.no{background:var(--crit-soft)}
+.io-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.io-cols>div{display:grid;gap:4px;align-content:start}
+.io-f{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:5px 8px 8px;border:none;background:none;text-align:left;font-size:13px;border-radius:4px}
+.io-f:hover{background:var(--surface-2)}
+.io-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.io-v{font-family:var(--mono);font-size:12.5px;color:var(--fg2)}
+.io-b{position:absolute;left:8px;bottom:3px;height:3px;border-radius:2px;display:block}
+.io-b.good{background:var(--good)}.io-b.crit{background:var(--crit)}
+@media (max-width:560px){.io-tiles{grid-template-columns:1fr}.io-cols{grid-template-columns:1fr}}
 </style>
 
 <div class="app">
@@ -229,6 +245,7 @@ textarea{resize:vertical}
       <li><b>Bucles:</b> aparecen solos cuando un flujo depende de su propia caja. <b>R</b> refuerza (crece sobre sí mismo), <b>B</b> equilibra (busca un nivel). La tarjeta de una caja tiene atajos para crear cada uno.</li>
       <li><b>Flujos de información:</b> las líneas punteadas, qué caja mira cada flujo. Con retardo, el flujo ve el dato tarde (el número en amarillo).</li>
       <li><b>Reglas:</b> en la tarjeta de un flujo, "solo si…" o "como máximo…".</li>
+      <li><b>Entradas y salidas:</b> debajo del gráfico, lo que entra desde afuera y sale hacia afuera, y cuánto queda. Tocá un flujo para abrirlo.</li>
       <li><b>Meta y paradigma:</b> al costado. Con una meta, el motor recomienda qué mover para llegar.</li>
       <li><b>Copiar y pegar:</b> "Copiar" en la tarjeta de una caja o un flujo (o Ctrl+C) y "Pegar" debajo del mapa (o Ctrl+V). Si tenés otra caja abierta al pegar un flujo, el flujo va hacia ella.</li>
     </ul>
@@ -242,6 +259,7 @@ textarea{resize:vertical}
         <div class="maptools"><span class="hint">Tocá cualquier cosa para editarla. Arrastrá para acomodar.</span><span class="btns"><button id="add-caja" class="primary sm">+ caja</button><button id="paste" class="sm" hidden title="Ctrl+V">Pegar</button><button id="relayout" class="sm">Reacomodar</button></span></div>
       </div>
       <div class="panel chartpanel"><div class="gchips" id="gchips"></div><div id="chart"></div><div class="tip" id="tip"></div></div>
+      <div class="panel" id="io-p"></div>
     </section>
     <aside class="col">
       <div class="panel" id="meta-p"></div>
@@ -797,7 +815,7 @@ function stopRun(){if(RUN){clearInterval(RUN);RUN=null;}$('play').textContent='�
 function playRun(){if(RUN){stopRun();renderDiagram();return;}if(TCUR>=ROWS.length-1)TCUR=0;$('play').textContent='❚❚';RUN=setInterval(()=>{if(TCUR>=ROWS.length-1){stopRun();renderTiempo();return;}TCUR++;renderTiempo();},SPEEDS[SPI][0]);}
 function renderTiempo(){
   const sc=$('scrub');sc.max=ROWS.length-1;if(document.activeElement!==sc)sc.value=TCUR;$('tl').textContent=TCUR?M.unidad+' '+TCUR:'hoy';
-  LINKS=enlaces(ROWS[TCUR]);LOOPS=bucles(LINKS);renderLev();renderDiagram();renderChart();if(POP&&M.flujos.some(f=>f.k===POP.k))popRead();
+  LINKS=enlaces(ROWS[TCUR]);LOOPS=bucles(LINKS);renderLev();renderDiagram();renderChart();renderIO();if(POP&&M.flujos.some(f=>f.k===POP.k))popRead();
 }
 
 /* ---------- cálculo ---------- */
@@ -962,6 +980,44 @@ document.addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();
   if(k==='c'&&POP){e.preventDefault();copiar();}
   else if(k==='v'&&CLIP){e.preventDefault();pegar();}
+});
+
+/* ---------- entradas y salidas: lo que cruza el borde del sistema ---------- */
+function renderIO(){
+  const box=$('io-p');if(!box)return;
+  const ent=M.flujos.filter(f=>!f.desde&&f.hacia),sal=M.flujos.filter(f=>f.desde&&!f.hacia);
+  const head=`<h2>Entradas y salidas <small>lo que cruza el borde del sistema</small></h2>`;
+  if(!ent.length&&!sal.length){box.innerHTML=head+'<p class="hint">Acá vas a ver lo que entra desde afuera y lo que sale hacia afuera. Lo que pasa entre cajas no cuenta.</p>';return;}
+  const n=ROWS.length-1,r=ROWS[TCUR]||ROWS[0];
+  const u=uniDe((ent[0]||sal[0]).k);const mezcla=[...ent,...sal].some(f=>uniDe(f.k)!==u);
+  const sum=(L,row)=>L.reduce((a,f)=>a+(row[f.k]||0),0);
+  const E=sum(ent,r),S=sum(sal,r),neto=E-S;
+  const lista=(L,tot,cls)=>L.map(f=>{const v=r[f.k]||0;const p=tot>0?Math.abs(v)/tot:0;return `<button class="io-f" data-io="${esc(f.k)}"><span class="io-n">${esc(f.nombre)}</span><span class="io-v">${fmtK(v,f.k)}</span><i class="io-b ${cls}" style="width:${(p*100).toFixed(1)}%"></i></button>`;}).join('');
+  const cuando=TCUR?`en ${M.unidad} ${TCUR}`:'hoy';
+  // acumulado hasta el momento del reloj
+  let aE=0,aS=0;for(let i=0;i<=TCUR&&i<n;i++){aE+=sum(ent,ROWS[i]);aS+=sum(sal,ROWS[i]);}
+  const tiles=`<div class="io-tiles"><div class="io-t"><span>Entra ${cuando}</span><b class="good">${fmtN(E,u)}</b></div><div class="io-t"><span>Sale ${cuando}</span><b class="crit">${fmtN(S,u)}</b></div><div class="io-t ${neto>=0?'ok':'no'}"><span>${neto>=0?'Queda':'Falta'} ${cuando}</span><b>${fmtN(Math.abs(neto),u)}</b></div></div>`;
+  const cols=`<div class="io-cols"><div><span class="pop-k">Entra desde afuera</span>${lista(ent,E,'good')||'<span class="hint">nada</span>'}</div><div><span class="pop-k">Sale hacia afuera</span>${lista(sal,S,'crit')||'<span class="hint">nada</span>'}</div></div>`;
+  // gráfico: entradas vs salidas en el tiempo
+  const W=720,Hh=170,pl=64,pr=96,pt=12,pb=26;
+  const eS=ROWS.map(q=>sum(ent,q)),sS=ROWS.map(q=>sum(sal,q));
+  let lo=0,hi=Math.max(1e-9,...eS,...sS);const step=nice(hi/4);hi=Math.ceil(hi/step)*step;
+  const x=t=>pl+(W-pl-pr)*t/n,y=v=>pt+(Hh-pt-pb)*(1-(v-lo)/(hi-lo));
+  let g='';for(let v=lo;v<=hi+1e-9;v+=step)g+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="${v===0?'var(--axis)':'var(--grid)'}"/><text x="${pl-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--mono)">${fmtN(v,u)}</text>`;
+  const xs=n<=12?2:n<=36?6:n<=72?12:24;for(let t=0;t<=n;t+=xs)g+=`<text x="${x(t)}" y="${Hh-8}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="var(--mono)">${t===0?'hoy':t}</text>`;
+  // franja entre las dos líneas: verde si entra más, roja si sale más
+  let bands='';for(let i=0;i<n;i++){const a=eS[i]-sS[i],b=eS[i+1]-sS[i+1];const c=(a+b)/2>=0?'var(--good)':'var(--crit)';bands+=`<polygon points="${x(i)},${y(eS[i])} ${x(i+1)},${y(eS[i+1])} ${x(i+1)},${y(sS[i+1])} ${x(i)},${y(sS[i])}" fill="${c}" opacity=".12"/>`;}
+  const path=(arr,c)=>`<path d="${arr.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join('')}" fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="round"/>`;
+  const endl=`<text x="${W-pr+8}" y="${y(eS[n])+4}" font-size="11" fill="var(--good)" font-family="var(--mono)">entra ${fmtN(eS[n],u)}</text><text x="${W-pr+8}" y="${y(sS[n])+(Math.abs(y(sS[n])-y(eS[n]))<14?(y(sS[n])>=y(eS[n])?14:-10):4)}" font-size="11" fill="var(--crit)" font-family="var(--mono)">sale ${fmtN(sS[n],u)}</text>`;
+  const cur=`<line x1="${x(TCUR)}" x2="${x(TCUR)}" y1="${pt}" y2="${Hh-pb}" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="2 3"/>`;
+  const chart=`<svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Entradas y salidas en el tiempo"><g>${g}</g>${bands}${path(eS,'var(--good)')}${path(sS,'var(--crit)')}${endl}${cur}<rect x="${pl}" y="${pt}" width="${W-pl-pr}" height="${Hh-pt-pb}" fill="transparent" data-iohit style="cursor:pointer"/></svg>`;
+  const acum=TCUR?`<p class="hint" style="margin-top:6px">Acumulado hasta el ${M.unidad} ${TCUR}: entró ${fmtN(aE,u)}, salió ${fmtN(aS,u)}, ${aE-aS>=0?'quedó':'faltó'} ${fmtN(Math.abs(aE-aS),u)}.</p>`:'';
+  box.innerHTML=head+tiles+cols+chart+acum+(mezcla?'<p class="hint">Hay flujos en distintas unidades; los totales suman todo igual.</p>':'');
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-io]');if(b){popOpen(b.dataset.io);$('mapwrap').scrollIntoView({block:'nearest',behavior:'smooth'});return;}
+  const h=e.target.closest('[data-iohit]');if(!h)return;
+  const svg=h.closest('svg'),rc=svg.getBoundingClientRect(),W=720,pl=64,pr=96,n=ROWS.length-1;const px=(e.clientX-rc.left)*W/rc.width;TCUR=Math.max(0,Math.min(n,Math.round((px-pl)/(W-pl-pr)*n)));stopRun();renderTiempo();
 });
 
 /* ---------- eventos ---------- */
