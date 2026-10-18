@@ -247,6 +247,21 @@ textarea{resize:vertical}
 .it-vez{display:inline-flex;align-items:center;gap:4px}.it-vez input{width:58px;font-family:var(--mono);padding:3px 5px}
 .chip.f{border-color:var(--good)}.ch-f{color:var(--good);font-weight:600}
 @media (max-width:560px){.it{grid-template-columns:minmax(0,1fr) 120px 24px}.it-hoy{grid-column:1/3;text-align:left}}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:700px){.comp-grid{grid-template-columns:1fr}}
+.comp h3{font-family:var(--display);font-size:14px;margin:0 0 6px;display:flex;justify-content:space-between;align-items:baseline}
+.comp h3 small{font-family:var(--mono);font-weight:500;font-size:13px;color:var(--fg2)}
+.comp-b{display:grid;grid-template-columns:120px minmax(0,1fr);gap:10px;align-items:start}
+.torta{width:120px;height:120px}
+.torta path{stroke:var(--surface);stroke-width:1.5;cursor:default}
+.cleg{display:grid;gap:3px;max-height:260px;overflow-y:auto;overflow-x:hidden;padding-right:4px}
+.cl{position:relative;display:grid;grid-template-columns:10px minmax(0,1fr) auto 46px;gap:6px;align-items:center;font-size:12.5px;padding:2px 2px 5px;border-radius:4px}
+.cl[data-comp-it]{cursor:pointer}.cl[data-comp-it]:hover{background:var(--surface-2)}
+.cl i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.cl-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cl-v{font-family:var(--mono);font-size:12px;color:var(--fg2)}
+.cl-p{font-family:var(--mono);font-size:12px;text-align:right}
+.cl b{position:absolute;left:18px;bottom:1px;height:2px;border-radius:1px;opacity:.6}
 </style>
 
 <div class="app">
@@ -293,7 +308,7 @@ textarea{resize:vertical}
   <section id="tablero" hidden>
     <div class="tab-head"><div class="io-tiles" id="tab-tiles"></div><label class="tab-ini" id="tab-inicio" hidden>Empieza en<input type="month" data-m-inicio></label></div>
     <div class="tab-grid">
-      <div class="col"><div class="panel" id="tab-ent"></div><div class="panel" id="tab-sal"></div><div class="panel" id="tab-chart"></div></div>
+      <div class="col"><div class="panel" id="tab-comp"></div><div class="panel" id="tab-ent"></div><div class="panel" id="tab-sal"></div><div class="panel" id="tab-chart"></div></div>
       <aside class="col"><div class="panel" id="tab-datos"></div></aside>
     </div>
   </section>
@@ -1139,7 +1154,7 @@ function renderTab(){
   }else{
     for(const f of [...ent,...sal]){const g=document.querySelector(`.tf[data-tf="${CSS.escape(f.k)}"]`);if(!g)continue;const tv=g.querySelector('.tf-v');if(tv)tv.textContent=fmtK(r[f.k]||0,f.k);for(const it of (f.items||[])){const h=g.querySelector(`.it[data-it="${CSS.escape(it.id)}"] .it-hoy`);if(h)h.textContent=fmtN(itemValor(it,TCUR,base,null,M),uniDe(f.k));}}
   }
-  renderTabChart(ent,sal,u);
+  renderTabComp(ent,sal);renderTabChart(ent,sal,u);
   const keys=M.datos.map(p=>p.k+'|'+p.unidad+'|'+(p.externo?1:0)).join(',');
   if(TAB_KEYS!==keys){TAB_KEYS=keys;$('tab-datos').innerHTML=`<h2>Perillas <small>movelas y mirá cómo cambia</small></h2>`+(M.datos.length?M.datos.map(p=>{const R=rango(p);return `<div class="dato"><div class="dato-top"><span class="dato-n" title="${esc(p.nombre)}">${esc(p.nombre)}${p.unidad!=='%'&&Math.abs(+p.valor||0)>=1e4?` <small data-dfmt="${esc(p.k)}">${esc(fmtN(p.valor,p.unidad))}</small>`:''}${p.externo?' <small>· externo</small>':''}</span><span class="dval"><input type="number" step="any" data-dval="${esc(p.k)}" data-pct="${p.unidad==='%'?1:''}" value="${disp(p)}">${p.unidad==='%'?'<i>%</i>':''}</span></div><input type="range" data-drange="${esc(p.k)}" min="${R.min}" max="${R.max}" step="${R.step}" value="${+p.valor||0}" aria-label="${esc(p.nombre)}"></div>`;}).join(''):'<p class="hint">Los porcentajes a los que siguen los componentes (inflación, aumentos) aparecen acá. Creá uno desde el mapa, en Parámetros.</p>');}
   else syncDatos();
@@ -1191,6 +1206,43 @@ document.addEventListener('click',e=>{
   const {it}=itemDe(b);if(!it)return;
   if(d.itDel!==undefined){f.items=f.items.filter(x=>x.id!==it.id);if(!f.items.length){f.items=[];f.formula='0';delete f.items;}cambio(true);renderTab();return;}
   if(d.itMes){const m=+d.itMes;const s=new Set(it.meses||[]);s.has(m)?s.delete(m):s.add(m);it.meses=[...s].sort((a,b)=>a-b);cambio();renderTab();return;}
+});
+
+/* ---------- composición: de qué se compone lo que entra y lo que sale ---------- */
+const PAL=['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#7a4ea8','#0f8f9c','#c44d2e','#6b8e23','#b8860b','#8d6e63','#5c6bc0'];
+let COMP_MODO='mes';
+function partesDe(L,prom){
+  const base={};for(const p of M.datos)base[p.k]=+p.valor||0;const n=ROWS.length-1;const out=[];
+  const val=(fn)=>{if(!prom)return fn(TCUR);let s=0;for(let i=0;i<n;i++)s+=fn(i);return n?s/n:0;};
+  for(const f of L){
+    if(tieneItems(f))for(const it of f.items)out.push({n:it.nombre||'(sin nombre)',v:val(t=>itemValor(it,t,base,null,M)),f:f.k,it:it.id});
+    else out.push({n:f.nombre,v:val(t=>(ROWS[t]&&ROWS[t][f.k])||0),f:f.k});
+  }
+  return out.filter(p=>p.v>0).sort((a,b)=>b.v-a.v);
+}
+function tortaHtml(titulo,P,u){
+  const tot=P.reduce((a,p)=>a+p.v,0);
+  if(!tot)return `<div class="comp"><h3>${esc(titulo)}</h3><p class="hint">nada por ahora</p></div>`;
+  let big=P.filter(p=>p.v/tot>=0.015),small=P.filter(p=>p.v/tot<0.015);
+  if(small.length>1)big=[...big,{n:`Otros (${small.length})`,v:small.reduce((a,p)=>a+p.v,0),otros:small}];else if(small.length)big=[...big,...small];
+  const R=62,r=38,cx=80,cy=80;let a0=-Math.PI/2,arcs='';
+  big.forEach((p,i)=>{const a1=a0+2*Math.PI*p.v/tot;const c=PAL[i%PAL.length];
+    const d=a1-a0>=2*Math.PI-1e-6?`M${cx+R} ${cy}A${R} ${R} 0 1 1 ${cx-R} ${cy}A${R} ${R} 0 1 1 ${cx+R} ${cy}Z M${cx+r} ${cy}A${r} ${r} 0 1 0 ${cx-r} ${cy}A${r} ${r} 0 1 0 ${cx+r} ${cy}Z`:
+      `M${(cx+R*Math.cos(a0)).toFixed(1)} ${(cy+R*Math.sin(a0)).toFixed(1)}A${R} ${R} 0 ${a1-a0>Math.PI?1:0} 1 ${(cx+R*Math.cos(a1)).toFixed(1)} ${(cy+R*Math.sin(a1)).toFixed(1)}L${(cx+r*Math.cos(a1)).toFixed(1)} ${(cy+r*Math.sin(a1)).toFixed(1)}A${r} ${r} 0 ${a1-a0>Math.PI?1:0} 0 ${(cx+r*Math.cos(a0)).toFixed(1)} ${(cy+r*Math.sin(a0)).toFixed(1)}Z`;
+    arcs+=`<path d="${d}" fill="${c}" fill-rule="evenodd" data-comp="${i}"><title>${esc(p.n+': '+fmtN(p.v,u)+' · '+nf1.format(p.v/tot*100)+' %')}</title></path>`;a0=a1;});
+  const leg=big.map((p,i)=>`<div class="cl" data-comp="${i}"${p.it?` data-comp-it="${esc(p.it)}" data-comp-f="${esc(p.f)}"`:''} title="${esc(p.otros?p.otros.map(x=>x.n+' '+fmtN(x.v,u)).join(', '):'')}"><i style="background:${PAL[i%PAL.length]}"></i><span class="cl-n">${esc(p.n)}</span><span class="cl-v">${fmtN(p.v,u)}</span><span class="cl-p">${nf1.format(p.v/tot*100)} %</span><b style="width:${(p.v/tot*100).toFixed(1)}%;background:${PAL[i%PAL.length]}"></b></div>`).join('');
+  return `<div class="comp"><h3>${esc(titulo)} <small>${fmtN(tot,u)}</small></h3><div class="comp-b"><svg viewBox="0 0 160 160" class="torta" aria-label="${esc(titulo)}">${arcs}<text x="80" y="76" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="var(--mono)">${big.length} parte${big.length>1?'s':''}</text><text x="80" y="92" text-anchor="middle" font-size="12" font-weight="600" fill="var(--fg)" font-family="var(--mono)">${nf1.format(big[0].v/tot*100)} %</text><title>${esc('la mayor: '+big[0].n)}</title></svg><div class="cleg">${leg}</div></div></div>`;
+}
+function renderTabComp(ent,sal){
+  const el=$('tab-comp');if(!el)return;const prom=COMP_MODO==='prom';const u=uniDe((sal[0]||ent[0]||{k:''}).k);
+  const E=partesDe(ent,prom),S=partesDe(sal,prom);
+  const cuando=prom?`promedio por ${M.unidad} en ${ROWS.length-1} ${plural(M.unidad)}`:(TCUR?`en ${M.unidad} ${TCUR}${M.unidad==='mes'?' · '+fechaTxt(TCUR):''}`:'hoy');
+  let lect='';if(S.length){const tot=S.reduce((a,p)=>a+p.v,0);const top=S.slice(0,3);const pct=top.reduce((a,p)=>a+p.v,0)/tot;lect=`<p class="hint" style="margin:8px 0 0">${top.length>1?`Las ${top.length} salidas más grandes (${top.map(p=>esc(p.n)).join(', ')}) son el ${nf1.format(pct*100)} % de lo que sale.`:`${esc(top[0].n)} es toda la salida.`}${E.length?` Lo que sale es el ${nf1.format(S.reduce((a,p)=>a+p.v,0)/Math.max(1e-9,E.reduce((a,p)=>a+p.v,0))*100)} % de lo que entra.`:''}</p>`;}
+  el.innerHTML=`<h2>Composición <small>${esc(cuando)}</small></h2><div class="btns" style="margin-bottom:8px"><button class="sm${prom?'':' primary'}" data-comp-modo="mes">en este ${esc(M.unidad)}</button><button class="sm${prom?' primary':''}" data-comp-modo="prom">promedio por ${esc(M.unidad)}</button></div><div class="comp-grid">${tortaHtml('Sale',S,u)}${tortaHtml('Entra',E,u)}</div>${lect}`;
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-comp-modo]');if(b){COMP_MODO=b.dataset.compModo;renderTab();return;}
+  const l=e.target.closest('.cl[data-comp-it]');if(l){const row=document.querySelector(`.tf[data-tf="${CSS.escape(l.dataset.compF)}"] .it[data-it="${CSS.escape(l.dataset.compIt)}"]`);if(row){row.scrollIntoView({block:'center',behavior:'smooth'});row.classList.remove('flash');void row.offsetWidth;row.classList.add('flash');}}
 });
 
 /* ---------- eventos ---------- */
