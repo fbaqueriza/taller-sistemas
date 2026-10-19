@@ -335,6 +335,12 @@ details.fold[open]>summary{margin-bottom:6px}
 .pop-ok button{white-space:nowrap;flex:none}
 .pop-ok button.primary{padding:6px 16px;font-weight:600}
 .pop-ok .hint{line-height:1.25}
+.conv-av{font-size:12.5px;background:var(--warn-soft);border-radius:5px;padding:6px 8px}
+.conv-r{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:6px;align-items:center;font-size:14px}
+.conv-r input{font-family:var(--mono);text-align:right}
+.conv-p{font-family:var(--mono);text-align:right;font-weight:500}
+.diagram .convm rect{fill:var(--warn-soft);stroke:var(--warn);stroke-width:1}
+.diagram .convm text{font-family:var(--mono);font-size:10.5px;text-anchor:middle;fill:var(--fg)}
 </style>
 
 <div class="app">
@@ -355,6 +361,7 @@ details.fold[open]>summary{margin-bottom:6px}
       <li><b>Parámetros:</b> los números que usan los flujos. Movelos al costado y mirá cómo se reacomoda todo.</li>
       <li><b>Bucles:</b> aparecen solos cuando un flujo depende de su propia caja. <b>R</b> refuerza (crece sobre sí mismo), <b>B</b> equilibra (busca un nivel). La tarjeta de una caja tiene atajos para crear cada uno.</li>
       <li><b>Flujos de información:</b> las líneas punteadas, qué caja mira cada flujo. Con retardo, el flujo ve el dato tarde (el número en amarillo).</li>
+      <li><b>Conversión:</b> si un flujo va entre cajas con distinta unidad (pesos y dólares, kilos y bolsas), su tarjeta pide cuánto vale una en la otra. Puede ser un parámetro, como el tipo de cambio.</li>
       <li><b>Reglas:</b> en la tarjeta de un flujo, "solo si…" o "como máximo…".</li>
       <li><b>Ingresos y gastos:</b> el botón de arriba abre un tablero aparte. Elegís un lado, ves de qué se compone y movés cada concepto con su deslizador para ver cuánto te queda y si la meta llega. Tocá un concepto para cambiarle la recurrencia o a qué sigue.</li>
       <li><b>Meta y paradigma:</b> al costado. Con una meta, el motor recomienda qué mover para llegar.</li>
@@ -564,7 +571,7 @@ function simular(m,over){
     const row={i,...st,...fv,_clamp:[]};row._meta=m.meta.cajas.reduce((a,k)=>a+(row[k]||0),0);rows.push(row);
     if(i===H)break;
     const d={};for(const s of m.cajas)d[s.k]=0;
-    for(const f of m.flujos){const v=fv[f.k];if(f.desde in d)d[f.desde]-=v;if(f.hacia in d)d[f.hacia]+=v;}
+    for(const f of m.flujos){const v=fv[f.k];if(f.desde in d)d[f.desde]-=v;if(f.hacia in d)d[f.hacia]+=f.conv?v*convDe(f,sc):v;}
     for(const s of m.cajas){let nv=st[s.k]+d[s.k];if(s.min0&&nv<0){nv=0;row._clamp.push(s.k);}st[s.k]=nv;hist[s.k].push(nv);}
   }
   return rows;
@@ -674,6 +681,7 @@ function renderDiagram(){
     if(B)[ex,ey]=ptS(B,vx,vy);else{const dx=vx-X(A),dy=vy-Y(A),d=Math.max(1,Math.hypot(dx,dy));ex=vx+dx/d*46;ey=vy+dy/d*46;marks+=`<circle class="cloud${dd}" cx="${f1(ex)}" cy="${f1(ey)}" r="10"><title>afuera del sistema</title></circle>`;}
     const [p1x,p1y]=ptV(f.k,sx,sy,12),[p2x,p2y]=ptV(f.k,ex,ey,12);
     pipes+=`<line class="pipe${a}${dd}" style="stroke-width:${w}" x1="${f1(sx)}" y1="${f1(sy)}" x2="${f1(p1x)}" y2="${f1(p1y)}"/><line class="pipe${a}${dd}" style="stroke-width:${w}" x1="${f1(p2x)}" y1="${f1(p2y)}" x2="${f1(ex)}" y2="${f1(ey)}" marker-end="url(#ahp)"/>`;
+    if(A&&B&&uniDe(A)!==uniDe(B)){const mx=(p2x+ex)/2,my=(p2y+ey)/2;marks+=`<g class="convm${dd}"><title>${esc((f.conv&&f.conv.v!==''?'convierte ':'sin conversión: ')+uniDe(A)+' → '+uniDe(B))}</title><rect x="${f1(mx-24)}" y="${f1(my-9)}" width="48" height="17" rx="8"/><text x="${f1(mx)}" y="${f1(my+3.5)}">${esc((uniDe(A)||'?')+'→'+(uniDe(B)||'?'))}</text></g>`;}
     let ls=wrapTxt(f.nombre||f.k,18);if(ls.length>2)ls=[ls[0],cut(ls.slice(1).join(' '),18)];
     nodes+=`<g class="vnode${dd}${POP&&POP.k===f.k?' on':''}" data-node="${esc(f.k)}"><title>${esc((f.nombre||f.k)+': '+fmtK(v,f.k))}</title><circle cx="${f1(vx)}" cy="${f1(vy)}" r="14"/><path d="M${f1(vx-7.5)} ${f1(vy-7.5)} L${f1(vx+7.5)} ${f1(vy+7.5)} L${f1(vx+7.5)} ${f1(vy-7.5)} L${f1(vx-7.5)} ${f1(vy+7.5)}Z"/>${ls.map((l,j)=>`<text class="vn" x="${f1(vx)}" y="${f1(vy+30+j*14)}">${esc(l)}</text>`).join('')}<text class="vv" x="${f1(vx)}" y="${f1(vy+31+ls.length*14)}">${fmtK(v,f.k)}</text>${f.reglas.length?`<text class="flag" x="${f1(vx+12)}" y="${f1(vy-10)}"><title>${esc(f.reglas.map(reglaTxt).join('\n'))}</title>⚑</text>`:''}</g>`;
   }
@@ -784,7 +792,7 @@ function renderMetaEstado(){
 /* ---------- parámetros ---------- */
 let DATO_OPEN='',DATO_DEL='';
 function rango(p){const v=+p.valor||0,a=Math.abs(v);if(p.unidad==='%'||(a>0&&a<=1))return {min:0,max:Math.max(0.1,Math.min(1,a*3||0.1)),step:0.001};const mx=a?a*3:100;return {min:v<0?-mx:0,max:mx,step:nice(mx/200)};}
-function usosDe(k){const out=[];for(const f of M.flujos){if(varsDe(f.formula).includes(k)||f.reglas.some(r=>r.a===k||r.b===k))out.push(f.nombre||f.k);}return out;}
+function usosDe(k){const out=[];for(const f of M.flujos){if(varsDe(f.formula).includes(k)||f.reglas.some(r=>r.a===k||r.b===k)||(f.conv&&f.conv.v===k))out.push(f.nombre||f.k);}return out;}
 function renderDatos(){
   const used=new Set(POP&&POP.kind==='flujo'?varsDe((M.flujos.find(f=>f.k===POP.k)||{}).formula||''):[]);
   $('datos-p').innerHTML=`<h2>Parámetros <small>movelos y mirá el mapa</small></h2>`+(M.datos.length?'':`<p class="hint">Los números que usan los flujos: tasas, montos, límites. Aparecen cuando armás un flujo.</p>`)+M.datos.map(p=>{
@@ -882,6 +890,7 @@ function popFlujo(f){
   return `<div class="pop-h"><span class="pop-k">Flujo</span><button class="del" data-close aria-label="cerrar" style="color:var(--fg2);font-size:18px">×</button></div>
     <input type="text" class="big" data-fl="nombre" value="${esc(f.nombre)}" placeholder="¿Qué es? Ej.: sueldo, alquiler, interés">
     <div class="g2"><label>Sale de${sel('desde',f.desde)}</label><label>Entra a${sel('hacia',f.hacia)}</label></div>
+    ${convHtml(f)}
     ${tieneItems(f)?itemsSec(f):`<div class="sec"><span class="pop-k">Cuánto mueve por ${esc(M.unidad)}</span>${tiposGrid(tipo)}${cuerpo}${lectura}</div>`}
     <details class="sec fold" data-fold="mira"${FOLD.has('mira')?' open':''}><summary>Qué mira <small>${esc(miraResumen(f))}</small></summary><div id="pop-mira">${miraHtml(f)}</div></details>
     <details class="sec fold" data-fold="reglas"${FOLD.has('reglas')||f.reglas.length?' open':''}><summary>Reglas <small>${f.reglas.length?f.reglas.length+' · '+esc(f.reglas.map(reglaTxt).join(' · ')):'ninguna'}</small></summary>${reglas||'<span class="hint">Sin reglas.</span>'}<div class="btns"><button class="sm" data-rnew="si">+ solo si…</button><button class="sm" data-rnew="max">+ como máximo…</button></div></details>
@@ -923,14 +932,15 @@ function renderPop(){
 function popOpen(k,snap,nuevo){POP={k,snap:snap||snapModelo(),nuevo:!!nuevo};renderPop();renderDiagram();renderDatos();}
 function popClose(){POP=null;$('pop').hidden=true;$('pop').innerHTML='';renderDiagram();renderDatos();}
 function popPos(){const p=$('pop');if(!POP||p.hidden)return;const r=p.getBoundingClientRect();if(innerWidth>900&&(r.top<60||r.top>innerHeight-80))p.scrollIntoView({block:'nearest'});}
-function popRead(){const f=M.flujos.find(x=>x.k===POP?.k);const el=$('pop-read');if(!f||!el)return;if(tieneItems(f)){el.innerHTML=itemsRead(f);return;}try{const v=compile(f.formula).fn(escena(ROWS[TCUR]));el.innerHTML=`${leer(f.formula)} <b>= ${fmtK(v,f.k)}</b>${TCUR?' en '+M.unidad+' '+TCUR:' hoy'}`;}catch(e){el.innerHTML=`<span class="err">${esc(e.message)}</span>`;}}
+function popRead2(){popConvLect();}
+function popRead(){setTimeout(popRead2,0);const f=M.flujos.find(x=>x.k===POP?.k);const el=$('pop-read');if(!f||!el)return;if(tieneItems(f)){el.innerHTML=itemsRead(f);return;}try{const v=compile(f.formula).fn(escena(ROWS[TCUR]));el.innerHTML=`${leer(f.formula)} <b>= ${fmtK(v,f.k)}</b>${TCUR?' en '+M.unidad+' '+TCUR:' hoy'}`;}catch(e){el.innerHTML=`<span class="err">${esc(e.message)}</span>`;}}
 
 /* ---------- crear y borrar ---------- */
 function keyLibre(base){const k=slug(base);const usados=new Set([...M.cajas,...M.datos,...M.flujos].map(x=>x.k));let i=2,kk=k;while(usados.has(kk)||kk==='t'||FN[kk])kk=k+'_'+(i++);return kk;}
 function rekey(e,nom){if(!e||!String(nom||'').trim())return;const s=slug(nom);if(s===e.k)return;renombrar(e.k,keyLibre(nom));}
 function renombrar(viejo,nuevo){
   if(viejo===nuevo)return;{const e=ent(viejo);if(e)e.k=nuevo;}const re=new RegExp('\\b'+viejo+'\\b','g');
-  for(const f of M.flujos){if(f.desde===viejo)f.desde=nuevo;if(f.hacia===viejo)f.hacia=nuevo;f.formula=String(f.formula).replace(re,nuevo);if(viejo in f.retardos){f.retardos[nuevo]=f.retardos[viejo];delete f.retardos[viejo];}for(const r of f.reglas){if(r.a===viejo)r.a=nuevo;if(r.b===viejo)r.b=nuevo;}for(const it of (f.items||[]))if(it.crece===viejo)it.crece=nuevo;}
+  for(const f of M.flujos){if(f.desde===viejo)f.desde=nuevo;if(f.hacia===viejo)f.hacia=nuevo;f.formula=String(f.formula).replace(re,nuevo);if(viejo in f.retardos){f.retardos[nuevo]=f.retardos[viejo];delete f.retardos[viejo];}for(const r of f.reglas){if(r.a===viejo)r.a=nuevo;if(r.b===viejo)r.b=nuevo;}for(const it of (f.items||[]))if(it.crece===viejo)it.crece=nuevo;if(f.conv&&f.conv.v===viejo)f.conv.v=nuevo;}
   M.meta.cajas=M.meta.cajas.map(k=>k===viejo?nuevo:k);
   for(const P of [LAY.pos,M.lay&&M.lay.pos])if(P&&P[viejo]){P[nuevo]=P[viejo];delete P[viejo];}
   LAY.key=layKey();if(M.lay)M.lay.key=LAY.key;
@@ -954,7 +964,7 @@ function borrarCaja(k){
   for(const f of M.flujos){if(f.desde===k)f.desde='';if(f.hacia===k)f.hacia='';f.formula=sinClave(f.formula,k);delete f.retardos[k];f.reglas=f.reglas.filter(r=>r.a!==k&&r.b!==k);}
   M.flujos=M.flujos.filter(f=>f.desde||f.hacia);M.meta.cajas=M.meta.cajas.filter(x=>x!==k);
 }
-function borrarDato(k){M.datos=M.datos.filter(p=>p.k!==k);for(const f of M.flujos){f.formula=sinClave(f.formula,k);f.reglas=f.reglas.filter(r=>r.a!==k&&r.b!==k);for(const it of (f.items||[]))if(it.crece===k)it.crece='';}}
+function borrarDato(k){const p0=M.datos.find(x=>x.k===k);M.datos=M.datos.filter(p=>p.k!==k);for(const f of M.flujos){f.formula=sinClave(f.formula,k);f.reglas=f.reglas.filter(r=>r.a!==k&&r.b!==k);for(const it of (f.items||[]))if(it.crece===k)it.crece='';if(f.conv&&f.conv.v===k)f.conv.v=p0?String(+p0.valor||0):'';}}
 
 /* ---------- tiempo ---------- */
 let RUN=null,SPI=0;const SPEEDS=[[260,'1×'],[120,'2×'],[50,'4×']];
@@ -1070,7 +1080,7 @@ document.addEventListener('click',e=>{
 
 /* ---------- copiar y pegar ---------- */
 let CLIP=null;try{CLIP=JSON.parse(localStorage.getItem(KEY+'-clip')||'null');}catch(e){}
-function refsDatos(fl){const s=new Set();for(const f of fl){for(const v of varsDe(f.formula))s.add(v);for(const it of (f.items||[]))if(it.crece)s.add(it.crece);for(const r of f.reglas){if(r.a&&!esNum(r.a))s.add(r.a);if(r.b&&!esNum(r.b))s.add(r.b);}}return M.datos.filter(p=>s.has(p.k));}
+function refsDatos(fl){const s=new Set();for(const f of fl){for(const v of varsDe(f.formula))s.add(v);for(const it of (f.items||[]))if(it.crece)s.add(it.crece);if(f.conv&&f.conv.v&&!esNum(f.conv.v))s.add(f.conv.v);for(const r of f.reglas){if(r.a&&!esNum(r.a))s.add(r.a);if(r.b&&!esNum(r.b))s.add(r.b);}}return M.datos.filter(p=>s.has(p.k));}
 function copiar(){
   if(!POP)return;const c=M.cajas.find(x=>x.k===POP.k),f=M.flujos.find(x=>x.k===POP.k);
   if(c){const fl=M.flujos.filter(x=>(x.desde===c.k&&!x.hacia)||(x.hacia===c.k&&!x.desde));CLIP={tipo:'caja',modelo:M.id,caja:structuredClone(c),flujos:structuredClone(fl),datos:structuredClone(refsDatos(fl)),nombre:c.nombre};}
@@ -1412,6 +1422,44 @@ document.addEventListener('change',e=>{
   else if(v==='#new'){const kind=el.dataset.kind;const cur=esNum(POP[id])?+POP[id]:+valorDefecto(f,kind);const nm=(el.dataset.corto||'valor')+' de '+(f.nombre||'flujo');const p=nuevoDato(nm.charAt(0).toUpperCase()+nm.slice(1),cur,kind==='pct'?'%':uniDe(f.hacia||f.desde));POP[id]=p.k;renderDatos();}
   else POP[id]=v;
   const fo=componer2(POP.tipo,POP.a,POP.b,POP.c);if(fo)f.formula=fo;cambio(true);renderPop();
+});
+
+/* ---------- conversión de unidades entre la caja de salida y la de entrada ---------- */
+function convDe(f,sc){const c=f.conv;if(!c||c.v===''||c.v==null)return 1;const v=valDe(c.v,sc);if(!v||!isFinite(v))return 1;return c.uno==='desde'?v:1/v;}
+const necesitaConv=f=>!!f.desde&&!!f.hacia&&uniDe(f.desde)!==uniDe(f.hacia);
+function convLect(f){
+  const r=ROWS[TCUR]||ROWS[0];if(!r)return '';const sale=r[f.k]||0;const fc=convDe(f,escena(r));
+  const ua=uniDe(f.desde),ub=uniDe(f.hacia);
+  if(!f.conv||f.conv.v===''||f.conv.v==null)return `<div class="read" id="conv-lect">Sin conversión: salen ${fmtN(sale,ua)} y entran ${fmtN(sale,ub)}.</div>`;
+  return `<div class="read" id="conv-lect">${TCUR?'En '+esc(M.unidad)+' '+TCUR:'Hoy'} salen <b>${fmtN(sale,ua)}</b> → entran <b>${fmtN(sale*fc,ub)}</b></div>`;
+}
+function convHtml(f){
+  if(!f.desde||!f.hacia)return '';if(!necesitaConv(f)&&!f.conv)return '';
+  const ua=uniDe(f.desde)||'unidad',ub=uniDe(f.hacia)||'unidad';const c=f.conv||{uno:'hacia',v:''};
+  const uno=c.uno==='desde'?ua:ub,otro=c.uno==='desde'?ub:ua;const v=String(c.v??'');const isNum=v===''||esNum(v);
+  const P=M.datos.filter(p=>p.unidad!=='%');const p=isNum?null:M.datos.find(x=>x.k===v);
+  return `<div class="sec conv"><span class="pop-k">Conversión de unidades</span>${!f.conv||v===''?`<span class="conv-av">Sale en <b>${esc(ua)}</b> y entra en <b>${esc(ub)}</b>: decí cuánto vale una en la otra.</span>`:''}
+    <div class="conv-r"><span>1 ${esc(uno)} =</span>${isNum?`<input type="number" step="any" data-conv-v value="${v}" placeholder="¿cuánto?">`:`<b class="conv-p">${esc(fmtN(p?p.valor:0,''))}</b>`}<span>${esc(otro)}</span><button class="sm" data-conv-swap ${isNum?'':'disabled'} title="dar vuelta la equivalencia">⇄</button></div>
+    <select data-conv-src><option value="#num"${isNum?' selected':''}>un número</option>${P.length?`<optgroup label="Parámetros">${P.map(q=>`<option value="${esc(q.k)}"${q.k===v?' selected':''}>${esc(q.nombre)} · ${esc(fmtN(q.valor,q.unidad))}</option>`).join('')}</optgroup>`:''}${isNum?'<option value="#new">↗ guardarlo como parámetro</option>':''}</select>
+    ${convLect(f)}</div>`;
+}
+function popConvLect(){const f=M.flujos.find(x=>x.k===POP?.k);const el=$('conv-lect');if(f&&el)el.outerHTML=convLect(f);}
+document.addEventListener('input',e=>{
+  const el=e.target;if(el.dataset.convV===undefined||!POP)return;const f=M.flujos.find(x=>x.k===POP.k);if(!f)return;
+  f.conv={uno:(f.conv&&f.conv.uno)||'hacia',v:el.value===''?'':String(+el.value)};dirty=true;scheduleCompute();scheduleSave();setTimeout(popConvLect,30);
+});
+document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.convV!==undefined&&POP){cambio();renderPop();}});
+document.addEventListener('click',e=>{
+  const b=e.target.closest('#pop [data-conv-swap]');if(!b||!POP)return;const f=M.flujos.find(x=>x.k===POP.k);if(!f)return;
+  const c=f.conv||{uno:'hacia',v:''};const v=esNum(c.v)&&+c.v?String(+(1/+c.v).toPrecision(6)):c.v;f.conv={uno:c.uno==='desde'?'hacia':'desde',v};cambio();renderPop();
+});
+document.addEventListener('change',e=>{
+  const el=e.target;if(el.dataset.convSrc===undefined||!POP)return;const f=M.flujos.find(x=>x.k===POP.k);if(!f)return;
+  const c=f.conv||{uno:'hacia',v:''};const ua=uniDe(f.desde),ub=uniDe(f.hacia);const uno=c.uno==='desde'?ua:ub,otro=c.uno==='desde'?ub:ua;
+  if(el.value==='#num'){const p=M.datos.find(x=>x.k===c.v);f.conv={...c,v:p?String(+p.valor||0):''};}
+  else if(el.value==='#new'){const p=nuevoDato((ua==='$'&&/^(USD|US\$|u\$s|dólares?)$/i.test(ub))||(ub==='$'&&/^(USD|US\$|u\$s|dólares?)$/i.test(ua))?'Tipo de cambio':`1 ${uno} en ${otro}`,+c.v||1,otro);f.conv={...c,v:p.k};renderDatos();}
+  else f.conv={...c,v:el.value};
+  cambio();renderPop();
 });
 
 /* ---------- eventos ---------- */
