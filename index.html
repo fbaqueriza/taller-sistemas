@@ -316,6 +316,18 @@ details.fold>summary::before{content:"▸"}details.fold[open]>summary::before{co
 details.fold>summary small{font-family:var(--body);text-transform:none;letter-spacing:0;font-size:12px;color:var(--fg2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 details.fold[open]>summary{margin-bottom:6px}
 .diagram .cloud{stroke-width:1.4}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.tbtn{display:grid;gap:0;text-align:left;padding:6px 9px;border-radius:7px;font-size:13px;line-height:1.25}
+.tbtn b{font-weight:600}.tbtn small{color:var(--muted);font-size:11.5px}
+.tbtn.on{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.opr2{display:grid;gap:3px}
+.opr2>span:first-child{font-size:12.5px;color:var(--fg2)}
+.opw{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;align-items:center}
+.opn{display:flex;align-items:center;gap:4px}
+.opn input{font-family:var(--mono);text-align:right;font-size:14px}
+.opn i{font-style:normal;color:var(--muted);font-size:13px;min-width:12px}
+.opn.opp{font-family:var(--mono);font-size:14px;justify-content:flex-end;padding-right:16px;color:var(--fg)}
+.opsrc{font-size:12.5px}
 </style>
 
 <div class="app">
@@ -460,8 +472,9 @@ function astTxt(e,pp=0){
 }
 function sinClave(src,k){const s=String(src||'');if(!new RegExp('\\b'+k+'\\b').test(s))return s;try{return astTxt(astSin(astDe(s),k));}catch(e){return s.replace(new RegExp('\\b'+k+'\\b','g'),'0');}}
 /* lectura en palabras */
+function numLeer(n){const v=+n;if(v>0&&v<1)return nf1.format(v*100)+' %';if(Number.isInteger(v))return nf.format(v);return nf2.format(v);}
 function leer(src){
-  return esc(String(src).replace(/\bmax\(\s*0\s*,\s*/g,'pos0(').replace(/\*/g,' × ').replace(/\//g,' ÷ ')).replace(/[A-Za-z_][A-Za-z0-9_]*/g,w=>{
+  return esc(String(src).replace(/\bmax\(\s*0\s*,\s*/g,'pos0(').replace(/\b\d+(?:\.\d+)?\b/g,numLeer).replace(/\*/g,' × ').replace(/\//g,' ÷ ')).replace(/[A-Za-z_][A-Za-z0-9_]*/g,w=>{
     if(w==='pos0')return '<i>sin bajar de 0:</i> ';
     if(FN[w])return `<i>${({if:'si',max:'el mayor de',min:'el menor de',abs:'sin signo'})[w]||w}</i>`;
     if(w==='t')return `<span class="ch-t">${plural(M.unidad)} desde hoy</span>`;
@@ -845,24 +858,24 @@ function popCaja(s){
     <input type="text" class="big" data-c="nombre" value="${esc(s.nombre)}" placeholder="nombre de la caja">
     <div class="g2"><label>Hoy<input type="number" step="any" data-c="hoy" value="${s.hoy}"></label><label>Unidad<input type="text" data-c="unidad" value="${esc(s.unidad||'')}" placeholder="$, personas, °C"></label></div>
     <label class="check"><input type="checkbox" data-c="min0" ${s.min0?'checked':''}> No puede bajar de cero</label>
-    <div class="sec"><span class="pop-k">Entra</span>${ins.map(f=>li(f,'in')).join('')||'<span class="hint">nada</span>'}<div class="btns"><button class="sm" data-nuevo="in">+ algo que entra</button></div></div>
-    <div class="sec"><span class="pop-k">Sale</span>${outs.map(f=>li(f,'out')).join('')||'<span class="hint">nada</span>'}<div class="btns"><button class="sm" data-nuevo="out">+ algo que sale</button>${otros.length?`<select data-nuevo-a style="width:auto"><option value="">+ pasa a otra caja…</option>${otros.map(x=>`<option value="${esc(x.k)}">${esc(x.nombre)}</option>`).join('')}</select>`:''}</div></div>
+    <div class="sec"><span class="pop-k">Entra</span>${ins.map(f=>li(f,'in')).join('')||'<span class="hint">nada</span>'}<div class="btns"><button class="sm primary" data-nuevo="in">+ entra</button></div></div>
+    <div class="sec"><span class="pop-k">Sale</span>${outs.map(f=>li(f,'out')).join('')||'<span class="hint">nada</span>'}<div class="btns"><button class="sm primary" data-nuevo="out">+ sale</button>${otros.length?`<select data-nuevo-a style="width:auto"><option value="">→ pasa a otra caja…</option>${otros.map(x=>`<option value="${esc(x.k)}">${esc(x.nombre)}</option>`).join('')}</select>`:''}</div></div>
     <div class="sec"><span class="pop-k">Bucles</span><div class="btns"><button class="sm" data-bucle="R" data-caja="${esc(s.k)}" title="un flujo que entra en proporción a lo que ya hay">+ de refuerzo (crece sobre sí misma)</button><button class="sm" data-bucle="B" data-caja="${esc(s.k)}" title="un flujo que la acerca a un nivel deseado">+ de balance (busca un nivel)</button></div></div>
     <div class="sec">${POP.del?`<div class="confirm">Se borra la caja y los flujos que solo la conectaban a ella. <button class="sm" data-borrar-ok>Borrar</button> <button class="sm" data-borrar-no>Cancelar</button></div>`:`<div class="btns" style="justify-content:space-between"><button class="sm" data-copiar title="Ctrl+C · copia la caja con sus flujos hacia afuera">Copiar</button><button class="del" data-borrar>Borrar caja</button></div>`}</div>`;
 }
 function popFlujo(f){
-  const det=detectar(f.formula),tipo=POP.tipo||det.tipo;const V=k=>POP[k]??det[k]??'';
-  const sel=(fd,val)=>`<select data-fl="${fd}"><option value="">(afuera)</option>${M.cajas.map(s=>`<option value="${esc(s.k)}"${s.k===val?' selected':''}>${esc(s.nombre)}</option>`).join('')}</select>`;
+  if(!tieneItems(f))prepPOP(f);const tipo=POP.tipo||'formula';
+  const sel=(fd,val)=>`<select data-fl="${fd}"><option value="">afuera del sistema</option>${M.cajas.map(s=>`<option value="${esc(s.k)}"${s.k===val?' selected':''}>${esc(s.nombre)}</option>`).join('')}</select>`;
   let cuerpo='';
   if(tipo==='formula'){
     cuerpo=`<input type="text" data-fl="formula" value="${esc(f.formula)}" spellcheck="false" placeholder="tocá los elementos de abajo"><div class="chips">${M.cajas.map(c=>`<button class="chip c" data-ins="${esc(c.k)}">${esc(c.nombre)}</button>`).join('')}${M.datos.map(p=>`<button class="chip p" data-ins="${esc(p.k)}">${esc(p.nombre)}</button>`).join('')}${M.flujos.filter(tieneItems).map(x=>`<button class="chip f" data-ins="${esc(x.k)}" title="total del tablero">${esc(x.nombre)}</button>`).join('')}</div><div class="chips">${[[' + ','+'],[' - ','−'],[' * ','×'],[' / ','÷'],['(','('],[')',')'],[' ^ ','elevado'],['t',plural(M.unidad)+' desde hoy'],['max(0, ','no menos de 0'],['min(','el menor de'],[', ',',']].map(([o,n])=>`<button class="chip o" data-ins="${esc(o)}">${esc(n)}</button>`).join('')}<button class="chip o" data-borrar-f>⌫ borrar todo</button></div>`;
-  }else cuerpo=campos(tipo).map(([id,lab,kind])=>`<div class="opr"><span>${esc(lab)}</span>${opSel(id,V(id),kind)}</div>`).join('');
+  }else cuerpo=camposHtml(f,tipo);
   let lectura='';try{const sc=escena(ROWS[TCUR]);const ret={};for(const S in f.retardos)if(f.retardos[S]>0)ret[S]=1;const v=compile(f.formula).fn(sc);lectura=`<div class="read" id="pop-read">${leer(f.formula)} <b>= ${fmtK(v,f.k)}</b>${TCUR?' en '+M.unidad+' '+TCUR:' hoy'}</div>`;}catch(e){lectura=`<div class="read" id="pop-read"><span class="err">${esc(e.message)}</span></div>`;}
   const reglas=f.reglas.map(r=>r.tipo==='max'?`<div class="regla max"><span>Como máximo</span>${opSel('rb:'+r.id,r.b,'dato')}<button class="del" data-rdel="${esc(r.id)}" aria-label="quitar regla">×</button></div>`:`<div class="regla"><span>Solo si</span>${opSel('ra:'+r.id,r.a,'cd')}<select data-rop="${esc(r.id)}"><option value=">"${r.op==='>'?' selected':''}>&gt;</option><option value="<"${r.op==='<'?' selected':''}>&lt;</option></select>${opSel('rb:'+r.id,r.b,'dato')}<button class="del" data-rdel="${esc(r.id)}" aria-label="quitar regla">×</button></div>`).join('');
   return `<div class="pop-h"><span class="pop-k">Flujo</span><button class="del" data-close aria-label="cerrar" style="color:var(--fg2);font-size:18px">×</button></div>
-    <input type="text" class="big" data-fl="nombre" value="${esc(f.nombre)}" placeholder="nombre del flujo">
+    <input type="text" class="big" data-fl="nombre" value="${esc(f.nombre)}" placeholder="¿Qué es? Ej.: sueldo, alquiler, interés">
     <div class="g2"><label>Sale de${sel('desde',f.desde)}</label><label>Entra a${sel('hacia',f.hacia)}</label></div>
-    ${tieneItems(f)?itemsSec(f):`<div class="sec"><span class="pop-k">Cuánto por ${esc(M.unidad)}</span><select data-tipo>${TIPOS.map(([k,t])=>`<option value="${k}"${k===tipo?' selected':''}>${t}</option>`).join('')}</select>${lectura}${cuerpo}</div>`}
+    ${tieneItems(f)?itemsSec(f):`<div class="sec"><span class="pop-k">Cuánto mueve por ${esc(M.unidad)}</span>${tiposGrid(tipo)}${cuerpo}${lectura}</div>`}
     <details class="sec fold" data-fold="mira"${FOLD.has('mira')?' open':''}><summary>Qué mira <small>${esc(miraResumen(f))}</small></summary><div id="pop-mira">${miraHtml(f)}</div></details>
     <details class="sec fold" data-fold="reglas"${FOLD.has('reglas')||f.reglas.length?' open':''}><summary>Reglas <small>${f.reglas.length?f.reglas.length+' · '+esc(f.reglas.map(reglaTxt).join(' · ')):'ninguna'}</small></summary>${reglas||'<span class="hint">Sin reglas.</span>'}<div class="btns"><button class="sm" data-rnew="si">+ solo si…</button><button class="sm" data-rnew="max">+ como máximo…</button></div></details>
     <div class="sec"><div class="btns" style="justify-content:space-between"><button class="sm" data-copiar title="Ctrl+C">Copiar</button><button class="del" data-borrar>Borrar flujo</button></div></div>`;
@@ -900,9 +913,9 @@ function renombrar(viejo,nuevo){
 function nuevaCaja(){const n='Caja '+(M.cajas.length+1);const c={k:keyLibre(n),nombre:n,hoy:0,unidad:M.cajas[0]?M.cajas[0].unidad:'',min0:true};M.cajas.push(c);if(!M.meta.cajas.length)M.meta.cajas=[c.k];cambio(true);renderMeta();popOpen(c.k);const i=$('pop').querySelector('.big');if(i){i.focus();i.select();}}
 function nuevoDato(nombreD,valor,unidad){const p={k:keyLibre(nombreD||'parametro'),nombre:nombreD||'Parámetro',valor:+valor||0,unidad:unidad||''};M.datos.push(p);return p;}
 function nuevoFlujo(caja,dir,to){
-  const s=M.cajas.find(x=>x.k===caja);const n=dir==='in'?'Entra a '+s.nombre:to?'De '+s.nombre+' a '+nombre(to):'Sale de '+s.nombre;
-  const f={k:keyLibre(n),nombre:n,desde:dir==='in'?'':s.k,hacia:dir==='in'?s.k:(to||''),formula:'0',retardos:{},reglas:[]};M.flujos.push(f);
-  cambio(true);POP={k:f.k,tipo:'fijo'};renderPop();renderDiagram();const i=$('pop').querySelector('.big');if(i){i.focus();i.select();}
+  const s=M.cajas.find(x=>x.k===caja);const n=dir==='in'?'entrada':to?'pase':'salida';
+  const f={k:keyLibre(n),nombre:'',desde:dir==='in'?'':s.k,hacia:dir==='in'?s.k:(to||''),formula:'0',retardos:{},reglas:[]};M.flujos.push(f);
+  cambio(true);POP={k:f.k,tipo:'fijo',a:'0'};renderPop();renderDiagram();const i=$('pop').querySelector('.big');if(i)i.focus();
 }
 function nuevoBucle(tipo,caja){
   const s=M.cajas.find(x=>x.k===caja);if(!s)return;let f;
@@ -1288,6 +1301,93 @@ document.addEventListener('change',e=>{
   if(el.dataset.ed==='nombre'||el.dataset.ed==='monto'||el.dataset.ed==='t'){el.blur();renderTab();return;}
 });
 
+/* ---------- armar un flujo: tipos con ejemplos y números directos ---------- */
+const TIPOS2=[
+  ['fijo','Monto fijo','sueldo, alquiler'],
+  ['parte','% de una caja','interés, rendimiento'],
+  ['sobra','Lo que sobra','ahorrar lo que pasa de un piso'],
+  ['crece','Monto que crece','sueldo con aumentos'],
+  ['brecha','Llevar a un nivel','termostato, reponer'],
+  ['formula','Fórmula libre','tocando elementos']
+];
+function campos2(tipo){const u=M.unidad;return ({
+  fijo:[['a','Cuánto por '+u,'monto','monto']],
+  parte:[['a','De qué caja','caja'],['b','Qué % por '+u,'pct','%']],
+  sobra:[['a','De qué caja','caja'],['b','Lo que pasa de','monto','piso'],['c','Qué % de lo que sobra','pct','%']],
+  crece:[['a','Cuánto hoy','monto','monto'],['b','Cuánto crece por '+u,'pct','aumento']],
+  brecha:[['a','Nivel deseado','monto','nivel'],['b','Qué caja','caja'],['c','Qué tan rápido por '+u,'pct','rapidez']]
+})[tipo]||[];}
+function detectar2(fo){
+  const f=String(fo||'').trim(),tok='([A-Za-z_][A-Za-z0-9_]*|-?\\d+(?:\\.\\d+)?)';let m;const esC=k=>M.cajas.some(c=>c.k===k);
+  if((m=new RegExp('^'+tok+'$').exec(f)))return {tipo:'fijo',a:m[1]};
+  if((m=new RegExp('^'+tok+'\\s*\\*\\s*\\(\\s*1\\s*\\+\\s*'+tok+'\\s*\\)\\s*\\^\\s*t$').exec(f)))return {tipo:'crece',a:m[1],b:m[2]};
+  if((m=new RegExp('^max\\(\\s*0\\s*,\\s*'+tok+'\\s*-\\s*'+tok+'\\s*\\)\\s*\\*\\s*'+tok+'$').exec(f))){if(esC(m[1]))return {tipo:'sobra',a:m[1],b:m[2],c:m[3]};if(esC(m[2]))return {tipo:'brecha',a:m[1],b:m[2],c:m[3]};}
+  if((m=new RegExp('^'+tok+'\\s*\\*\\s*'+tok+'$').exec(f))){if(esC(m[1]))return {tipo:'parte',a:m[1],b:m[2]};if(esC(m[2]))return {tipo:'parte',a:m[2],b:m[1]};}
+  return {tipo:'formula'};
+}
+function componer2(tipo,a,b,c){
+  const ok=x=>x!==undefined&&x!==null&&String(x)!=='';
+  if(tipo==='fijo')return ok(a)?String(a):null;
+  if(tipo==='parte')return ok(a)&&ok(b)?`${a} * ${b}`:null;
+  if(tipo==='sobra')return ok(a)&&ok(b)&&ok(c)?`max(0, ${a} - ${b}) * ${c}`:null;
+  if(tipo==='crece')return ok(a)&&ok(b)?`${a} * (1 + ${b}) ^ t`:null;
+  if(tipo==='brecha')return ok(a)&&ok(b)&&ok(c)?`max(0, ${a} - ${b}) * ${c}`:null;
+  return null;
+}
+function prepPOP(f){
+  if(POP.tipo&&POP._ok)return;const det=detectar2(f.formula);
+  POP.tipo=POP.tipo||det.tipo;for(const k of ['a','b','c'])if(POP[k]===undefined)POP[k]=det[k];POP._ok=1;
+}
+function valorDefecto(f,kind){
+  const caja=M.cajas.find(c=>c.k===(f.desde||f.hacia))||M.cajas[0];
+  if(kind==='caja')return caja?caja.k:'';
+  if(kind==='pct')return '0.05';
+  return '0';
+}
+function cambiarTipo(f,tipo){
+  prepPOP(f);const viejos=campos2(POP.tipo).map(([id,,kind])=>({kind,v:POP[id]}));
+  POP.tipo=tipo;POP.a=POP.b=POP.c=undefined;
+  if(tipo==='formula'){renderPop();return;}
+  for(const [id,,kind] of campos2(tipo)){
+    const prev=viejos.find(x=>x.kind===kind&&x.v!==undefined&&x.v!=='');
+    let v=prev?prev.v:valorDefecto(f,kind);
+    if(kind==='caja'&&tipo==='brecha')v=f.hacia||f.desde||v;
+    if(kind==='monto'&&id==='a'&&tipo==='brecha'&&esNum(v)&&+v===0){const c=M.cajas.find(x=>x.k===(f.hacia||f.desde));v=String(c?Math.max(1,Math.abs(+c.hoy||0)*2):100);}
+    POP[id]=v;if(prev)viejos.splice(viejos.indexOf(prev),1);
+  }
+  const fo=componer2(tipo,POP.a,POP.b,POP.c);if(fo){f.formula=fo;cambio(true);}renderPop();
+}
+function opW(f,id,val,kind,corto){
+  const opt=(k,n,sel)=>`<option value="${esc(k)}"${sel?' selected':''}>${esc(n)}</option>`;
+  if(kind==='caja')return `<select data-opsrc="${id}">${M.cajas.map(c=>opt(c.k,c.nombre,c.k===val)).join('')}</select>`;
+  const v=String(val??'');const isNum=v===''||esNum(v);const u=kind==='pct'?'%':uniDe(f.hacia||f.desde);
+  const P=M.datos.filter(p=>kind==='pct'?p.unidad==='%':p.unidad!=='%');const T=kind==='pct'?[]:M.flujos.filter(x=>tieneItems(x)&&x.k!==f.k);
+  const sel=`<select data-opsrc="${id}" data-kind="${kind}" data-corto="${esc(corto||'')}" class="opsrc"><option value="#num"${isNum?' selected':''}>${kind==='pct'?'un porcentaje':'un número'}</option>${P.length?`<optgroup label="Parámetros">${P.map(p=>opt(p.k,p.nombre+' · '+fmtN(p.valor,p.unidad),p.k===v)).join('')}</optgroup>`:''}${T.length?`<optgroup label="Totales del tablero">${T.map(x=>opt(x.k,x.nombre+' · '+fmtK(ROWS[0]?ROWS[0][x.k]:0,x.k),x.k===v)).join('')}</optgroup>`:''}${isNum?'<option value="#new">↗ guardarlo como parámetro</option>':''}</select>`;
+  if(isNum){const n=v===''?0:+v;return `<span class="opw"><span class="opn"><input type="number" step="any" data-opv="${id}" data-pct="${kind==='pct'?1:''}" value="${kind==='pct'?+(n*100).toFixed(4):n}"><i>${esc(u)}</i></span>${sel}</span>`;}
+  const p=M.datos.find(x=>x.k===v),t=M.flujos.find(x=>x.k===v);
+  return `<span class="opw"><span class="opn opp">${p?esc(fmtN(p.valor,p.unidad)):t?esc(fmtK(ROWS[0]?ROWS[0][t.k]:0,t.k)):''}</span>${sel}</span>`;
+}
+function tiposGrid(tipo){return `<div class="tgrid">${TIPOS2.map(([k,t,ej])=>`<button class="tbtn${k===tipo?' on':''}" data-tipo2="${k}"><b>${esc(t)}</b><small>${esc(ej)}</small></button>`).join('')}</div>`;}
+function camposHtml(f,tipo){return campos2(tipo).map(([id,lab,kind,corto])=>`<div class="opr2"><span>${esc(lab)}</span>${opW(f,id,POP[id],kind,corto)}</div>`).join('');}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('#pop [data-tipo2]');if(!b||!POP)return;const f=M.flujos.find(x=>x.k===POP.k);if(!f)return;
+  if(b.dataset.tipo2===POP.tipo)return;cambiarTipo(f,b.dataset.tipo2);
+  if(b.dataset.tipo2==='formula'){const i=$('pop').querySelector('[data-fl="formula"]');if(i)i.focus();}
+});
+document.addEventListener('input',e=>{
+  const el=e.target;if(!el.dataset||el.dataset.opv===undefined||!POP)return;const f=M.flujos.find(x=>x.k===POP.k);if(!f||el.value==='')return;
+  prepPOP(f);POP[el.dataset.opv]=String(el.dataset.pct?+el.value/100:+el.value);
+  const fo=componer2(POP.tipo,POP.a,POP.b,POP.c);if(fo){f.formula=fo;dirty=true;popRead();scheduleCompute();scheduleSave();}
+});
+document.addEventListener('change',e=>{
+  const el=e.target;if(!el.dataset||el.dataset.opsrc===undefined||!POP)return;const f=M.flujos.find(x=>x.k===POP.k);if(!f)return;
+  prepPOP(f);const id=el.dataset.opsrc,v=el.value;
+  if(v==='#num'){const cur=POP[id];const p=M.datos.find(x=>x.k===cur);POP[id]=p?String(+p.valor||0):(esNum(cur)?cur:valorDefecto(f,el.dataset.kind));}
+  else if(v==='#new'){const kind=el.dataset.kind;const cur=esNum(POP[id])?+POP[id]:+valorDefecto(f,kind);const nm=(el.dataset.corto||'valor')+' de '+(f.nombre||'flujo');const p=nuevoDato(nm.charAt(0).toUpperCase()+nm.slice(1),cur,kind==='pct'?'%':uniDe(f.hacia||f.desde));POP[id]=p.k;renderDatos();}
+  else POP[id]=v;
+  const fo=componer2(POP.tipo,POP.a,POP.b,POP.c);if(fo)f.formula=fo;cambio(true);renderPop();
+});
+
 /* ---------- eventos ---------- */
 document.addEventListener('click',e=>{
   const t=e.target,b=t.closest('button');
@@ -1350,7 +1450,7 @@ document.addEventListener('change',e=>{
   if(c&&el.matches('[data-nuevo-a]')){if(el.value)nuevoFlujo(c.k,'out',el.value);return;}
   if(!f)return;
   if(d.fl==='desde'||d.fl==='hacia'){f[d.fl]=el.value;cambio(true);renderPop();return;}
-  if(d.fl==='nombre'){f.nombre=el.value;rekey(f,el.value);cambio(true);return;}
+  if(d.fl==='nombre'){f.nombre=el.value;rekey(f,el.value);cambio(true);renderDatos();return;}
   if(d.tipo!==undefined){POP.tipo=el.value;POP.a=POP.b=POP.c='';renderPop();if(el.value==='formula'){const i=$('pop').querySelector('[data-fl="formula"]');if(i)i.focus();}return;}
   if(d.ret){f.retardos[d.ret]=+el.value;if(!f.retardos[d.ret])delete f.retardos[d.ret];cambio();renderPop();return;}
   if(d.rop){const r=f.reglas.find(x=>x.id===d.rop);if(r){r.op=el.value;cambio();}return;}
