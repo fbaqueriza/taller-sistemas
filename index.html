@@ -359,6 +359,11 @@ details.fold[open]>summary{margin-bottom:6px}
 .rp-conv.falta{background:var(--crit-soft);border-radius:5px;padding:4px 6px}
 .diagram .repm rect{fill:var(--surface);stroke:var(--accent);stroke-width:1}
 .diagram .repm text{font-family:var(--mono);font-size:10.5px;text-anchor:middle;fill:var(--accent-ink);font-weight:600}
+.lc-add{border-style:dashed;color:var(--accent-ink)}
+.bq-t{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45}
+.bq-t>b{font-family:var(--display);font-size:20px;line-height:1;padding:6px 10px;border-radius:8px;color:#fff}
+.bq-t.ref>b{background:var(--good)}.bq-t.bal>b{background:var(--accent)}
+.nb-tipos{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 </style>
 
 <div class="app">
@@ -377,7 +382,7 @@ details.fold[open]>summary{margin-bottom:6px}
       <li><b>Cajas:</b> lo que se acumula (plata, gente, agua, temperatura). Botón "+ caja".</li>
       <li><b>Flujos:</b> lo que entra y sale de una caja. Tocá una caja y agregá uno.</li>
       <li><b>Parámetros:</b> los números que usan los flujos. Movelos al costado y mirá cómo se reacomoda todo.</li>
-      <li><b>Bucles:</b> aparecen solos cuando un flujo depende de su propia caja. <b>R</b> refuerza (crece sobre sí mismo), <b>B</b> equilibra (busca un nivel). La tarjeta de una caja tiene atajos para crear cada uno.</li>
+      <li><b>Bucles:</b> aparecen solos cuando un flujo depende de su propia caja. <b>R</b> refuerza (crece sobre sí mismo), <b>B</b> equilibra (busca un nivel). Tocá uno para ver qué hace, su fuerza y qué lo controla; "+ bucle" crea uno nuevo.</li>
       <li><b>Flujos de información:</b> las líneas punteadas, qué caja mira cada flujo. Con retardo, el flujo ve el dato tarde (el número en amarillo).</li>
       <li><b>Nada sale de la nada:</b> lo que entra a una caja es exactamente lo que salió de otra. Si van en distinta unidad (pesos y dólares, kilos y bolsas), hay que declarar cuánto vale una en la otra; si no, el flujo no se mueve. Y si una caja no tiene lo que un flujo pide, sale solo lo que hay.</li>
       <li><b>Repartir:</b> en la tarjeta de un flujo, "↘ Repartir entre varias cajas": cada destino con su %, el último se lleva el resto, así siempre suma 100 %.</li>
@@ -747,7 +752,7 @@ function renderDiagram(){
     const c=b.tipo==='R'?'ref':'bal',onL=sel?b.key===SEL_LOOP:LV?LV.tipo===b.tipo:true,rr=12,a0=-Math.PI*0.3,b0=Math.PI*1.2;
     marks+=`<g class="lmark ${c}${onL?'':' dim'}" data-loop="${esc(b.key)}"><title>${esc((b.tipo==='R'?'Bucle de refuerzo':'Bucle de balance')+(b.ret?' con retardo':''))}</title><circle class="bg" cx="${f1(mx_)}" cy="${f1(my_)}" r="16"/><path d="M${f1(mx_+rr*Math.cos(a0))} ${f1(my_+rr*Math.sin(a0))} A${rr} ${rr} 0 1 1 ${f1(mx_+rr*Math.cos(b0))} ${f1(my_+rr*Math.sin(b0))}" marker-end="url(#ahl-${c})"/><text x="${f1(mx_)}" y="${f1(my_+4.5)}">${b.tipo}</text></g>`;
   }
-  $('loopchips').innerHTML=L.length?`<span class="lc-k">Bucles</span>`+L.map(b=>`<button class="lc ${b.tipo==='R'?'ref':'bal'}${b.key===SEL_LOOP?' on':''}" data-loop="${esc(b.key)}"><b>${b.tipo}</b>${esc(b.edges.map(e=>nombre(e.from)+' → '+(e.via.nombre||e.via.k)).join(' → '))}${b.ret?' · con retardo':''}</button>`).join(''):'<span class="hint">Todavía no hay bucles: aparecen cuando un flujo depende de su propia caja.</span>';
+  $('loopchips').innerHTML=`<span class="lc-k">Bucles</span>`+(L.length?L.map(b=>`<button class="lc ${b.tipo==='R'?'ref':'bal'}${b.key===SEL_LOOP?' on':''}" data-loop="${esc(b.key)}"><b>${b.tipo}</b>${esc(b.edges.map(e=>nombre(e.from)+' → '+(e.via.nombre||e.via.k)).join(' → '))}${b.ret?' · con retardo':''}</button>`).join(''):'<span class="hint" style="align-self:center">todavía ninguno</span>')+`<button class="lc lc-add" data-bucle-nuevo>+ bucle</button>`;
   $('diagram').innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="max-width:${Math.round(W*1.45)}px;max-height:72vh;margin:0 auto" role="img" aria-label="Mapa del sistema"><defs>
     <marker id="ahp" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--accent)"/></marker>
     <marker id="ahi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fg2)"/></marker>
@@ -966,11 +971,12 @@ document.addEventListener('click',e=>{
 });
 function renderPop(){
   if(!POP){$('pop').hidden=true;return;}
+  if(POP.bucle||POP.nuevoB){const pop=$('pop');pop.hidden=false;if(POP.nuevoB){pop.innerHTML=nuevoBucleCard();return;}const b=LOOPS.find(x=>x.key===POP.bucle);pop.innerHTML=b?bucleCard(b):`<div class="pop-h"><span class="pop-k">Bucle</span><button class="del" data-close aria-label="cerrar" style="color:var(--fg2);font-size:18px">×</button></div><p class="hint">Este bucle no está activo en este momento: alguno de sus flujos no depende de la caja ahora (por ejemplo, un umbral que todavía no se alcanzó). Mové el reloj para buscarlo.</p>`;return;}
   const c=M.cajas.find(x=>x.k===POP.k),f=M.flujos.find(x=>x.k===POP.k);if(!c&&!f){popClose();return;}
   const pop=$('pop');const sy=pop.scrollTop;pop.hidden=false;if(!POP.snap)POP.snap=snapModelo();pop.innerHTML=(c?popCaja(c):popFlujo(f))+'<div class="pop-ok" id="pop-ok"></div>';pop.scrollTop=sy;popFoot();popPos();
 }
 function popOpen(k,snap,nuevo){POP={k,snap:snap||snapModelo(),nuevo:!!nuevo};renderPop();renderDiagram();renderDatos();}
-function popClose(){POP=null;$('pop').hidden=true;$('pop').innerHTML='';renderDiagram();renderDatos();}
+function popClose(){if(POP&&POP.bucle)SEL_LOOP='';POP=null;$('pop').hidden=true;$('pop').innerHTML='';renderDiagram();renderDatos();}
 function popPos(){const p=$('pop');if(!POP||p.hidden)return;const r=p.getBoundingClientRect();if(innerWidth>900&&(r.top<60||r.top>innerHeight-80))p.scrollIntoView({block:'nearest'});}
 function popRead2(){popConvLect();}
 function limNota(f){const r=ROWS[TCUR]||ROWS[0];if(!r)return '';if(faltaConv(f))return `<div class="nota crit">No se mueve nada hasta que declares la conversión de unidades (más abajo). Así no aparece ${esc(uniDe(f.hacia))} de la nada.</div>`;const p=r._lim&&r._lim[f.k];if(p===undefined)return '';return `<div class="nota warn">Pide ${fmtK(p,f.k)}, pero en ${TCUR?esc(M.unidad)+' '+TCUR:'hoy'} ${esc(nombre(p>0?f.desde:f.hacia))} no tiene tanto: sale ${fmtK(r[f.k]||0,f.k)}.</div>`;}
@@ -1022,7 +1028,7 @@ function renderAvisosMapa(){
 document.addEventListener('click',e=>{const b=e.target.closest('[data-am-open]');if(b)popOpen(b.dataset.amOpen);});
 function renderTiempo(){
   const sc=$('scrub');sc.max=ROWS.length-1;if(document.activeElement!==sc)sc.value=TCUR;$('tl').textContent=(TCUR?(M.unidad+' '+TCUR+' de '+(ROWS.length-1)+(M.unidad==='mes'?' · '+fechaTxt(TCUR):'')):'hoy')+'';if(!RUN)$('play').textContent=TCUR>=ROWS.length-1&&TCUR>0?'↺ De nuevo':'▶ Simular';
-  LINKS=enlaces(ROWS[TCUR]);LOOPS=bucles(LINKS);renderAvisosMapa();renderLev();renderDiagram();renderChart();renderIO();if(VISTA==='tab')renderTab();if(POP&&M.flujos.some(f=>f.k===POP.k))popRead();
+  LINKS=enlaces(ROWS[TCUR]);LOOPS=bucles(LINKS);renderAvisosMapa();if(POP&&POP.bucle){const act=document.activeElement;if(!(act&&act.closest&&act.closest('#pop')&&['range','number'].includes(act.type)))renderPop();else{const b=LOOPS.find(x=>x.key===POP.bucle);const r=$('pop').querySelector('.read b');if(b&&r)r.textContent=nf1.format(b.g*100)+' %';}}renderLev();renderDiagram();renderChart();renderIO();if(VISTA==='tab')renderTab();if(POP&&M.flujos.some(f=>f.k===POP.k))popRead();
 }
 
 /* ---------- cálculo ---------- */
@@ -1574,6 +1580,44 @@ document.addEventListener('change',e=>{
     cambio();renderPop();}
 });
 
+/* ---------- bucles: tarjeta propia y "+ bucle" ---------- */
+function bucleFrase(b){
+  const partes=[];
+  for(const e of b.edges){
+    const l=LINKS.find(x=>x.from===e.from&&x.to===e.via.k);const s1=l?l.sign:1;
+    if(!partes.length)partes.push(`más <b>${esc(nombre(e.from))}</b>`);
+    partes.push(`${s1>0?'más':'menos'} <b>${esc(e.via.nombre||e.via.k)}</b>`);
+    partes.push(`${e.sign>0?'más':'menos'} <b>${esc(nombre(e.to))}</b>`);
+  }
+  return partes.join(' → ');
+}
+function bucleCard(b){
+  const R=b.tipo==='R';const flujos=[...new Map(b.edges.map(e=>[e.via.k,e.via])).values()];
+  const cajas=[...new Set(b.edges.flatMap(e=>[e.from,e.to]))];
+  const ks=new Set();for(const f of flujos){for(const v of varsDe(tieneItems(f)?'0':f.formula))if(M.datos.some(p=>p.k===v))ks.add(v);for(const r of f.reglas)if(M.datos.some(p=>p.k===r.b))ks.add(r.b);}
+  const P=M.datos.filter(p=>ks.has(p.k));
+  const ret=b.edges.filter(e=>e.ret>0);
+  const vicioso=R&&cajas.some(k=>(M.meta.sentido==='menos')&&M.meta.cajas.includes(k));
+  const que=R?'Se alimenta a sí mismo: cuanto más hay, más crece (o cuanto menos hay, más cae). Es el motor del interés compuesto, de una deuda que se agranda o de una población que se multiplica.':'Se corrige solo: empuja hacia un nivel. Es el termostato, el colchón que se repone o el gasto que se frena cuando falta plata.';
+  return `<div class="pop-h"><span class="pop-k">Bucle de ${R?'refuerzo':'balance'}</span><button class="del" data-close aria-label="cerrar" style="color:var(--fg2);font-size:18px">×</button></div>
+    <div class="bq-t ${R?'ref':'bal'}"><b>${b.tipo}</b><span>${bucleFrase(b)}</span></div>
+    <p class="hint" style="margin:0">${que}</p>
+    <div class="sec"><span class="pop-k">Fuerza</span><div class="read">Realimenta cerca de un <b>${nf1.format(b.g*100)} %</b> por ${esc(M.unidad)}${TCUR?' en '+esc(M.unidad)+' '+TCUR:' hoy'}.${ret.length?` Tiene <b>retardo</b>: ${ret.map(e=>esc(nombre(e.via.k))+' ve '+esc(nombre(e.from))+' con '+e.ret+' '+(e.ret===1?M.unidad:plural(M.unidad))+' de atraso').join('; ')}. Los retardos hacen que un balance se pase de largo y oscile.`:''}</div></div>
+    <div class="sec"><span class="pop-k">Qué lo controla</span>${P.length?`<p class="hint" style="margin:0">Movelo y mirá cómo cambia la fuerza y el mapa.</p>`+P.map(p=>{const Rg=rango(p);return `<div class="dato"><div class="dato-top"><span class="dato-n">${esc(p.nombre)}</span><span class="dval"><input type="number" step="any" data-dval="${esc(p.k)}" data-pct="${p.unidad==='%'?1:''}" value="${disp(p)}">${p.unidad==='%'?'<i>%</i>':''}</span><span></span></div><input type="range" data-drange="${esc(p.k)}" min="${Rg.min}" max="${Rg.max}" step="${Rg.step}" value="${+p.valor||0}"></div>`;}).join(''):'<p class="hint" style="margin:0">Ningún parámetro: la fuerza sale de números fijos dentro de los flujos. Abrí un flujo y guardá el número como parámetro para poder moverlo.</p>'}</div>
+    <div class="sec"><span class="pop-k">Flujos que lo forman</span><div class="btns">${flujos.map(f=>`<button class="sm" data-go="${esc(f.k)}">${esc(f.nombre||f.k)}</button>`).join('')}</div><p class="hint" style="margin:0">Para cambiarlo o romperlo, abrí uno: cambiá cuánto mueve, hacé que no dependa de su caja, o borralo.</p></div>`;
+}
+function nuevoBucleCard(){
+  const opts=M.cajas.map(c=>`<option value="${esc(c.k)}">${esc(c.nombre)}</option>`).join('');
+  return `<div class="pop-h"><span class="pop-k">Nuevo bucle</span><button class="del" data-close aria-label="cerrar" style="color:var(--fg2);font-size:18px">×</button></div>
+    ${M.cajas.length?`<label>Sobre qué caja<select id="nb-caja">${opts}</select></label>
+    <div class="nb-tipos"><button class="tbtn" data-nb="R"><b>R · Refuerzo</b><small>crece sobre sí misma: interés, rendimiento, contagio</small></button><button class="tbtn" data-nb="B"><b>B · Balance</b><small>busca un nivel: termostato, reponer, colchón</small></button></div>
+    <p class="hint" style="margin:0">Se crea un flujo que depende de la caja, con sus parámetros. Después podés ajustarlo como cualquier flujo.</p>`:'<p class="hint">Primero creá una caja.</p>'}`;
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-nb]');if(b){const c=$('nb-caja');if(c&&c.value)nuevoBucle(b.dataset.nb,c.value);return;}
+  if(e.target.closest('[data-bucle-nuevo]')){SEL_LOOP='';POP={nuevoB:true};renderPop();renderDiagram();return;}
+});
+
 /* ---------- eventos ---------- */
 document.addEventListener('click',e=>{
   const t=e.target,b=t.closest('button');
@@ -1584,7 +1628,7 @@ document.addEventListener('click',e=>{
   if(t.closest('#speed')){SPI=(SPI+1)%SPEEDS.length;$('speed').textContent=SPEEDS[SPI][1];if(RUN){stopRun();playRun();}return;}
   if(t.closest('#add-caja')||(b&&b.dataset.act==='caja')){nuevaCaja();return;}
   if(t.closest('#relayout')){layout(true);renderDiagram();scheduleSave();return;}
-  const lc=t.closest('[data-loop]');if(lc){SEL_LOOP=SEL_LOOP===lc.dataset.loop?'':lc.dataset.loop;SEL_LEV=0;renderLev();renderDiagram();return;}
+  const lc=t.closest('[data-loop]');if(lc){SEL_LOOP=SEL_LOOP===lc.dataset.loop?'':lc.dataset.loop;SEL_LEV=0;if(SEL_LOOP){POP={bucle:SEL_LOOP};renderPop();}else if(POP&&POP.bucle){POP=null;$('pop').hidden=true;}renderLev();renderDiagram();return;}
   if(!b){if(POP&&t.closest('#mapwrap')&&!t.closest('#pop')&&!t.closest('[data-node]'))popClose();return;}
   const d=b.dataset;
   // menú de modelos
