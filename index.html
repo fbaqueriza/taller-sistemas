@@ -341,6 +341,14 @@ details.fold[open]>summary{margin-bottom:6px}
 .conv-p{font-family:var(--mono);text-align:right;font-weight:500}
 .diagram .convm rect{fill:var(--warn-soft);stroke:var(--warn);stroke-width:1}
 .diagram .convm text{font-family:var(--mono);font-size:10.5px;text-anchor:middle;fill:var(--fg)}
+.avisos-mapa{display:grid;gap:6px;margin-bottom:8px}
+.am{font-size:13px;border-radius:6px;padding:8px 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.am.crit{background:var(--crit-soft)}.am.warn{background:var(--warn-soft)}
+.nota{font-size:12.5px;border-radius:5px;padding:6px 8px;margin-top:6px}
+.nota.crit{background:var(--crit-soft)}.nota.warn{background:var(--warn-soft)}
+.diagram .vnode.sinconv circle{stroke:var(--crit);stroke-dasharray:4 3;stroke-width:2.5}
+.diagram .vnode.sinconv .vv{fill:var(--crit);font-family:var(--body);font-weight:600}
+.diagram .vnode.lim circle{stroke:var(--warn);stroke-width:2.6}
 </style>
 
 <div class="app">
@@ -361,7 +369,7 @@ details.fold[open]>summary{margin-bottom:6px}
       <li><b>Parámetros:</b> los números que usan los flujos. Movelos al costado y mirá cómo se reacomoda todo.</li>
       <li><b>Bucles:</b> aparecen solos cuando un flujo depende de su propia caja. <b>R</b> refuerza (crece sobre sí mismo), <b>B</b> equilibra (busca un nivel). La tarjeta de una caja tiene atajos para crear cada uno.</li>
       <li><b>Flujos de información:</b> las líneas punteadas, qué caja mira cada flujo. Con retardo, el flujo ve el dato tarde (el número en amarillo).</li>
-      <li><b>Conversión:</b> si un flujo va entre cajas con distinta unidad (pesos y dólares, kilos y bolsas), su tarjeta pide cuánto vale una en la otra. Puede ser un parámetro, como el tipo de cambio.</li>
+      <li><b>Nada sale de la nada:</b> lo que entra a una caja es exactamente lo que salió de otra. Si van en distinta unidad (pesos y dólares, kilos y bolsas), hay que declarar cuánto vale una en la otra; si no, el flujo no se mueve. Y si una caja no tiene lo que un flujo pide, sale solo lo que hay.</li>
       <li><b>Reglas:</b> en la tarjeta de un flujo, "solo si…" o "como máximo…".</li>
       <li><b>Ingresos y gastos:</b> el botón de arriba abre un tablero aparte. Elegís un lado, ves de qué se compone y movés cada concepto con su deslizador para ver cuánto te queda y si la meta llega. Tocá un concepto para cambiarle la recurrencia o a qué sigue.</li>
       <li><b>Meta y paradigma:</b> al costado. Con una meta, el motor recomienda qué mover para llegar.</li>
@@ -372,6 +380,7 @@ details.fold[open]>summary{margin-bottom:6px}
   <main class="board" id="board">
     <section class="col">
       <div class="panel">
+        <div class="avisos-mapa" id="avisos-mapa" hidden></div>
         <div class="loopchips" id="loopchips"></div>
         <div class="mapwrap" id="mapwrap"><div class="diagram" id="diagram"></div></div>
         <div class="maptools"><span class="hint">Tocá cualquier cosa para editarla. Arrastrá para acomodar.</span><span class="btns"><button id="add-caja" class="primary sm">+ caja</button><button id="paste" class="sm" hidden title="Ctrl+V">Pegar</button><button id="relayout" class="sm">Reacomodar</button></span></div>
@@ -555,6 +564,10 @@ const hz=m=>m.meta.plazo;
 
 /* ---------- motor ---------- */
 const valDe=(x,sc)=>esNum(x)?+x:(sc[x]??0);
+function faltaConv(f,uni){
+  if(!f.desde||!f.hacia)return false;const a=uni?uni[f.desde]:uniDe(f.desde),b=uni?uni[f.hacia]:uniDe(f.hacia);
+  if(!a||!b||a===b)return false;return !(f.conv&&f.conv.v!==''&&f.conv.v!=null);
+}
 function simular(m,over){
   const H=hz(m),base={};for(const p of m.datos)base[p.k]=over&&over[p.k]!==undefined?over[p.k]:(+p.valor||0);
   const st={},hist={};for(const s of m.cajas){st[s.k]=+s.hoy||0;hist[s.k]=[st[s.k]];}
@@ -568,10 +581,25 @@ function simular(m,over){
       for(const r of f.reglas){if(r.b===''||r.b==null)continue;const b=valDe(r.b,s2);if(r.tipo==='max')v=Math.min(v,b);else{const a=valDe(r.a,s2);if(!(r.op==='>'?a>b:a<b))v=0;}}
       fv[f.k]=v;sc[f.k]=v;
     }
-    const row={i,...st,...fv,_clamp:[]};row._meta=m.meta.cajas.reduce((a,k)=>a+(row[k]||0),0);rows.push(row);
+    // conservación: sin conversión declarada entre unidades distintas no se mueve nada; nadie saca más de lo que hay
+    const real={...fv},sinConv=[],lim={};const uni={};for(const s of m.cajas)uni[s.k]=String(s.unidad||'').trim();
+    for(const f of m.flujos)if(faltaConv(f,uni)){if(real[f.k])sinConv.push(f.k);real[f.k]=0;}
+    const fcDe={};for(const f of m.flujos)fcDe[f.k]=f.conv?convDe(f,sc):1;
+    for(let pass=0;pass<4;pass++){
+      const inn={},out={};for(const s of m.cajas){inn[s.k]=0;out[s.k]=0;}
+      for(const f of m.flujos){const v=real[f.k];if(!v)continue;
+        if(v>0){if(f.desde in out)out[f.desde]+=v;if(f.hacia in inn)inn[f.hacia]+=v*fcDe[f.k];}
+        else{if(f.hacia in out)out[f.hacia]+=-v*fcDe[f.k];if(f.desde in inn)inn[f.desde]+=-v;}}
+      let cambio_=false;
+      for(const s of m.cajas){if(!s.min0)continue;const disp=Math.max(0,st[s.k])+inn[s.k];if(out[s.k]>disp*(1+1e-9)+1e-9){const r=out[s.k]>0?Math.max(0,disp/out[s.k]):0;cambio_=true;
+        for(const f of m.flujos){const v=real[f.k];if((v>0&&f.desde===s.k)||(v<0&&f.hacia===s.k))real[f.k]=v*r;}}}
+      if(!cambio_)break;
+    }
+    for(const f of m.flujos)if(Math.abs(real[f.k]-fv[f.k])>1e-6*(Math.abs(fv[f.k])+1)&&!sinConv.includes(f.k))lim[f.k]=fv[f.k];
+    const row={i,...st,...real,_clamp:[],_lim:lim,_sinConv:sinConv};row._meta=m.meta.cajas.reduce((a,k)=>a+(row[k]||0),0);rows.push(row);
     if(i===H)break;
     const d={};for(const s of m.cajas)d[s.k]=0;
-    for(const f of m.flujos){const v=fv[f.k];if(f.desde in d)d[f.desde]-=v;if(f.hacia in d)d[f.hacia]+=f.conv?v*convDe(f,sc):v;}
+    for(const f of m.flujos){const v=real[f.k];if(!v)continue;if(f.desde in d)d[f.desde]-=v;if(f.hacia in d)d[f.hacia]+=v*fcDe[f.k];}
     for(const s of m.cajas){let nv=st[s.k]+d[s.k];if(s.min0&&nv<0){nv=0;row._clamp.push(s.k);}st[s.k]=nv;hist[s.k].push(nv);}
   }
   return rows;
@@ -683,7 +711,8 @@ function renderDiagram(){
     pipes+=`<line class="pipe${a}${dd}" style="stroke-width:${w}" x1="${f1(sx)}" y1="${f1(sy)}" x2="${f1(p1x)}" y2="${f1(p1y)}"/><line class="pipe${a}${dd}" style="stroke-width:${w}" x1="${f1(p2x)}" y1="${f1(p2y)}" x2="${f1(ex)}" y2="${f1(ey)}" marker-end="url(#ahp)"/>`;
     if(A&&B&&uniDe(A)!==uniDe(B)){const mx=(p2x+ex)/2,my=(p2y+ey)/2;marks+=`<g class="convm${dd}"><title>${esc((f.conv&&f.conv.v!==''?'convierte ':'sin conversión: ')+uniDe(A)+' → '+uniDe(B))}</title><rect x="${f1(mx-24)}" y="${f1(my-9)}" width="48" height="17" rx="8"/><text x="${f1(mx)}" y="${f1(my+3.5)}">${esc((uniDe(A)||'?')+'→'+(uniDe(B)||'?'))}</text></g>`;}
     let ls=wrapTxt(f.nombre||f.k,18);if(ls.length>2)ls=[ls[0],cut(ls.slice(1).join(' '),18)];
-    nodes+=`<g class="vnode${dd}${POP&&POP.k===f.k?' on':''}" data-node="${esc(f.k)}"><title>${esc((f.nombre||f.k)+': '+fmtK(v,f.k))}</title><circle cx="${f1(vx)}" cy="${f1(vy)}" r="14"/><path d="M${f1(vx-7.5)} ${f1(vy-7.5)} L${f1(vx+7.5)} ${f1(vy+7.5)} L${f1(vx+7.5)} ${f1(vy-7.5)} L${f1(vx-7.5)} ${f1(vy+7.5)}Z"/>${ls.map((l,j)=>`<text class="vn" x="${f1(vx)}" y="${f1(vy+30+j*14)}">${esc(l)}</text>`).join('')}<text class="vv" x="${f1(vx)}" y="${f1(vy+31+ls.length*14)}">${fmtK(v,f.k)}</text>${f.reglas.length?`<text class="flag" x="${f1(vx+12)}" y="${f1(vy-10)}"><title>${esc(f.reglas.map(reglaTxt).join('\n'))}</title>⚑</text>`:''}</g>`;
+    const sinC=(r._sinConv||[]).includes(f.k)||faltaConv(f),limV=r._lim&&r._lim[f.k]!==undefined?r._lim[f.k]:null;
+    nodes+=`<g class="vnode${dd}${POP&&POP.k===f.k?' on':''}${sinC?' sinconv':limV!==null?' lim':''}" data-node="${esc(f.k)}"><title>${esc((f.nombre||f.k)+': '+fmtK(v,f.k)+(sinC?'\nNo se mueve: falta declarar la conversión de unidades':limV!==null?'\nPidió '+fmtK(limV,f.k)+', pero no alcanzaba':''))}</title><circle cx="${f1(vx)}" cy="${f1(vy)}" r="14"/><path d="M${f1(vx-7.5)} ${f1(vy-7.5)} L${f1(vx+7.5)} ${f1(vy+7.5)} L${f1(vx+7.5)} ${f1(vy-7.5)} L${f1(vx-7.5)} ${f1(vy+7.5)}Z"/>${ls.map((l,j)=>`<text class="vn" x="${f1(vx)}" y="${f1(vy+30+j*14)}">${esc(l)}</text>`).join('')}<text class="vv" x="${f1(vx)}" y="${f1(vy+31+ls.length*14)}">${sinC?'falta conversión':fmtK(v,f.k)+(limV!==null?' ⚠':'')}</text>${f.reglas.length?`<text class="flag" x="${f1(vx+12)}" y="${f1(vy-10)}"><title>${esc(f.reglas.map(reglaTxt).join('\n'))}</title>⚑</text>`:''}</g>`;
   }
   for(const l of LINKS){if(!P[l.from]||!P[l.to])continue;
     const sx0=X(l.from),sy0=Y(l.from),tx=X(l.to),ty=Y(l.to),dx=tx-sx0,dy=ty-sy0,d=Math.max(1,Math.hypot(dx,dy)),nx=-dy/d,ny=dx/d,bend=bendOf(l.from,l.to);
@@ -891,7 +920,7 @@ function popFlujo(f){
     <input type="text" class="big" data-fl="nombre" value="${esc(f.nombre)}" placeholder="¿Qué es? Ej.: sueldo, alquiler, interés">
     <div class="g2"><label>Sale de${sel('desde',f.desde)}</label><label>Entra a${sel('hacia',f.hacia)}</label></div>
     ${convHtml(f)}
-    ${tieneItems(f)?itemsSec(f):`<div class="sec"><span class="pop-k">Cuánto mueve por ${esc(M.unidad)}</span>${tiposGrid(tipo)}${cuerpo}${lectura}</div>`}
+    ${tieneItems(f)?itemsSec(f):`<div class="sec"><span class="pop-k">Cuánto mueve por ${esc(M.unidad)}</span>${tiposGrid(tipo)}${cuerpo}${lectura}<div id="lim-nota">${limNota(f)}</div></div>`}
     <details class="sec fold" data-fold="mira"${FOLD.has('mira')?' open':''}><summary>Qué mira <small>${esc(miraResumen(f))}</small></summary><div id="pop-mira">${miraHtml(f)}</div></details>
     <details class="sec fold" data-fold="reglas"${FOLD.has('reglas')||f.reglas.length?' open':''}><summary>Reglas <small>${f.reglas.length?f.reglas.length+' · '+esc(f.reglas.map(reglaTxt).join(' · ')):'ninguna'}</small></summary>${reglas||'<span class="hint">Sin reglas.</span>'}<div class="btns"><button class="sm" data-rnew="si">+ solo si…</button><button class="sm" data-rnew="max">+ como máximo…</button></div></details>
     <div class="sec"><div class="btns" style="justify-content:space-between"><button class="sm" data-copiar title="Ctrl+C">Copiar</button><button class="del" data-borrar>Borrar flujo</button></div></div>`;
@@ -933,7 +962,8 @@ function popOpen(k,snap,nuevo){POP={k,snap:snap||snapModelo(),nuevo:!!nuevo};ren
 function popClose(){POP=null;$('pop').hidden=true;$('pop').innerHTML='';renderDiagram();renderDatos();}
 function popPos(){const p=$('pop');if(!POP||p.hidden)return;const r=p.getBoundingClientRect();if(innerWidth>900&&(r.top<60||r.top>innerHeight-80))p.scrollIntoView({block:'nearest'});}
 function popRead2(){popConvLect();}
-function popRead(){setTimeout(popRead2,0);const f=M.flujos.find(x=>x.k===POP?.k);const el=$('pop-read');if(!f||!el)return;if(tieneItems(f)){el.innerHTML=itemsRead(f);return;}try{const v=compile(f.formula).fn(escena(ROWS[TCUR]));el.innerHTML=`${leer(f.formula)} <b>= ${fmtK(v,f.k)}</b>${TCUR?' en '+M.unidad+' '+TCUR:' hoy'}`;}catch(e){el.innerHTML=`<span class="err">${esc(e.message)}</span>`;}}
+function limNota(f){const r=ROWS[TCUR]||ROWS[0];if(!r)return '';if(faltaConv(f))return `<div class="nota crit">No se mueve nada hasta que declares la conversión de unidades (más abajo). Así no aparece ${esc(uniDe(f.hacia))} de la nada.</div>`;const p=r._lim&&r._lim[f.k];if(p===undefined)return '';return `<div class="nota warn">Pide ${fmtK(p,f.k)}, pero en ${TCUR?esc(M.unidad)+' '+TCUR:'hoy'} ${esc(nombre(p>0?f.desde:f.hacia))} no tiene tanto: sale ${fmtK(r[f.k]||0,f.k)}.</div>`;}
+function popRead(){setTimeout(()=>{const el=$('lim-nota');const f=M.flujos.find(x=>x.k===POP?.k);if(el&&f)el.innerHTML=limNota(f);},0);setTimeout(popRead2,0);const f=M.flujos.find(x=>x.k===POP?.k);const el=$('pop-read');if(!f||!el)return;if(tieneItems(f)){el.innerHTML=itemsRead(f);return;}try{const v=compile(f.formula).fn(escena(ROWS[TCUR]));el.innerHTML=`${leer(f.formula)} <b>= ${fmtK(v,f.k)}</b>${TCUR?' en '+M.unidad+' '+TCUR:' hoy'}`;}catch(e){el.innerHTML=`<span class="err">${esc(e.message)}</span>`;}}
 
 /* ---------- crear y borrar ---------- */
 function keyLibre(base){const k=slug(base);const usados=new Set([...M.cajas,...M.datos,...M.flujos].map(x=>x.k));let i=2,kk=k;while(usados.has(kk)||kk==='t'||FN[kk])kk=k+'_'+(i++);return kk;}
@@ -970,9 +1000,18 @@ function borrarDato(k){const p0=M.datos.find(x=>x.k===k);M.datos=M.datos.filter(
 let RUN=null,SPI=0;const SPEEDS=[[260,'1×'],[120,'2×'],[50,'4×']];
 function stopRun(){if(RUN){clearInterval(RUN);RUN=null;}$('play').textContent=TCUR>=ROWS.length-1&&TCUR>0?'↺ De nuevo':'▶ Simular';}
 function playRun(){if(RUN){stopRun();renderDiagram();return;}if(TCUR>=ROWS.length-1)TCUR=0;$('play').textContent='❚❚ Pausa';RUN=setInterval(()=>{if(TCUR>=ROWS.length-1){stopRun();renderTiempo();return;}TCUR++;renderTiempo();},SPEEDS[SPI][0]);}
+function renderAvisosMapa(){
+  const el=$('avisos-mapa');if(!el)return;const sc=M.flujos.filter(f=>faltaConv(f));
+  const limK=new Set();for(const r of ROWS)for(const k in (r._lim||{}))limK.add(k);
+  const L=[];
+  if(sc.length)L.push(`<div class="am crit"><b>${sc.length===1?'Un flujo no se mueve':sc.length+' flujos no se mueven'}:</b> va${sc.length===1?'':'n'} entre cajas de distinta unidad y falta declarar cuánto vale una en la otra. ${sc.map(f=>`<button class="sm" data-am-open="${esc(f.k)}">${esc(f.nombre||f.k)} (${esc(uniDe(f.desde))} → ${esc(uniDe(f.hacia))})</button>`).join(' ')}</div>`);
+  if(limK.size){const F=M.flujos.filter(f=>limK.has(f.k));L.push(`<div class="am warn"><b>No siempre alcanza:</b> en algún momento ${F.length===1?'este flujo pide':'estos flujos piden'} más de lo que hay en su caja, y sale solo lo que hay. ${F.map(f=>`<button class="sm" data-am-open="${esc(f.k)}">${esc(f.nombre||f.k)}</button>`).join(' ')}</div>`);}
+  el.innerHTML=L.join('');el.hidden=!L.length;
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-am-open]');if(b)popOpen(b.dataset.amOpen);});
 function renderTiempo(){
   const sc=$('scrub');sc.max=ROWS.length-1;if(document.activeElement!==sc)sc.value=TCUR;$('tl').textContent=(TCUR?(M.unidad+' '+TCUR+' de '+(ROWS.length-1)+(M.unidad==='mes'?' · '+fechaTxt(TCUR):'')):'hoy')+'';if(!RUN)$('play').textContent=TCUR>=ROWS.length-1&&TCUR>0?'↺ De nuevo':'▶ Simular';
-  LINKS=enlaces(ROWS[TCUR]);LOOPS=bucles(LINKS);renderLev();renderDiagram();renderChart();renderIO();if(VISTA==='tab')renderTab();if(POP&&M.flujos.some(f=>f.k===POP.k))popRead();
+  LINKS=enlaces(ROWS[TCUR]);LOOPS=bucles(LINKS);renderAvisosMapa();renderLev();renderDiagram();renderChart();renderIO();if(VISTA==='tab')renderTab();if(POP&&M.flujos.some(f=>f.k===POP.k))popRead();
 }
 
 /* ---------- cálculo ---------- */
@@ -1448,7 +1487,7 @@ function convHtml(f){
   const uno=c.uno==='desde'?ua:ub,otro=c.uno==='desde'?ub:ua;const v=String(c.v??'');const isNum=v===''||esNum(v);
   const P=M.datos.filter(p=>p.unidad!=='%');const p=isNum?null:M.datos.find(x=>x.k===v);
   const fx=convEnFormula(f);
-  return `<div class="sec conv"><span class="pop-k">Conversión de unidades</span>${fx?`<div class="conv-av">La fórmula ya divide por <b>${esc(nombre(fx.k))}</b>. Así, de <b>${esc(nombre(f.desde))}</b> sale solo el monto convertido y esa caja casi no baja. Lo correcto es calcular en ${esc(ua)} y convertir acá. <button class="sm primary" data-conv-fix style="margin-top:6px">Arreglarlo</button></div>`:!f.conv||v===''?`<span class="conv-av">Sale en <b>${esc(ua)}</b> y entra en <b>${esc(ub)}</b>: decí cuánto vale una en la otra.</span>`:''}
+  return `<div class="sec conv"><span class="pop-k">Conversión de unidades</span>${fx?`<div class="conv-av">La fórmula ya divide por <b>${esc(nombre(fx.k))}</b>. Así, de <b>${esc(nombre(f.desde))}</b> sale solo el monto convertido y esa caja casi no baja. Lo correcto es calcular en ${esc(ua)} y convertir acá. <button class="sm primary" data-conv-fix style="margin-top:6px">Arreglarlo</button></div>`:!f.conv||v===''?`<span class="conv-av">Sale en <b>${esc(ua)}</b> y entra en <b>${esc(ub)}</b>: decí cuánto vale una en la otra. Hasta entonces, este flujo no mueve nada.</span>`:''}
     <div class="conv-r"><span>1 ${esc(uno)} =</span>${isNum?`<input type="number" step="any" data-conv-v value="${v}" placeholder="¿cuánto?">`:`<b class="conv-p">${esc(fmtN(p?p.valor:0,''))}</b>`}<span>${esc(otro)}</span><button class="sm" data-conv-swap ${isNum?'':'disabled'} title="dar vuelta la equivalencia">⇄</button></div>
     <select data-conv-src><option value="#num"${isNum?' selected':''}>un número</option>${P.length?`<optgroup label="Parámetros">${P.map(q=>`<option value="${esc(q.k)}"${q.k===v?' selected':''}>${esc(q.nombre)} · ${esc(fmtN(q.valor,q.unidad))}</option>`).join('')}</optgroup>`:''}${isNum?'<option value="#new">↗ guardarlo como parámetro</option>':''}</select>
     ${convLect(f)}</div>`;
