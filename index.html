@@ -60,10 +60,12 @@ input[type=range]{padding:0;background:none;border:none;accent-color:var(--accen
 .drop .mi:hover{background:var(--surface-2)}
 .drop .mi.on{background:var(--accent-soft);font-weight:600}
 .drop .row{display:flex;gap:6px;flex-wrap:wrap}
-.clock{display:flex;align-items:center;gap:8px;flex:1;min-width:240px}
+.clock{display:flex;align-items:center;gap:8px;flex:1 1 240px;min-width:0;flex-wrap:wrap}
 .clock #play{padding:5px 12px;white-space:nowrap}
 .clock input[type=range]{flex:1}
 .clock .tl{font-family:var(--mono);font-size:13px;color:var(--fg2);white-space:nowrap}
+.clock input[type=range]{min-width:120px}
+html,body{overflow-x:hidden}
 .status{font-size:12px;color:var(--muted)}
 .board{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:14px;align-items:start}
 @media (max-width:900px){.board{grid-template-columns:1fr}}
@@ -349,6 +351,14 @@ details.fold[open]>summary{margin-bottom:6px}
 .diagram .vnode.sinconv circle{stroke:var(--crit);stroke-dasharray:4 3;stroke-width:2.5}
 .diagram .vnode.sinconv .vv{fill:var(--crit);font-family:var(--body);font-weight:600}
 .diagram .vnode.lim circle{stroke:var(--warn);stroke-width:2.6}
+.rep{gap:6px}
+.rp-row{display:grid;grid-template-columns:minmax(0,1fr) 110px 24px;gap:6px;align-items:center}
+.rp-resto{font-family:var(--mono);font-size:13px;color:var(--fg2);text-align:right;padding-right:4px}
+.rp-conv{display:grid;grid-template-columns:auto 100px auto minmax(0,1fr);gap:6px;align-items:center;font-size:12.5px;margin:-2px 0 4px 10px;color:var(--fg2)}
+.rp-conv input{font-family:var(--mono);text-align:right;padding:3px 6px}
+.rp-conv.falta{background:var(--crit-soft);border-radius:5px;padding:4px 6px}
+.diagram .repm rect{fill:var(--surface);stroke:var(--accent);stroke-width:1}
+.diagram .repm text{font-family:var(--mono);font-size:10.5px;text-anchor:middle;fill:var(--accent-ink);font-weight:600}
 </style>
 
 <div class="app">
@@ -370,6 +380,7 @@ details.fold[open]>summary{margin-bottom:6px}
       <li><b>Bucles:</b> aparecen solos cuando un flujo depende de su propia caja. <b>R</b> refuerza (crece sobre sí mismo), <b>B</b> equilibra (busca un nivel). La tarjeta de una caja tiene atajos para crear cada uno.</li>
       <li><b>Flujos de información:</b> las líneas punteadas, qué caja mira cada flujo. Con retardo, el flujo ve el dato tarde (el número en amarillo).</li>
       <li><b>Nada sale de la nada:</b> lo que entra a una caja es exactamente lo que salió de otra. Si van en distinta unidad (pesos y dólares, kilos y bolsas), hay que declarar cuánto vale una en la otra; si no, el flujo no se mueve. Y si una caja no tiene lo que un flujo pide, sale solo lo que hay.</li>
+      <li><b>Repartir:</b> en la tarjeta de un flujo, "↘ Repartir entre varias cajas": cada destino con su %, el último se lleva el resto, así siempre suma 100 %.</li>
       <li><b>Reglas:</b> en la tarjeta de un flujo, "solo si…" o "como máximo…".</li>
       <li><b>Ingresos y gastos:</b> el botón de arriba abre un tablero aparte. Elegís un lado, ves de qué se compone y movés cada concepto con su deslizador para ver cuánto te queda y si la meta llega. Tocá un concepto para cambiarle la recurrencia o a qué sigue.</li>
       <li><b>Meta y paradigma:</b> al costado. Con una meta, el motor recomienda qué mover para llegar.</li>
@@ -564,10 +575,7 @@ const hz=m=>m.meta.plazo;
 
 /* ---------- motor ---------- */
 const valDe=(x,sc)=>esNum(x)?+x:(sc[x]??0);
-function faltaConv(f,uni){
-  if(!f.desde||!f.hacia)return false;const a=uni?uni[f.desde]:uniDe(f.desde),b=uni?uni[f.hacia]:uniDe(f.hacia);
-  if(!a||!b||a===b)return false;return !(f.conv&&f.conv.v!==''&&f.conv.v!=null);
-}
+function faltaConv(f,uni){return destinos(f).some(d=>faltaConvD(f.desde,d,uni));}
 function simular(m,over){
   const H=hz(m),base={};for(const p of m.datos)base[p.k]=over&&over[p.k]!==undefined?over[p.k]:(+p.valor||0);
   const st={},hist={};for(const s of m.cajas){st[s.k]=+s.hoy||0;hist[s.k]=[st[s.k]];}
@@ -584,11 +592,12 @@ function simular(m,over){
     // conservación: sin conversión declarada entre unidades distintas no se mueve nada; nadie saca más de lo que hay
     const real={...fv},sinConv=[],lim={};const uni={};for(const s of m.cajas)uni[s.k]=String(s.unidad||'').trim();
     for(const f of m.flujos)if(faltaConv(f,uni)){if(real[f.k])sinConv.push(f.k);real[f.k]=0;}
-    const fcDe={};for(const f of m.flujos)fcDe[f.k]=f.conv?convDe(f,sc):1;
+    const DS={};for(const f of m.flujos){DS[f.k]=destinos(f).map(x=>({h:x.hacia,p:x.parte,fc:x.conv?convDe({conv:x.conv},sc):1}));if(DS[f.k].length>1&&real[f.k]<0)real[f.k]=0;}
+    const fcDe={};for(const f of m.flujos)fcDe[f.k]=(DS[f.k][0]||{fc:1}).fc;
     for(let pass=0;pass<4;pass++){
       const inn={},out={};for(const s of m.cajas){inn[s.k]=0;out[s.k]=0;}
       for(const f of m.flujos){const v=real[f.k];if(!v)continue;
-        if(v>0){if(f.desde in out)out[f.desde]+=v;if(f.hacia in inn)inn[f.hacia]+=v*fcDe[f.k];}
+        if(v>0){if(f.desde in out)out[f.desde]+=v;for(const x of DS[f.k])if(x.h in inn)inn[x.h]+=v*x.p*x.fc;}
         else{if(f.hacia in out)out[f.hacia]+=-v*fcDe[f.k];if(f.desde in inn)inn[f.desde]+=-v;}}
       let cambio_=false;
       for(const s of m.cajas){if(!s.min0)continue;const disp=Math.max(0,st[s.k])+inn[s.k];if(out[s.k]>disp*(1+1e-9)+1e-9){const r=out[s.k]>0?Math.max(0,disp/out[s.k]):0;cambio_=true;
@@ -599,7 +608,7 @@ function simular(m,over){
     const row={i,...st,...real,_clamp:[],_lim:lim,_sinConv:sinConv};row._meta=m.meta.cajas.reduce((a,k)=>a+(row[k]||0),0);rows.push(row);
     if(i===H)break;
     const d={};for(const s of m.cajas)d[s.k]=0;
-    for(const f of m.flujos){const v=real[f.k];if(!v)continue;if(f.desde in d)d[f.desde]-=v;if(f.hacia in d)d[f.hacia]+=v*fcDe[f.k];}
+    for(const f of m.flujos){const v=real[f.k];if(!v)continue;if(f.desde in d)d[f.desde]-=v;if(v>0){for(const x of DS[f.k])if(x.h in d)d[x.h]+=v*x.p*x.fc;}else if(f.hacia in d)d[f.hacia]+=v*fcDe[f.k];}
     for(const s of m.cajas){let nv=st[s.k]+d[s.k];if(s.min0&&nv<0){nv=0;row._clamp.push(s.k);}st[s.k]=nv;hist[s.k].push(nv);}
   }
   return rows;
@@ -629,7 +638,7 @@ function enlaces(r){
 }
 function bucles(L){
   const st=M.cajas.map(s=>s.k);const edges=[];
-  for(const l of L){if(!l.sign)continue;for(const [T,s2] of [[l.f.hacia,1],[l.f.desde,-1]]){if(!T||!st.includes(T))continue;edges.push({from:l.from,via:l.f,to:T,sign:l.sign*s2,g:l.g,ret:l.ret});}}
+  for(const l of L){if(!l.sign)continue;for(const [T,s2] of [...destinos(l.f).map(x=>[x.hacia,1]),[l.f.desde,-1]]){if(!T||!st.includes(T))continue;edges.push({from:l.from,via:l.f,to:T,sign:l.sign*s2,g:l.g,ret:l.ret});}}
   const out=[],seen=new Set(),byFrom={};for(const e of edges)(byFrom[e.from]=byFrom[e.from]||[]).push(e);
   function dfs(start,node,path,depth){for(const e of byFrom[node]||[]){
     if(e.to===start){const cyc=[...path,e];const key=cyc.map(x=>x.via.k+'@'+x.from).sort().join('|');if(seen.has(key))continue;seen.add(key);const sign=cyc.reduce((a,x)=>a*x.sign,1);out.push({edges:cyc,tipo:sign>0?'R':'B',g:cyc.reduce((a,x)=>a*x.g,1),ret:cyc.some(x=>x.ret>0),key});}
@@ -641,7 +650,8 @@ function bucles(L){
 /* ---------- mapa: posiciones ---------- */
 let LAY={key:'',pos:{},T:null},SEL_LOOP='',DRAG=null,RAF=0;
 const NW=168,NH=62;
-function layKey(){return M.id+'|'+M.cajas.map(s=>s.k).join(',')+'|'+M.flujos.map(f=>f.k+':'+f.desde+'>'+f.hacia).join(',');}
+const sigF=f=>f.desde+'>'+destinos(f).map(x=>x.hacia).join('+');
+function layKey(){return M.id+'|'+M.cajas.map(s=>s.k).join(',')+'|'+M.flujos.map(f=>f.k+':'+f.desde+'>'+destinos(f).map(x=>x.hacia).join('+')).join(',');}
 function fitT(P){
   const ids=Object.keys(P);let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
   for(const i of ids){const p=P[i];const hw=p.st?NW/2+8:70,ht=p.st?NH/2+10:60,hb=p.st?NH/2+8:66;x0=Math.min(x0,p.x-hw);x1=Math.max(x1,p.x+hw);y0=Math.min(y0,p.y-ht);y1=Math.max(y1,p.y+hb);}
@@ -651,7 +661,7 @@ function fitT(P){
 }
 function fuerzas(P,iters){
   const E=[];
-  for(const f of M.flujos){if(!P[f.k])continue;const rf=varsDe(f.formula);if(P[f.desde])E.push([f.desde,f.k,rf.includes(f.desde)?150:110,0.06]);if(P[f.hacia])E.push([f.k,f.hacia,rf.includes(f.hacia)?150:110,0.06]);
+  for(const f of M.flujos){if(!P[f.k])continue;const rf=varsDe(f.formula);if(P[f.desde])E.push([f.desde,f.k,rf.includes(f.desde)?150:110,0.06]);if(P[f.hacia])E.push([f.k,f.hacia,rf.includes(f.hacia)?150:110,0.06]);for(const x of destinos(f).slice(1))if(P[x.hacia])E.push([f.k,x.hacia,130,0.05]);
     for(const v of rf)if(P[v]&&P[v].st&&v!==f.desde&&v!==f.hacia)E.push([v,f.k,150,0.015]);}
   const ids=Object.keys(P);
   for(let it=0;it<iters;it++){
@@ -665,22 +675,23 @@ function fuerzas(P,iters){
 function layout(force){
   const key=layKey();if(!force&&LAY.key===key&&LAY.T)return;
   if(!force&&M.lay&&M.lay.key===key&&M.lay.T&&!LAY.T){LAY={key,pos:structuredClone(M.lay.pos),T:{...M.lay.T}};return;}
-  const prev=force?null:(Object.keys(LAY.pos||{}).length?LAY.pos:(M.lay&&M.lay.pos)||null);
+  let prev=force?null:(Object.keys(LAY.pos||{}).length?LAY.pos:(M.lay&&M.lay.pos)||null);
+  {const sp=(M.lay&&M.lay.sig)||LAY.sig;if(prev&&sp&&M.flujos.some(f=>sp[f.k]!==undefined&&sp[f.k]!==sigF(f)&&destinos(f).length>1))prev=null;}
   const S=M.cajas,F=M.flujos.filter(f=>S.some(s=>s.k===f.desde||s.k===f.hacia));const P={};
-  const ubicar=()=>{const cnt={};for(const f of F)if(!P[f.k]){const A=P[f.desde],B=P[f.hacia];
+  const ubicar=()=>{const cnt={};for(const f of F)if(!P[f.k]){const A=P[f.desde];let B=P[f.hacia];const DD=destinos(f).map(x=>P[x.hacia]).filter(Boolean);if(DD.length>1)B={x:DD.reduce((a,p)=>a+p.x,0)/DD.length,y:DD.reduce((a,p)=>a+p.y,0)/DD.length,st:1};
     if(A&&B)P[f.k]={x:(A.x+B.x)/2+(B.y-A.y)*0.15,y:(A.y+B.y)/2-(B.x-A.x)*0.15};
     else{const k=A?f.desde:f.hacia,s=P[k],i=(cnt[k]=(cnt[k]||0)+1)-1;let ang=(A?0:Math.PI)+(i%2?1:-1)*Math.ceil(i/2)*0.7;if(S.length>1)ang=Math.atan2(s.y,s.x)+(i%2?1:-1)*Math.ceil(i/2)*0.6;P[f.k]={x:s.x+125*Math.cos(ang),y:s.y+125*Math.sin(ang)};}}};
   if(prev){
     for(const s of S)if(prev[s.k])P[s.k]={...prev[s.k],st:1,fix:1};
-    for(const f of F)if(prev[f.k])P[f.k]={...prev[f.k],fix:1};
-    let maxY=Math.max(0,...Object.values(P).map(p=>p.y));for(const s of S)if(!P[s.k]){P[s.k]={x:0,y:maxY+160,st:1};maxY+=160;}
+    const sigPrev=(M.lay&&M.lay.sig)||LAY.sig||{};for(const f of F)if(prev[f.k]&&(sigPrev[f.k]===undefined||sigPrev[f.k]===sigF(f)))P[f.k]={...prev[f.k],fix:1};
+    const vs=Object.values(P);let maxX=vs.length?Math.max(...vs.map(p=>p.x)):0;const midY=vs.length?vs.reduce((a,p)=>a+p.y,0)/vs.length:0;let k_=0;for(const s of S)if(!P[s.k]){P[s.k]={x:maxX+240,y:midY+(k_%2?140:-40),st:1};maxX+=240;k_++;}
     ubicar();fuerzas(P,40);for(const p of Object.values(P))delete p.fix;
   }else{
     const n=S.length,R0=n<=1?0:Math.max(170,n*62);
     S.forEach((s,i)=>{const a=Math.PI+2*Math.PI*i/Math.max(1,n);P[s.k]={x:R0*Math.cos(a),y:R0*Math.sin(a)*0.8,st:1};});
     ubicar();fuerzas(P,360);
   }
-  LAY={key,pos:P,T:fitT(P)};M.lay={key,pos:structuredClone(P),T:{...LAY.T}};
+  const sig={};for(const f of M.flujos)sig[f.k]=sigF(f);LAY={key,pos:P,T:fitT(P),sig};M.lay={key,pos:structuredClone(P),T:{...LAY.T},sig};
 }
 
 /* ---------- mapa: dibujo ---------- */
@@ -709,7 +720,8 @@ function renderDiagram(){
     if(B)[ex,ey]=ptS(B,vx,vy);else{const dx=vx-X(A),dy=vy-Y(A),d=Math.max(1,Math.hypot(dx,dy));ex=vx+dx/d*46;ey=vy+dy/d*46;marks+=`<circle class="cloud${dd}" cx="${f1(ex)}" cy="${f1(ey)}" r="10"><title>afuera del sistema</title></circle>`;}
     const [p1x,p1y]=ptV(f.k,sx,sy,12),[p2x,p2y]=ptV(f.k,ex,ey,12);
     pipes+=`<line class="pipe${a}${dd}" style="stroke-width:${w}" x1="${f1(sx)}" y1="${f1(sy)}" x2="${f1(p1x)}" y2="${f1(p1y)}"/><line class="pipe${a}${dd}" style="stroke-width:${w}" x1="${f1(p2x)}" y1="${f1(p2y)}" x2="${f1(ex)}" y2="${f1(ey)}" marker-end="url(#ahp)"/>`;
-    if(A&&B&&uniDe(A)!==uniDe(B)){const mx=(p2x+ex)/2,my=(p2y+ey)/2;marks+=`<g class="convm${dd}"><title>${esc((f.conv&&f.conv.v!==''?'convierte ':'sin conversión: ')+uniDe(A)+' → '+uniDe(B))}</title><rect x="${f1(mx-24)}" y="${f1(my-9)}" width="48" height="17" rx="8"/><text x="${f1(mx)}" y="${f1(my+3.5)}">${esc((uniDe(A)||'?')+'→'+(uniDe(B)||'?'))}</text></g>`;}
+    const DST=destinos(f);if(DST.length>1){DST.forEach((x,j)=>{if(!P[x.hacia])return;let qx=p2x,qy=p2y,tx=ex,ty=ey;if(j>0){[tx,ty]=ptS(x.hacia,vx,vy);[qx,qy]=ptV(f.k,tx,ty,12);pipes+=`<line class="pipe${a}${dd}" style="stroke-width:${f1(Math.max(2,+w*Math.max(0.35,x.parte)))}" x1="${f1(qx)}" y1="${f1(qy)}" x2="${f1(tx)}" y2="${f1(ty)}" marker-end="url(#ahp)"/>`;}const lb=nf.format(x.parte*100)+' %'+(A&&uniDe(A)!==uniDe(x.hacia)?' · '+uniDe(A)+'→'+uniDe(x.hacia):'');const mx=(qx+tx)/2,my=(qy+ty)/2,lw=10+lb.length*6.3;marks+=`<g class="repm${dd}"><rect x="${f1(mx-lw/2)}" y="${f1(my-9)}" width="${f1(lw)}" height="17" rx="8"/><text x="${f1(mx)}" y="${f1(my+3.5)}">${esc(lb)}</text></g>`;});}
+    else if(A&&B&&uniDe(A)!==uniDe(B)){const mx=(p2x+ex)/2,my=(p2y+ey)/2;marks+=`<g class="convm${dd}"><title>${esc((f.conv&&f.conv.v!==''?'convierte ':'sin conversión: ')+uniDe(A)+' → '+uniDe(B))}</title><rect x="${f1(mx-24)}" y="${f1(my-9)}" width="48" height="17" rx="8"/><text x="${f1(mx)}" y="${f1(my+3.5)}">${esc((uniDe(A)||'?')+'→'+(uniDe(B)||'?'))}</text></g>`;}
     let ls=wrapTxt(f.nombre||f.k,18);if(ls.length>2)ls=[ls[0],cut(ls.slice(1).join(' '),18)];
     const sinC=(r._sinConv||[]).includes(f.k)||faltaConv(f),limV=r._lim&&r._lim[f.k]!==undefined?r._lim[f.k]:null;
     nodes+=`<g class="vnode${dd}${POP&&POP.k===f.k?' on':''}${sinC?' sinconv':limV!==null?' lim':''}" data-node="${esc(f.k)}"><title>${esc((f.nombre||f.k)+': '+fmtK(v,f.k)+(sinC?'\nNo se mueve: falta declarar la conversión de unidades':limV!==null?'\nPidió '+fmtK(limV,f.k)+', pero no alcanzaba':''))}</title><circle cx="${f1(vx)}" cy="${f1(vy)}" r="14"/><path d="M${f1(vx-7.5)} ${f1(vy-7.5)} L${f1(vx+7.5)} ${f1(vy+7.5)} L${f1(vx+7.5)} ${f1(vy-7.5)} L${f1(vx-7.5)} ${f1(vy+7.5)}Z"/>${ls.map((l,j)=>`<text class="vn" x="${f1(vx)}" y="${f1(vy+30+j*14)}">${esc(l)}</text>`).join('')}<text class="vv" x="${f1(vx)}" y="${f1(vy+31+ls.length*14)}">${sinC?'falta conversión':fmtK(v,f.k)+(limV!==null?' ⚠':'')}</text>${f.reglas.length?`<text class="flag" x="${f1(vx+12)}" y="${f1(vy-10)}"><title>${esc(f.reglas.map(reglaTxt).join('\n'))}</title>⚑</text>`:''}</g>`;
@@ -821,7 +833,7 @@ function renderMetaEstado(){
 /* ---------- parámetros ---------- */
 let DATO_OPEN='',DATO_DEL='';
 function rango(p){const v=+p.valor||0,a=Math.abs(v);if(p.unidad==='%'||(a>0&&a<=1))return {min:0,max:Math.max(0.1,Math.min(1,a*3||0.1)),step:0.001};const mx=a?a*3:100;return {min:v<0?-mx:0,max:mx,step:nice(mx/200)};}
-function usosDe(k){const out=[];for(const f of M.flujos){if(varsDe(f.formula).includes(k)||f.reglas.some(r=>r.a===k||r.b===k)||(f.conv&&f.conv.v===k))out.push(f.nombre||f.k);}return out;}
+function usosDe(k){const out=[];for(const f of M.flujos){if(varsDe(f.formula).includes(k)||f.reglas.some(r=>r.a===k||r.b===k)||(f.conv&&f.conv.v===k)||(f.reparto||[]).some(x=>x.conv&&x.conv.v===k))out.push(f.nombre||f.k);}return out;}
 function renderDatos(){
   const used=new Set(POP&&POP.kind==='flujo'?varsDe((M.flujos.find(f=>f.k===POP.k)||{}).formula||''):[]);
   $('datos-p').innerHTML=`<h2>Parámetros <small>movelos y mirá el mapa</small></h2>`+(M.datos.length?'':`<p class="hint">Los números que usan los flujos: tasas, montos, límites. Aparecen cuando armás un flujo.</p>`)+M.datos.map(p=>{
@@ -896,7 +908,7 @@ function opSel(id,val,kind){
 }
 function reglaTxt(r){return r.tipo==='max'?`Como máximo ${esNum(r.b)?r.b:nombre(r.b)}`:`Solo si ${nombre(r.a)} ${r.op==='>'?'supera':'es menor que'} ${esNum(r.b)?r.b:nombre(r.b)}`;}
 function popCaja(s){
-  const ins=M.flujos.filter(f=>f.hacia===s.k),outs=M.flujos.filter(f=>f.desde===s.k),otros=M.cajas.filter(x=>x.k!==s.k);
+  const ins=M.flujos.filter(f=>destinos(f).some(x=>x.hacia===s.k)),outs=M.flujos.filter(f=>f.desde===s.k),otros=M.cajas.filter(x=>x.k!==s.k);
   const li=(f,dir)=>{const otro=dir==='in'?f.desde:f.hacia;return `<button class="fl" data-go="${esc(f.k)}">${esc(f.nombre||f.k)} <small>${fmtK((ROWS[TCUR]||{})[f.k],f.k)}${otro?(dir==='in'?' ← ':' → ')+esc(nombre(otro)):''}</small></button>`;};
   return `<div class="pop-h"><span class="pop-k">Caja</span><button class="del" data-close aria-label="cerrar" style="color:var(--fg2);font-size:18px">×</button></div>
     <input type="text" class="big" data-c="nombre" value="${esc(s.nombre)}" placeholder="nombre de la caja">
@@ -918,8 +930,7 @@ function popFlujo(f){
   const reglas=f.reglas.map(r=>r.tipo==='max'?`<div class="regla max"><span>Como máximo</span>${opSel('rb:'+r.id,r.b,'dato')}<button class="del" data-rdel="${esc(r.id)}" aria-label="quitar regla">×</button></div>`:`<div class="regla"><span>Solo si</span>${opSel('ra:'+r.id,r.a,'cd')}<select data-rop="${esc(r.id)}"><option value=">"${r.op==='>'?' selected':''}>&gt;</option><option value="<"${r.op==='<'?' selected':''}>&lt;</option></select>${opSel('rb:'+r.id,r.b,'dato')}<button class="del" data-rdel="${esc(r.id)}" aria-label="quitar regla">×</button></div>`).join('');
   return `<div class="pop-h"><span class="pop-k">Flujo</span><button class="del" data-close aria-label="cerrar" style="color:var(--fg2);font-size:18px">×</button></div>
     <input type="text" class="big" data-fl="nombre" value="${esc(f.nombre)}" placeholder="¿Qué es? Ej.: sueldo, alquiler, interés">
-    <div class="g2"><label>Sale de${sel('desde',f.desde)}</label><label>Entra a${sel('hacia',f.hacia)}</label></div>
-    ${convHtml(f)}
+    ${repEsta(f)?`<label>Sale de${sel('desde',f.desde)}</label>${repHtml(f)}`:`<div class="g2"><label>Sale de${sel('desde',f.desde)}</label><label>Entra a${sel('hacia',f.hacia)}</label></div>${convHtml(f)}${repBoton(f)}`}
     ${tieneItems(f)?itemsSec(f):`<div class="sec"><span class="pop-k">Cuánto mueve por ${esc(M.unidad)}</span>${tiposGrid(tipo)}${cuerpo}${lectura}<div id="lim-nota">${limNota(f)}</div></div>`}
     <details class="sec fold" data-fold="mira"${FOLD.has('mira')?' open':''}><summary>Qué mira <small>${esc(miraResumen(f))}</small></summary><div id="pop-mira">${miraHtml(f)}</div></details>
     <details class="sec fold" data-fold="reglas"${FOLD.has('reglas')||f.reglas.length?' open':''}><summary>Reglas <small>${f.reglas.length?f.reglas.length+' · '+esc(f.reglas.map(reglaTxt).join(' · ')):'ninguna'}</small></summary>${reglas||'<span class="hint">Sin reglas.</span>'}<div class="btns"><button class="sm" data-rnew="si">+ solo si…</button><button class="sm" data-rnew="max">+ como máximo…</button></div></details>
@@ -970,7 +981,7 @@ function keyLibre(base){const k=slug(base);const usados=new Set([...M.cajas,...M
 function rekey(e,nom){if(!e||!String(nom||'').trim())return;const s=slug(nom);if(s===e.k)return;renombrar(e.k,keyLibre(nom));}
 function renombrar(viejo,nuevo){
   if(viejo===nuevo)return;{const e=ent(viejo);if(e)e.k=nuevo;}const re=new RegExp('\\b'+viejo+'\\b','g');
-  for(const f of M.flujos){if(f.desde===viejo)f.desde=nuevo;if(f.hacia===viejo)f.hacia=nuevo;f.formula=String(f.formula).replace(re,nuevo);if(viejo in f.retardos){f.retardos[nuevo]=f.retardos[viejo];delete f.retardos[viejo];}for(const r of f.reglas){if(r.a===viejo)r.a=nuevo;if(r.b===viejo)r.b=nuevo;}for(const it of (f.items||[]))if(it.crece===viejo)it.crece=nuevo;if(f.conv&&f.conv.v===viejo)f.conv.v=nuevo;}
+  for(const f of M.flujos){if(f.desde===viejo)f.desde=nuevo;if(f.hacia===viejo)f.hacia=nuevo;f.formula=String(f.formula).replace(re,nuevo);if(viejo in f.retardos){f.retardos[nuevo]=f.retardos[viejo];delete f.retardos[viejo];}for(const r of f.reglas){if(r.a===viejo)r.a=nuevo;if(r.b===viejo)r.b=nuevo;}for(const it of (f.items||[]))if(it.crece===viejo)it.crece=nuevo;if(f.conv&&f.conv.v===viejo)f.conv.v=nuevo;for(const x of (f.reparto||[])){if(x.hacia===viejo)x.hacia=nuevo;if(x.conv&&x.conv.v===viejo)x.conv.v=nuevo;}}
   M.meta.cajas=M.meta.cajas.map(k=>k===viejo?nuevo:k);
   for(const P of [LAY.pos,M.lay&&M.lay.pos])if(P&&P[viejo]){P[nuevo]=P[viejo];delete P[viejo];}
   LAY.key=layKey();if(M.lay)M.lay.key=LAY.key;
@@ -991,10 +1002,10 @@ function nuevoBucle(tipo,caja){
 }
 function borrarCaja(k){
   M.cajas=M.cajas.filter(c=>c.k!==k);
-  for(const f of M.flujos){if(f.desde===k)f.desde='';if(f.hacia===k)f.hacia='';f.formula=sinClave(f.formula,k);delete f.retardos[k];f.reglas=f.reglas.filter(r=>r.a!==k&&r.b!==k);}
+  for(const f of M.flujos){if(repEsta(f)){f.reparto=f.reparto.filter(x=>x.hacia!==k);if(f.reparto.length<2){const r0=f.reparto[0];f.hacia=r0?r0.hacia:'';if(r0&&r0.conv)f.conv=r0.conv;delete f.reparto;}else repSync(f);}if(f.desde===k)f.desde='';if(f.hacia===k)f.hacia='';f.formula=sinClave(f.formula,k);delete f.retardos[k];f.reglas=f.reglas.filter(r=>r.a!==k&&r.b!==k);}
   M.flujos=M.flujos.filter(f=>f.desde||f.hacia);M.meta.cajas=M.meta.cajas.filter(x=>x!==k);
 }
-function borrarDato(k){const p0=M.datos.find(x=>x.k===k);M.datos=M.datos.filter(p=>p.k!==k);for(const f of M.flujos){f.formula=sinClave(f.formula,k);f.reglas=f.reglas.filter(r=>r.a!==k&&r.b!==k);for(const it of (f.items||[]))if(it.crece===k)it.crece='';if(f.conv&&f.conv.v===k)f.conv.v=p0?String(+p0.valor||0):'';}}
+function borrarDato(k){const p0=M.datos.find(x=>x.k===k);M.datos=M.datos.filter(p=>p.k!==k);for(const f of M.flujos){f.formula=sinClave(f.formula,k);f.reglas=f.reglas.filter(r=>r.a!==k&&r.b!==k);for(const it of (f.items||[]))if(it.crece===k)it.crece='';if(f.conv&&f.conv.v===k)f.conv.v=p0?String(+p0.valor||0):'';for(const x of (f.reparto||[]))if(x.conv&&x.conv.v===k)x.conv.v=p0?String(+p0.valor||0):'';}}
 
 /* ---------- tiempo ---------- */
 let RUN=null,SPI=0;const SPEEDS=[[260,'1×'],[120,'2×'],[50,'4×']];
@@ -1119,7 +1130,7 @@ document.addEventListener('click',e=>{
 
 /* ---------- copiar y pegar ---------- */
 let CLIP=null;try{CLIP=JSON.parse(localStorage.getItem(KEY+'-clip')||'null');}catch(e){}
-function refsDatos(fl){const s=new Set();for(const f of fl){for(const v of varsDe(f.formula))s.add(v);for(const it of (f.items||[]))if(it.crece)s.add(it.crece);if(f.conv&&f.conv.v&&!esNum(f.conv.v))s.add(f.conv.v);for(const r of f.reglas){if(r.a&&!esNum(r.a))s.add(r.a);if(r.b&&!esNum(r.b))s.add(r.b);}}return M.datos.filter(p=>s.has(p.k));}
+function refsDatos(fl){const s=new Set();for(const f of fl){for(const v of varsDe(f.formula))s.add(v);for(const it of (f.items||[]))if(it.crece)s.add(it.crece);if(f.conv&&f.conv.v&&!esNum(f.conv.v))s.add(f.conv.v);for(const x of (f.reparto||[]))if(x.conv&&x.conv.v&&!esNum(x.conv.v))s.add(x.conv.v);for(const r of f.reglas){if(r.a&&!esNum(r.a))s.add(r.a);if(r.b&&!esNum(r.b))s.add(r.b);}}return M.datos.filter(p=>s.has(p.k));}
 function copiar(){
   if(!POP)return;const c=M.cajas.find(x=>x.k===POP.k),f=M.flujos.find(x=>x.k===POP.k);
   if(c){const fl=M.flujos.filter(x=>(x.desde===c.k&&!x.hacia)||(x.hacia===c.k&&!x.desde));CLIP={tipo:'caja',modelo:M.id,caja:structuredClone(c),flujos:structuredClone(fl),datos:structuredClone(refsDatos(fl)),nombre:c.nombre};}
@@ -1511,6 +1522,58 @@ document.addEventListener('change',e=>{
   cambio();renderPop();
 });
 
+/* ---------- repartir un flujo entre varias cajas ---------- */
+const repEsta=f=>Array.isArray(f.reparto)&&f.reparto.length>1;
+function destinos(f){
+  if(!repEsta(f))return f.hacia?[{hacia:f.hacia,parte:1,conv:f.conv||null,i:0}]:[];
+  const R=f.reparto,n=R.length;let otros=R.slice(0,-1).map(d=>Math.max(0,Math.min(1,+d.parte||0)));const s=otros.reduce((a,b)=>a+b,0);
+  if(s>1)otros=otros.map(p=>p/s);const resto=Math.max(0,1-otros.reduce((a,b)=>a+b,0));
+  return R.map((d,i)=>({hacia:d.hacia,parte:i<n-1?otros[i]:resto,conv:d.conv||null,i}));
+}
+function faltaConvD(desde,d,uni){const a=uni?uni[desde]:uniDe(desde),b=uni?uni[d.hacia]:uniDe(d.hacia);if(!desde||!d.hacia||!a||!b||a===b)return false;return !(d.conv&&d.conv.v!==''&&d.conv.v!=null);}
+function repSync(f){if(repEsta(f)){f.hacia=f.reparto[0].hacia;delete f.conv;}}
+function repLect(f){
+  const r=ROWS[TCUR]||ROWS[0];if(!r)return '';const v=r[f.k]||0;const sc=escena(r);const ua=uniDe(f.desde||f.hacia);
+  return `<div class="read" id="rep-lect">${TCUR?'En '+esc(M.unidad)+' '+TCUR:'Hoy'} salen <b>${fmtN(v,ua)}</b> → ${destinos(f).map(d=>{const fc=d.conv?convDe({conv:d.conv},sc):1;return `${esc(nombre(d.hacia))} <b>${fmtN(v*d.parte*fc,uniDe(d.hacia))}</b> (${nf1.format(d.parte*100)} %)`;}).join(', ')}</div>`;
+}
+function convFila(f,d,i){
+  const ua=uniDe(f.desde),ub=uniDe(d.hacia);if(!f.desde||!ua||!ub||ua===ub)return '';
+  const v=String(d.conv&&d.conv.v!=null?d.conv.v:'');const isNum=v===''||esNum(v);const P=M.datos.filter(p=>p.unidad!=='%');const p=isNum?null:M.datos.find(x=>x.k===v);
+  return `<div class="rp-conv${v===''?' falta':''}"><span>1 ${esc(ub)} =</span>${isNum?`<input type="number" step="any" data-rp-cv="${i}" value="${v}" placeholder="¿cuánto?">`:`<b>${esc(fmtN(p?p.valor:0,''))}</b>`}<span>${esc(ua)}</span><select data-rp-src="${i}"><option value="#num"${isNum?' selected':''}>un número</option>${P.length?`<optgroup label="Parámetros">${P.map(q=>`<option value="${esc(q.k)}"${q.k===v?' selected':''}>${esc(q.nombre)} · ${esc(fmtN(q.valor,q.unidad))}</option>`).join('')}</optgroup>`:''}${isNum?'<option value="#new">↗ guardarlo como parámetro</option>':''}</select></div>`;
+}
+function repHtml(f){
+  const R=f.reparto,D=destinos(f);const opts=sel=>M.cajas.filter(c=>c.k!==f.desde).map(c=>`<option value="${esc(c.k)}"${c.k===sel?' selected':''}>${esc(c.nombre)}</option>`).join('');
+  return `<div class="sec rep"><span class="pop-k">Se reparte entre</span>${R.map((d,i)=>{const last=i===R.length-1;const pct=D[i].parte*100;
+    return `<div class="rp-row"><select data-rp-h="${i}">${opts(d.hacia)}</select>${last?`<span class="rp-resto">el resto · ${nf1.format(pct)} %</span>`:`<span class="opn"><input type="number" step="any" min="0" max="100" data-rp-p="${i}" value="${+pct.toFixed(2)}"><i>%</i></span>`}<button class="del" data-rp-del="${i}" ${R.length<=2?'disabled':''} aria-label="quitar destino">×</button></div>${convFila(f,d,i)}`;}).join('')}
+    <div class="btns"><button class="sm" data-rp-add>+ otro destino</button><button class="link sm" data-rp-off>dejar de repartir</button></div>${repLect(f)}</div>`;
+}
+function repBoton(f){if(!(f.desde||f.hacia))return '';const otras=M.cajas.filter(c=>c.k!==f.desde);if(otras.length<2)return '';return `<button class="link sm" data-rp-on style="justify-self:start">↘ Repartir entre varias cajas</button>`;}
+const flujoPop=()=>M.flujos.find(x=>x.k===POP?.k);
+document.addEventListener('click',e=>{
+  const b=e.target.closest('#pop [data-rp-on],#pop [data-rp-add],#pop [data-rp-del],#pop [data-rp-off]');if(!b)return;const f=flujoPop();if(!f)return;const d=b.dataset;
+  const libres=()=>M.cajas.filter(c=>c.k!==f.desde&&!(f.reparto||[]).some(x=>x.hacia===c.k));
+  if(d.rpOn!==undefined){const h1=f.hacia||(libres()[0]||{}).k;const h2=(M.cajas.find(c=>c.k!==f.desde&&c.k!==h1)||{}).k;if(!h1||!h2)return;f.reparto=[{hacia:h1,parte:0.5,conv:f.conv||null},{hacia:h2,parte:0.5,conv:null}];repSync(f);}
+  else if(d.rpAdd!==undefined){const l=libres()[0]||M.cajas.find(c=>c.k!==f.desde);if(!l)return;f.reparto.splice(f.reparto.length-1,0,{hacia:l.k,parte:0.1,conv:null});}
+  else if(d.rpDel!==undefined){f.reparto.splice(+d.rpDel,1);if(f.reparto.length<2){const r0=f.reparto[0];f.hacia=r0?r0.hacia:f.hacia;if(r0&&r0.conv)f.conv=r0.conv;delete f.reparto;}else repSync(f);}
+  else if(d.rpOff!==undefined){const r0=f.reparto[0];f.hacia=r0.hacia;if(r0.conv)f.conv=r0.conv;delete f.reparto;}
+  cambio(true);renderPop();
+});
+document.addEventListener('input',e=>{
+  const el=e.target,f=POP&&el.closest&&el.closest('#pop')?flujoPop():null;if(!f||!repEsta(f))return;
+  if(el.dataset.rpP!==undefined&&el.value!==''){f.reparto[+el.dataset.rpP].parte=Math.max(0,Math.min(100,+el.value))/100;dirty=true;scheduleCompute();scheduleSave();setTimeout(()=>{const x=$('rep-lect');if(x)x.outerHTML=repLect(f);},40);}
+  if(el.dataset.rpCv!==undefined){const d=f.reparto[+el.dataset.rpCv];d.conv={uno:'hacia',v:el.value===''?'':String(+el.value)};dirty=true;scheduleCompute();scheduleSave();setTimeout(()=>{const x=$('rep-lect');if(x)x.outerHTML=repLect(f);},40);}
+});
+document.addEventListener('change',e=>{
+  const el=e.target,f=POP&&el.closest&&el.closest('#pop')?flujoPop():null;if(!f||!repEsta(f))return;const ds=el.dataset;
+  if(ds.rpH!==undefined){f.reparto[+ds.rpH].hacia=el.value;f.reparto[+ds.rpH].conv=null;repSync(f);cambio(true);renderPop();return;}
+  if(ds.rpP!==undefined||ds.rpCv!==undefined){cambio();renderPop();return;}
+  if(ds.rpSrc!==undefined){const d=f.reparto[+ds.rpSrc];const c=d.conv||{uno:'hacia',v:''};const ua=uniDe(f.desde),ub=uniDe(d.hacia);
+    if(el.value==='#num'){const p=M.datos.find(x=>x.k===c.v);d.conv={uno:'hacia',v:p?String(+p.valor||0):''};}
+    else if(el.value==='#new'){const usd=s=>/^(USD|US\$|u\$s|dólares?)$/i.test(s);const ex=M.datos.find(p=>p.nombre==='Tipo de cambio');const p=(ua==='$'&&usd(ub))&&ex?ex:nuevoDato((ua==='$'&&usd(ub))?'Tipo de cambio':`1 ${ub} en ${ua}`,+c.v||1,ua);d.conv={uno:'hacia',v:p.k};renderDatos();}
+    else d.conv={uno:'hacia',v:el.value};
+    cambio();renderPop();}
+});
+
 /* ---------- eventos ---------- */
 document.addEventListener('click',e=>{
   const t=e.target,b=t.closest('button');
@@ -1596,7 +1659,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(POP)popClose();$
 // arrastrar y tocar nodos
 document.addEventListener('pointerdown',e=>{const n=e.target.closest('#diagram [data-node]');if(!n||!LAY.pos[n.dataset.node])return;DRAG={k:n.dataset.node,moved:false,x:e.clientX,y:e.clientY};e.preventDefault();});
 document.addEventListener('pointermove',e=>{if(!DRAG)return;if(!DRAG.moved&&Math.hypot(e.clientX-DRAG.x,e.clientY-DRAG.y)<4)return;const svg=$('diagram').querySelector('svg');if(!svg)return;const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const p=pt.matrixTransform(svg.getScreenCTM().inverse());const T=LAY.T;LAY.pos[DRAG.k].x=(Math.max(20,Math.min(T.W-20,p.x))-T.ox)/T.s;LAY.pos[DRAG.k].y=(Math.max(20,Math.min(T.H-20,p.y))-T.oy)/T.s;DRAG.moved=true;if(!RAF)RAF=requestAnimationFrame(()=>{RAF=0;renderDiagram();});});
-document.addEventListener('pointerup',()=>{if(!DRAG)return;if(DRAG.moved){M.lay={key:LAY.key,pos:structuredClone(LAY.pos),T:{...LAY.T}};scheduleSave();}else popOpen(DRAG.k);DRAG=null;});
+document.addEventListener('pointerup',()=>{if(!DRAG)return;if(DRAG.moved){M.lay={key:LAY.key,pos:structuredClone(LAY.pos),T:{...LAY.T},sig:LAY.sig};scheduleSave();}else popOpen(DRAG.k);DRAG=null;});
 window.addEventListener('resize',()=>{clearTimeout(window.__rz);window.__rz=setTimeout(()=>{if(POP)popPos();},120);});
 
 /* ---------- arranque ---------- */
