@@ -364,6 +364,33 @@ details.fold[open]>summary{margin-bottom:6px}
 .bq-t>b{font-family:var(--display);font-size:20px;line-height:1;padding:6px 10px;border-radius:8px;color:#fff}
 .bq-t.ref>b{background:var(--good)}.bq-t.bal>b{background:var(--accent)}
 .nb-tipos{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pasos{background:var(--accent-soft);border-radius:8px;padding:10px 12px;margin-bottom:10px}
+.ps-h{display:flex;align-items:center;gap:10px;font-size:14px}.ps-h .del{margin-left:auto;font-size:16px}
+.ps{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px 14px}
+.ps li{display:flex;align-items:flex-start;gap:6px;font-size:13.5px;color:var(--fg2)}
+.ps li i{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-family:var(--mono);font-size:11px;background:var(--surface);border:1px solid var(--line)}
+.ps li.ok{color:var(--muted);text-decoration:line-through}.ps li.ok i{background:var(--good);border-color:var(--good);color:#fff;text-decoration:none}
+.ps li.sig{color:var(--fg);font-weight:600}.ps li.sig i{background:var(--accent);border-color:var(--accent);color:#fff}
+.ps li small{display:block;font-weight:400;color:var(--fg2);font-size:12px}
+.piezas{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+.pz-h{width:100%;display:flex;justify-content:space-between;align-items:baseline;gap:8px;border:none;background:none;padding:2px 0;text-align:left;font-family:var(--mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.pz-h small{font-family:var(--body);text-transform:none;letter-spacing:0;font-size:12px}
+.pz-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px;margin-top:8px}
+.pz{display:grid;justify-items:center;gap:1px;padding:6px 4px 5px;border-radius:8px;border:1px solid transparent;background:none;color:var(--muted);position:relative}
+.pz:hover{border-color:var(--line);background:var(--surface-2)}
+.pz.on{color:var(--fg)}
+.pz.sel{border-color:var(--accent);background:var(--accent-soft)}
+.pz-i{display:block;width:64px;height:44px;opacity:.45}.pz.on .pz-i{opacity:1}
+.pz-i svg{width:64px;height:44px;overflow:visible}
+.pz b{font-size:12.5px;font-weight:600}
+.pz small{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;text-transform:uppercase}
+.pz-c{position:absolute;top:4px;right:6px;font-style:normal;font-family:var(--mono);font-size:10.5px;color:var(--fg2)}
+.pz-d{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:8px;font-size:13.5px}
+.pz-d p{margin:0;flex:1 1 320px;color:var(--fg2)}.pz-d p b{color:var(--fg)}
+.niv{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:0 7px;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--fg2);vertical-align:middle;margin-left:6px;line-height:16px}
+.niv:hover{border-color:var(--accent);color:var(--accent-ink)}
+.panel h2 .niv{margin-left:auto;white-space:nowrap;flex:none}
+.niv{white-space:nowrap}
 </style>
 
 <div class="app">
@@ -379,6 +406,7 @@ details.fold[open]>summary{margin-bottom:6px}
     <div class="lev" id="lev"></div>
     <p style="margin:14px 0 0"><b>Cómo se arma.</b> Todo se crea tocando el mapa.</p>
     <ul>
+      <li><b>Piezas:</b> debajo del mapa está la lista de piezas, dibujadas como en el mapa, con su nivel. Tocá una para ver dónde está en tu sistema y crearla.</li>
       <li><b>Cajas:</b> lo que se acumula (plata, gente, agua, temperatura). Botón "+ caja".</li>
       <li><b>Flujos:</b> lo que entra y sale de una caja. Tocá una caja y agregá uno.</li>
       <li><b>Parámetros:</b> los números que usan los flujos. Movelos al costado y mirá cómo se reacomoda todo.</li>
@@ -396,10 +424,12 @@ details.fold[open]>summary{margin-bottom:6px}
   <main class="board" id="board">
     <section class="col">
       <div class="panel">
+        <div class="pasos" id="pasos" hidden></div>
         <div class="avisos-mapa" id="avisos-mapa" hidden></div>
         <div class="loopchips" id="loopchips"></div>
         <div class="mapwrap" id="mapwrap"><div class="diagram" id="diagram"></div></div>
         <div class="maptools"><span class="hint">Tocá cualquier cosa para editarla. Arrastrá para acomodar.</span><span class="btns"><button id="add-caja" class="primary sm">+ caja</button><button id="paste" class="sm" hidden title="Ctrl+V">Pegar</button><button id="relayout" class="sm">Reacomodar</button></span></div>
+        <div class="piezas" id="piezas"></div>
       </div>
       <div class="panel chartpanel"><div class="gchips" id="gchips"></div><div id="chart"></div><div class="tip" id="tip"></div></div>
     </section>
@@ -708,7 +738,7 @@ function renderDiagram(){
   const r=ROWS[TCUR]||ROWS[0];const {s,ox,oy,W,H}=LAY.T,P=LAY.pos;const X=k=>ox+s*P[k].x,Y=k=>oy+s*P[k].y;
   const F=M.flujos.filter(f=>P[f.k]);
   const L=LOOPS.slice(0,6),sel=L.find(b=>b.key===SEL_LOOP)||null;
-  const LV=sel?null:levSet();
+  const LV=sel?null:(levSet()||piezaSet());
   const on=k=>sel?sel.edges.some(e=>e.from===k||e.via.k===k||e.to===k):LV?LV.has(k):false;
   const dim=k=>(sel||LV)&&!on(k)?' dim':'';
   const cut=(t,mx)=>{t=String(t);return t.length>mx?t.slice(0,mx-1)+'…':t;};
@@ -749,7 +779,7 @@ function renderDiagram(){
     const ks=[...new Set(b.edges.flatMap(e=>[e.from,e.via.k]))].filter(k=>P[k]);if(!ks.length)continue;
     let mx_=ks.reduce((a,k)=>a+X(k),0)/ks.length,my_=ks.reduce((a,k)=>a+Y(k),0)/ks.length;
     if(b.edges.length===1){const e=b.edges[0];const sx0=X(e.from),sy0=Y(e.from),tx=X(e.via.k),ty=Y(e.via.k),dx=tx-sx0,dy=ty-sy0,d=Math.max(1,Math.hypot(dx,dy)),bd=bendOf(e.from,e.via.k),cx=(sx0+tx)/2-dy/d*bd,cy=(sy0+ty)/2+dx/d*bd;const [a1x,a1y]=ptS(e.from,cx,cy);const qx=(a1x+2*cx+tx)/4,qy=(a1y+2*cy+ty)/4;const [px,py]=ptS(e.from,tx,ty);mx_=(qx+(px+tx)/2)/2;my_=(qy+(py+ty)/2)/2;}
-    const c=b.tipo==='R'?'ref':'bal',onL=sel?b.key===SEL_LOOP:LV?LV.tipo===b.tipo:true,rr=12,a0=-Math.PI*0.3,b0=Math.PI*1.2;
+    const c=b.tipo==='R'?'ref':'bal',onL=sel?b.key===SEL_LOOP:LV?(LV.tipo==='*'||LV.tipo===b.tipo):true,rr=12,a0=-Math.PI*0.3,b0=Math.PI*1.2;
     marks+=`<g class="lmark ${c}${onL?'':' dim'}" data-loop="${esc(b.key)}"><title>${esc((b.tipo==='R'?'Bucle de refuerzo':'Bucle de balance')+(b.ret?' con retardo':''))}</title><circle class="bg" cx="${f1(mx_)}" cy="${f1(my_)}" r="16"/><path d="M${f1(mx_+rr*Math.cos(a0))} ${f1(my_+rr*Math.sin(a0))} A${rr} ${rr} 0 1 1 ${f1(mx_+rr*Math.cos(b0))} ${f1(my_+rr*Math.sin(b0))}" marker-end="url(#ahl-${c})"/><text x="${f1(mx_)}" y="${f1(my_+4.5)}">${b.tipo}</text></g>`;
   }
   $('loopchips').innerHTML=`<span class="lc-k">Bucles</span>`+(L.length?L.map(b=>`<button class="lc ${b.tipo==='R'?'ref':'bal'}${b.key===SEL_LOOP?' on':''}" data-loop="${esc(b.key)}"><b>${b.tipo}</b>${esc(b.edges.map(e=>nombre(e.from)+' → '+(e.via.nombre||e.via.k)).join(' → '))}${b.ret?' · con retardo':''}</button>`).join(''):'<span class="hint" style="align-self:center">todavía ninguno</span>')+`<button class="lc lc-add" data-bucle-nuevo>+ bucle</button>`;
@@ -815,7 +845,7 @@ function renderChart(){
 /* ---------- meta y paradigma ---------- */
 function renderMeta(){
   const mt=M.meta;
-  $('meta-p').innerHTML=`<h2>Meta <small>hacia dónde va el sistema</small></h2>
+  $('meta-p').innerHTML=`<h2>Meta <small>hacia dónde va el sistema</small>${nivChip(3)}</h2>
   <div class="meta-q">
     <div class="line">Que <select data-meta="sentido"><option value="mas"${mt.sentido==='mas'?' selected':''}>suba</option><option value="menos"${mt.sentido==='menos'?' selected':''}>baje</option></select></div>
     <div class="line">${M.cajas.length?M.cajas.map(c=>`<button class="cchip${mt.cajas.includes(c.k)?' on':''}" data-meta-caja="${esc(c.k)}">${esc(c.nombre)}</button>`).join(''):'<span class="hint">Primero creá una caja en el mapa.</span>'}</div>
@@ -823,7 +853,7 @@ function renderMeta(){
     <input type="text" data-meta="texto" value="${esc(mt.texto||'')}" placeholder="Para qué (opcional)">
     <div class="estado" id="meta-estado"></div>
   </div>
-  <div class="para"><label for="paradigma">Paradigma <small class="muted" style="font-weight:400">la idea de fondo desde la que surge este sistema</small></label><textarea id="paradigma" data-m="paradigma" rows="2" placeholder="Por ejemplo: la plata es tiempo libre, no seguridad.">${esc(M.paradigma||'')}</textarea></div>`;
+  <div class="para"><label for="paradigma">Paradigma <small class="muted" style="font-weight:400">la idea de fondo desde la que surge este sistema</small> ${nivChip(2)}</label><textarea id="paradigma" data-m="paradigma" rows="2" placeholder="Por ejemplo: la plata es tiempo libre, no seguridad.">${esc(M.paradigma||'')}</textarea></div>`;
   renderMetaEstado();
 }
 function renderMetaEstado(){
@@ -841,7 +871,7 @@ function rango(p){const v=+p.valor||0,a=Math.abs(v);if(p.unidad==='%'||(a>0&&a<=
 function usosDe(k){const out=[];for(const f of M.flujos){if(varsDe(f.formula).includes(k)||f.reglas.some(r=>r.a===k||r.b===k)||(f.conv&&f.conv.v===k)||(f.reparto||[]).some(x=>x.conv&&x.conv.v===k))out.push(f.nombre||f.k);}return out;}
 function renderDatos(){
   const used=new Set(POP&&POP.kind==='flujo'?varsDe((M.flujos.find(f=>f.k===POP.k)||{}).formula||''):[]);
-  $('datos-p').innerHTML=`<h2>Parámetros <small>movelos y mirá el mapa</small></h2>`+(M.datos.length?'':`<p class="hint">Los números que usan los flujos: tasas, montos, límites. Aparecen cuando armás un flujo.</p>`)+M.datos.map(p=>{
+  $('datos-p').innerHTML=`<h2>Parámetros <small>movelos y mirá el mapa</small>${nivChip(12)}</h2>`+(M.datos.length?'':`<p class="hint">Los números que usan los flujos: tasas, montos, límites. Aparecen cuando armás un flujo.</p>`)+M.datos.map(p=>{
     const R=rango(p),u=usosDe(p.k);
     return `<div class="dato${used.has(p.k)?' used':''}" data-dato="${esc(p.k)}"><div class="dato-top"><span class="dato-n" title="${esc(p.nombre)}">${esc(p.nombre)}${p.unidad!=='%'&&Math.abs(+p.valor||0)>=1e4?` <small data-dfmt="${esc(p.k)}">${esc(fmtN(p.valor,p.unidad))}</small>`:''}${p.externo?' <small>· externo</small>':''}</span><span class="dval"><input type="number" step="any" data-dval="${esc(p.k)}" data-pct="${p.unidad==='%'?1:''}" value="${disp(p)}" title="${esc(fmtN(p.valor,p.unidad))}">${p.unidad==='%'?'<i>%</i>':''}</span><button class="dato-x" data-dmore="${esc(p.k)}" aria-label="más opciones">⋯</button></div>
       <input type="range" data-drange="${esc(p.k)}" min="${R.min}" max="${R.max}" step="${R.step}" value="${+p.valor||0}" aria-label="${esc(p.nombre)}">
@@ -915,7 +945,7 @@ function reglaTxt(r){return r.tipo==='max'?`Como máximo ${esNum(r.b)?r.b:nombre
 function popCaja(s){
   const ins=M.flujos.filter(f=>destinos(f).some(x=>x.hacia===s.k)),outs=M.flujos.filter(f=>f.desde===s.k),otros=M.cajas.filter(x=>x.k!==s.k);
   const li=(f,dir)=>{const otro=dir==='in'?f.desde:f.hacia;return `<button class="fl" data-go="${esc(f.k)}">${esc(f.nombre||f.k)} <small>${fmtK((ROWS[TCUR]||{})[f.k],f.k)}${otro?(dir==='in'?' ← ':' → ')+esc(nombre(otro)):''}</small></button>`;};
-  return `<div class="pop-h"><span class="pop-k">Caja</span><button class="del" data-close aria-label="cerrar" style="color:var(--fg2);font-size:18px">×</button></div>
+  return `<div class="pop-h"><span class="pop-k">Caja ${nivChip(11)}</span><button class="del" data-close aria-label="cerrar" style="color:var(--fg2);font-size:18px">×</button></div>
     <input type="text" class="big" data-c="nombre" value="${esc(s.nombre)}" placeholder="nombre de la caja">
     <div class="g2"><label>Hoy<input type="number" step="any" data-c="hoy" value="${s.hoy}"></label><label>Unidad<input type="text" data-c="unidad" value="${esc(s.unidad||'')}" placeholder="$, personas, °C"></label></div>
     <label class="check"><input type="checkbox" data-c="min0" ${s.min0?'checked':''}> No puede bajar de cero</label>
@@ -933,12 +963,12 @@ function popFlujo(f){
   }else cuerpo=camposHtml(f,tipo);
   let lectura='';try{const sc=escena(ROWS[TCUR]);const ret={};for(const S in f.retardos)if(f.retardos[S]>0)ret[S]=1;const v=compile(f.formula).fn(sc);lectura=`<div class="read" id="pop-read">${leer(f.formula)} <b>= ${fmtK(v,f.k)}</b>${TCUR?' en '+M.unidad+' '+TCUR:' hoy'}</div>`;}catch(e){lectura=`<div class="read" id="pop-read"><span class="err">${esc(e.message)}</span></div>`;}
   const reglas=f.reglas.map(r=>r.tipo==='max'?`<div class="regla max"><span>Como máximo</span>${opSel('rb:'+r.id,r.b,'dato')}<button class="del" data-rdel="${esc(r.id)}" aria-label="quitar regla">×</button></div>`:`<div class="regla"><span>Solo si</span>${opSel('ra:'+r.id,r.a,'cd')}<select data-rop="${esc(r.id)}"><option value=">"${r.op==='>'?' selected':''}>&gt;</option><option value="<"${r.op==='<'?' selected':''}>&lt;</option></select>${opSel('rb:'+r.id,r.b,'dato')}<button class="del" data-rdel="${esc(r.id)}" aria-label="quitar regla">×</button></div>`).join('');
-  return `<div class="pop-h"><span class="pop-k">Flujo</span><button class="del" data-close aria-label="cerrar" style="color:var(--fg2);font-size:18px">×</button></div>
+  return `<div class="pop-h"><span class="pop-k">Flujo ${nivChip(10)}</span><button class="del" data-close aria-label="cerrar" style="color:var(--fg2);font-size:18px">×</button></div>
     <input type="text" class="big" data-fl="nombre" value="${esc(f.nombre)}" placeholder="¿Qué es? Ej.: sueldo, alquiler, interés">
     ${repEsta(f)?`<label>Sale de${sel('desde',f.desde)}</label>${repHtml(f)}`:`<div class="g2"><label>Sale de${sel('desde',f.desde)}</label><label>Entra a${sel('hacia',f.hacia)}</label></div>${convHtml(f)}${repBoton(f)}`}
     ${tieneItems(f)?itemsSec(f):`<div class="sec"><span class="pop-k">Cuánto mueve por ${esc(M.unidad)}</span>${tiposGrid(tipo)}${cuerpo}${lectura}<div id="lim-nota">${limNota(f)}</div></div>`}
-    <details class="sec fold" data-fold="mira"${FOLD.has('mira')?' open':''}><summary>Qué mira <small>${esc(miraResumen(f))}</small></summary><div id="pop-mira">${miraHtml(f)}</div></details>
-    <details class="sec fold" data-fold="reglas"${FOLD.has('reglas')||f.reglas.length?' open':''}><summary>Reglas <small>${f.reglas.length?f.reglas.length+' · '+esc(f.reglas.map(reglaTxt).join(' · ')):'ninguna'}</small></summary>${reglas||'<span class="hint">Sin reglas.</span>'}<div class="btns"><button class="sm" data-rnew="si">+ solo si…</button><button class="sm" data-rnew="max">+ como máximo…</button></div></details>
+    <details class="sec fold" data-fold="mira"${FOLD.has('mira')?' open':''}><summary>Qué mira ${nivChip(6)} <small>${esc(miraResumen(f))}</small></summary><div id="pop-mira">${miraHtml(f)}</div></details>
+    <details class="sec fold" data-fold="reglas"${FOLD.has('reglas')||f.reglas.length?' open':''}><summary>Reglas ${nivChip(5)} <small>${f.reglas.length?f.reglas.length+' · '+esc(f.reglas.map(reglaTxt).join(' · ')):'ninguna'}</small></summary>${reglas||'<span class="hint">Sin reglas.</span>'}<div class="btns"><button class="sm" data-rnew="si">+ solo si…</button><button class="sm" data-rnew="max">+ como máximo…</button></div></details>
     <div class="sec"><div class="btns" style="justify-content:space-between"><button class="sm" data-copiar title="Ctrl+C">Copiar</button><button class="del" data-borrar>Borrar flujo</button></div></div>`;
 }
 const FOLD=new Set();
@@ -971,6 +1001,7 @@ document.addEventListener('click',e=>{
 });
 function renderPop(){
   if(!POP){$('pop').hidden=true;return;}
+  if(POP.nuevoF){const pop=$('pop');pop.hidden=false;pop.innerHTML=nuevoFlujoCard();return;}
   if(POP.bucle||POP.nuevoB){const pop=$('pop');pop.hidden=false;if(POP.nuevoB){pop.innerHTML=nuevoBucleCard();return;}const b=LOOPS.find(x=>x.key===POP.bucle);pop.innerHTML=b?bucleCard(b):`<div class="pop-h"><span class="pop-k">Bucle</span><button class="del" data-close aria-label="cerrar" style="color:var(--fg2);font-size:18px">×</button></div><p class="hint">Este bucle no está activo en este momento: alguno de sus flujos no depende de la caja ahora (por ejemplo, un umbral que todavía no se alcanzó). Mové el reloj para buscarlo.</p>`;return;}
   const c=M.cajas.find(x=>x.k===POP.k),f=M.flujos.find(x=>x.k===POP.k);if(!c&&!f){popClose();return;}
   const pop=$('pop');const sy=pop.scrollTop;pop.hidden=false;if(!POP.snap)POP.snap=snapModelo();pop.innerHTML=(c?popCaja(c):popFlujo(f))+'<div class="pop-ok" id="pop-ok"></div>';pop.scrollTop=sy;popFoot();popPos();
@@ -1016,7 +1047,7 @@ function borrarDato(k){const p0=M.datos.find(x=>x.k===k);M.datos=M.datos.filter(
 /* ---------- tiempo ---------- */
 let RUN=null,SPI=0;const SPEEDS=[[260,'1×'],[120,'2×'],[50,'4×']];
 function stopRun(){if(RUN){clearInterval(RUN);RUN=null;}$('play').textContent=TCUR>=ROWS.length-1&&TCUR>0?'↺ De nuevo':'▶ Simular';}
-function playRun(){if(RUN){stopRun();renderDiagram();return;}if(TCUR>=ROWS.length-1)TCUR=0;$('play').textContent='❚❚ Pausa';RUN=setInterval(()=>{if(TCUR>=ROWS.length-1){stopRun();renderTiempo();return;}TCUR++;renderTiempo();},SPEEDS[SPI][0]);}
+function playRun(){if(RUN){stopRun();renderDiagram();return;}SIMULADO=true;if(TCUR>=ROWS.length-1)TCUR=0;$('play').textContent='❚❚ Pausa';RUN=setInterval(()=>{if(TCUR>=ROWS.length-1){stopRun();renderTiempo();return;}TCUR++;renderTiempo();},SPEEDS[SPI][0]);}
 function renderAvisosMapa(){
   const el=$('avisos-mapa');if(!el)return;const sc=M.flujos.filter(f=>faltaConv(f));
   const limK=new Set();for(const r of ROWS)for(const k in (r._lim||{}))limK.add(k);
@@ -1028,7 +1059,7 @@ function renderAvisosMapa(){
 document.addEventListener('click',e=>{const b=e.target.closest('[data-am-open]');if(b)popOpen(b.dataset.amOpen);});
 function renderTiempo(){
   const sc=$('scrub');sc.max=ROWS.length-1;if(document.activeElement!==sc)sc.value=TCUR;$('tl').textContent=(TCUR?(M.unidad+' '+TCUR+' de '+(ROWS.length-1)+(M.unidad==='mes'?' · '+fechaTxt(TCUR):'')):'hoy')+'';if(!RUN)$('play').textContent=TCUR>=ROWS.length-1&&TCUR>0?'↺ De nuevo':'▶ Simular';
-  LINKS=enlaces(ROWS[TCUR]);LOOPS=bucles(LINKS);renderAvisosMapa();if(POP&&POP.bucle){const act=document.activeElement;if(!(act&&act.closest&&act.closest('#pop')&&['range','number'].includes(act.type)))renderPop();else{const b=LOOPS.find(x=>x.key===POP.bucle);const r=$('pop').querySelector('.read b');if(b&&r)r.textContent=nf1.format(b.g*100)+' %';}}renderLev();renderDiagram();renderChart();renderIO();if(VISTA==='tab')renderTab();if(POP&&M.flujos.some(f=>f.k===POP.k))popRead();
+  LINKS=enlaces(ROWS[TCUR]);LOOPS=bucles(LINKS);renderAvisosMapa();renderPiezas();renderPasos();if(POP&&POP.bucle){const act=document.activeElement;if(!(act&&act.closest&&act.closest('#pop')&&['range','number'].includes(act.type)))renderPop();else{const b=LOOPS.find(x=>x.key===POP.bucle);const r=$('pop').querySelector('.read b');if(b&&r)r.textContent=nf1.format(b.g*100)+' %';}}renderLev();renderDiagram();renderChart();renderIO();if(VISTA==='tab')renderTab();if(POP&&M.flujos.some(f=>f.k===POP.k))popRead();
 }
 
 /* ---------- cálculo ---------- */
@@ -1113,7 +1144,7 @@ function levSet(){
 function renderLev(){
   const el=$('lev');if(!el)return;
   const sel=LEV.find(x=>x[0]===SEL_LEV);
-  el.innerHTML=`<div class="lev-h"><span>Las 12 palancas de Meadows</span><span>más débil → más fuerte</span></div><div class="lev-row">${LEV.map(([n,corto,largo])=>{const c=levCuenta(n);const fuera=n===4||n===1;return `<button class="lv${c?' on':''}${fuera?' fuera':''}${SEL_LEV===n?' sel':''}" data-lev="${n}" title="${n} · ${esc(largo)}">${LEV.find(x=>x[0]===n)[4]}<span class="lv-n">${n}</span><span class="lv-t">${esc(corto)}</span><span class="lv-c">${fuera?'·':c||'—'}</span></button>`;}).join('')}</div>${sel?`<p class="lev-d"><b>${sel[0]} · ${esc(sel[2])}.</b> ${esc(sel[3])} ${levEnEste(sel[0])}</p>`:'<p class="lev-d muted">Donella Meadows ordenó en 12 palancas los lugares donde intervenir un sistema. Tocá una para ver qué es y dónde está en el tuyo.</p>'}`;
+  el.innerHTML=`<div class="lev-h"><span>Los 12 niveles: las palancas de Meadows</span><span>más débil → más fuerte</span></div><div class="lev-row">${LEV.map(([n,corto,largo])=>{const c=levCuenta(n);const fuera=n===4||n===1;return `<button class="lv${c?' on':''}${fuera?' fuera':''}${SEL_LEV===n?' sel':''}" data-lev="${n}" title="${n} · ${esc(largo)}">${LEV.find(x=>x[0]===n)[4]}<span class="lv-n">${n}</span><span class="lv-t">${esc(corto)}</span><span class="lv-c">${fuera?'·':c||'—'}</span></button>`;}).join('')}</div>${sel?`<p class="lev-d"><b>${sel[0]} · ${esc(sel[2])}.</b> ${esc(sel[3])} ${levEnEste(sel[0])}</p>`:'<p class="lev-d muted">Donella Meadows ordenó en 12 palancas los lugares donde intervenir un sistema. Tocá una para ver qué es y dónde está en el tuyo.</p>'}`;
 }
 function levEnEste(n){
   const c=levCuenta(n);
@@ -1599,7 +1630,7 @@ function bucleCard(b){
   const ret=b.edges.filter(e=>e.ret>0);
   const vicioso=R&&cajas.some(k=>(M.meta.sentido==='menos')&&M.meta.cajas.includes(k));
   const que=R?'Se alimenta a sí mismo: cuanto más hay, más crece (o cuanto menos hay, más cae). Es el motor del interés compuesto, de una deuda que se agranda o de una población que se multiplica.':'Se corrige solo: empuja hacia un nivel. Es el termostato, el colchón que se repone o el gasto que se frena cuando falta plata.';
-  return `<div class="pop-h"><span class="pop-k">Bucle de ${R?'refuerzo':'balance'}</span><button class="del" data-close aria-label="cerrar" style="color:var(--fg2);font-size:18px">×</button></div>
+  return `<div class="pop-h"><span class="pop-k">Bucle de ${R?'refuerzo':'balance'} ${nivChip(R?7:8)}</span><button class="del" data-close aria-label="cerrar" style="color:var(--fg2);font-size:18px">×</button></div>
     <div class="bq-t ${R?'ref':'bal'}"><b>${b.tipo}</b><span>${bucleFrase(b)}</span></div>
     <p class="hint" style="margin:0">${que}</p>
     <div class="sec"><span class="pop-k">Fuerza</span><div class="read">Realimenta cerca de un <b>${nf1.format(b.g*100)} %</b> por ${esc(M.unidad)}${TCUR?' en '+esc(M.unidad)+' '+TCUR:' hoy'}.${ret.length?` Tiene <b>retardo</b>: ${ret.map(e=>esc(nombre(e.via.k))+' ve '+esc(nombre(e.from))+' con '+e.ret+' '+(e.ret===1?M.unidad:plural(M.unidad))+' de atraso').join('; ')}. Los retardos hacen que un balance se pase de largo y oscile.`:''}</div></div>
@@ -1617,6 +1648,82 @@ document.addEventListener('click',e=>{
   const b=e.target.closest('[data-nb]');if(b){const c=$('nb-caja');if(c&&c.value)nuevoBucle(b.dataset.nb,c.value);return;}
   if(e.target.closest('[data-bucle-nuevo]')){SEL_LOOP='';POP={nuevoB:true};renderPop();renderDiagram();return;}
 });
+
+/* ---------- piezas de un sistema: leyenda viva, primeros pasos, niveles ---------- */
+const PZ_DEFS='<defs><marker id="pzah" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--accent)"/></marker><marker id="pzai" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fg2)"/></marker></defs>';
+const pzSvg=inner=>`<svg viewBox="0 0 64 44" class="pz-ico" aria-hidden="true">${PZ_DEFS}${inner}</svg>`;
+const PIEZAS=[
+  {k:'caja',n:'Caja',niv:11,q:'Lo que se acumula y podés medir en un momento: plata, gente, agua, temperatura.',ico:pzSvg('<g class="snode"><rect class="box" x="6" y="8" width="52" height="28" rx="5"/><rect class="fill" x="8" y="22" width="48" height="12" rx="3"/><text class="nm" x="32" y="20" style="font-size:9px">caja</text></g>'),act:'caja',btn:'+ caja'},
+  {k:'flujo',n:'Flujo',niv:10,q:'Lo que entra a una caja o sale de ella en cada período. La válvula dice cuánto.',ico:pzSvg('<line class="pipe" x1="4" y1="22" x2="22" y2="22" style="stroke-width:5"/><g class="vnode"><circle cx="32" cy="22" r="9"/><path d="M27 17L37 27L37 17L27 27Z"/></g><line class="pipe" x1="42" y1="22" x2="58" y2="22" style="stroke-width:5" marker-end="url(#pzah)"/>'),act:'flujo',btn:'+ flujo'},
+  {k:'afuera',n:'Afuera',niv:0,q:'El borde del sistema: de ahí viene lo que entra y ahí se va lo que sale.',ico:pzSvg('<circle class="cloud" cx="18" cy="22" r="9"/><line class="pipe" x1="28" y1="22" x2="56" y2="22" style="stroke-width:5" marker-end="url(#pzah)"/>')},
+  {k:'parametro',n:'Parámetro',niv:12,q:'Un número que decidís vos: una tasa, un precio, un límite. Es la palanca más fácil de mover y la más débil.',ico:pzSvg('<line x1="8" y1="22" x2="56" y2="22" stroke="var(--line)" stroke-width="4" stroke-linecap="round"/><line x1="8" y1="22" x2="30" y2="22" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/><circle cx="30" cy="22" r="7" fill="var(--accent)"/>'),act:'dato',btn:'+ parámetro'},
+  {k:'bucle',n:'Bucle',niv:7,niv2:8,q:'Un flujo que depende de su propia caja. R se refuerza: crece o cae solo. B se equilibra: busca un nivel.',ico:pzSvg('<g class="lmark ref"><circle class="bg" cx="20" cy="22" r="13"/><path d="M28 14A10 10 0 1 1 12 15" marker-end="url(#pzah)"/><text x="20" y="26">R</text></g><g class="lmark bal"><circle class="bg" cx="46" cy="22" r="13"/><path d="M54 14A10 10 0 1 1 38 15"/><text x="46" y="26">B</text></g>'),act:'bucle',btn:'+ bucle'},
+  {k:'info',n:'Información',niv:6,q:'La línea punteada: qué caja mira un flujo para decidir cuánto mover. Mostrar algo que nadie miraba cambia el comportamiento.',ico:pzSvg('<path class="info" d="M8 34Q32 2 56 20" marker-end="url(#pzai)"/><g class="sg"><circle cx="30" cy="16" r="7"/><text x="30" y="19.5">+</text></g>'),q2:'Abrí un flujo → Qué mira.'},
+  {k:'retardo',n:'Retardo',niv:9,q:'El flujo ve la caja con atraso. Con retardo, un bucle de balance se pasa de largo y oscila.',ico:pzSvg('<path class="info" d="M8 34Q32 2 56 20" marker-end="url(#pzai)"/><g class="ret"><circle cx="30" cy="16" r="9"/><text x="30" y="19.5">3</text></g>'),q2:'Abrí un flujo → Qué mira → lo ve con retardo.'},
+  {k:'regla',n:'Regla',niv:5,q:'Una condición sobre un flujo: "solo si…" o "como máximo…". Incentivos, permisos, límites.',ico:pzSvg('<g class="vnode"><circle cx="32" cy="24" r="9"/><path d="M27 19L37 29L37 19L27 29Z"/><text class="flag" x="42" y="16" style="font-size:14px">⚑</text></g>'),q2:'Abrí un flujo → Reglas.'},
+  {k:'conv',n:'Conversión',niv:10,q:'Cuando un flujo cruza de una unidad a otra ($ → USD, kilos → bolsas) hay que decir cuánto vale una en la otra.',ico:pzSvg('<line class="pipe" x1="4" y1="22" x2="58" y2="22" style="stroke-width:5" marker-end="url(#pzah)"/><g class="convm"><rect x="12" y="13" width="40" height="17" rx="8"/><text x="32" y="25.5">$→USD</text></g>'),q2:'Aparece sola en el flujo cuando hace falta.'},
+  {k:'meta',n:'Meta',niv:3,q:'Hacia dónde querés que vaya el sistema. Con meta, el taller te recomienda qué mover para llegar.',ico:pzSvg('<g class="snode meta"><rect class="box" x="6" y="8" width="52" height="28" rx="5"/><text class="star" x="10" y="19">★</text><text class="nm" x="32" y="26" style="font-size:9px">meta</text></g>'),act:'meta',btn:'fijar la meta'},
+  {k:'paradigma',n:'Paradigma',niv:2,q:'La idea de fondo desde la que surge el sistema: qué es la plata, qué es el éxito. Cambiarla es la palanca más fuerte.',ico:pzSvg('<rect x="8" y="8" width="48" height="28" rx="6" fill="none" stroke="var(--fg2)" stroke-width="1.4" stroke-dasharray="3 3"/><text x="32" y="30" text-anchor="middle" font-family="var(--display)" font-weight="700" font-size="20" fill="var(--fg2)">“ ”</text>'),act:'paradigma',btn:'escribirlo'}
+];
+let SEL_PZ='';
+function piezaSet(){
+  const k=SEL_PZ;if(!k)return null;const S=new Set();let links=null,tipo=null;
+  if(k==='caja')for(const c of M.cajas)S.add(c.k);
+  else if(k==='flujo')for(const f of M.flujos)S.add(f.k);
+  else if(k==='afuera')for(const f of M.flujos)if(!f.desde||!f.hacia)S.add(f.k);
+  else if(k==='parametro'){const D=new Set(M.datos.map(p=>p.k));for(const f of M.flujos)if(varsDe(tieneItems(f)?'0':f.formula).some(v=>D.has(v))||f.reglas.some(r=>D.has(r.b))||(f.items||[]).some(it=>it.crece)||(f.conv&&D.has(f.conv.v)))S.add(f.k);}
+  else if(k==='bucle'){const ks=new Set();for(const b of LOOPS)for(const e of b.edges){S.add(e.from);S.add(e.via.k);S.add(e.to);ks.add(e.from+'>'+e.via.k);}links=l=>ks.has(l.from+'>'+l.to);tipo='*';}
+  else if(k==='info'){for(const l of LINKS){S.add(l.from);S.add(l.to);}links=()=>true;}
+  else if(k==='retardo'){for(const l of LINKS)if(l.ret>0){S.add(l.from);S.add(l.to);}links=l=>l.ret>0;}
+  else if(k==='regla'){for(const f of M.flujos)if(f.reglas.length)S.add(f.k);links=l=>!!l.regla;}
+  else if(k==='conv')for(const f of M.flujos)if(destinos(f).some(d=>f.desde&&uniDe(f.desde)!==uniDe(d.hacia)))S.add(f.k);
+  else if(k==='meta')for(const c of M.meta.cajas)S.add(c);
+  else return null;
+  S.links=links;S.tipo=tipo;return S;
+}
+function pzCuenta(p){switch(p.k){case 'caja':return M.cajas.length;case 'flujo':return M.flujos.length;case 'afuera':return M.flujos.filter(f=>!f.desde||!f.hacia).length;case 'parametro':return M.datos.length;case 'bucle':return LOOPS.length;case 'info':return LINKS.length;case 'retardo':return LINKS.filter(l=>l.ret>0).length;case 'regla':return M.flujos.reduce((a,f)=>a+f.reglas.length,0);case 'conv':return M.flujos.filter(f=>destinos(f).some(d=>f.desde&&uniDe(f.desde)!==uniDe(d.hacia))).length;case 'meta':return M.meta.cajas.length&&M.meta.valor!==null&&M.meta.valor!==''?1:0;case 'paradigma':return String(M.paradigma||'').trim()?1:0;}return 0;}
+let PZ_OPEN=true;try{PZ_OPEN=localStorage.getItem(KEY+'-pz')!=='0';}catch(e){}
+function renderPiezas(){
+  const el=$('piezas');if(!el)return;
+  const sel=PIEZAS.find(p=>p.k===SEL_PZ);
+  el.innerHTML=`<button class="pz-h" data-pz-tog aria-expanded="${PZ_OPEN}"><span>${PZ_OPEN?'▾':'▸'} Piezas de un sistema</span><small>${PZ_OPEN?'tocá una para verla en tu mapa':PIEZAS.filter(p=>pzCuenta(p)).length+' de '+PIEZAS.length+' en uso'}</small></button>`+(PZ_OPEN?`<div class="pz-row">${PIEZAS.map(p=>{const c=pzCuenta(p);return `<button class="pz${c?' on':''}${SEL_PZ===p.k?' sel':''}" data-pz="${p.k}"><span class="diagram pz-i">${p.ico}</span><b>${esc(p.n)}</b><small>${p.niv?'nivel '+p.niv+(p.niv2?'·'+p.niv2:''):'borde'}</small><i class="pz-c">${c||'—'}</i></button>`;}).join('')}</div>${sel?`<div class="pz-d"><p><b>${esc(sel.n)}${sel.niv?` <button class="niv" data-niv="${sel.niv}">nivel ${sel.niv}${sel.niv2?' · '+sel.niv2:''}</button>`:''}</b> ${esc(sel.q)} ${sel.q2?`<span class="muted">${esc(sel.q2)}</span>`:''}</p>${sel.act?`<button class="sm primary" data-pz-act="${sel.act}">${esc(sel.btn)}</button>`:''}<span class="hint">En tu mapa: ${pzCuenta(sel)||'todavía ninguna'}.</span></div>`:''}`:'');
+}
+/* primeros pasos */
+let SIMULADO=false;
+function pasos(){return [
+  ['Creá una caja',M.cajas.length>0,'Lo que se acumula. Botón "+ caja".'],
+  ['Agregale un flujo',M.flujos.length>0,'Abrí la caja y tocá "+ entra" o "+ sale".'],
+  ['Fijá una meta',M.meta.cajas.length>0&&M.meta.valor!==null&&M.meta.valor!=='','Al costado: qué caja, hasta cuánto, en cuánto tiempo.'],
+  ['Simulá',SIMULADO||TCUR>0,'▶ Simular, arriba. Mirá cómo cambian cajas y gráfico.'],
+  ['Armá un bucle',LOOPS.length>0,'"+ bucle" en la fila de arriba. Ahí empieza el pensamiento sistémico.']
+];}
+function renderPasos(){
+  const el=$('pasos');if(!el)return;let oculto=false;try{oculto=localStorage.getItem(KEY+'-pasos-'+M.id)==='1';}catch(e){}
+  const P=pasos();const hechos=P.filter(p=>p[1]).length;
+  if(oculto||hechos===P.length){el.hidden=true;return;}
+  const sig=P.findIndex(p=>!p[1]);
+  el.hidden=false;el.innerHTML=`<div class="ps-h"><b>Primeros pasos</b><span class="muted">${hechos} de ${P.length}</span><button class="del" data-pasos-x aria-label="ocultar" title="ocultar">×</button></div><ol class="ps">${P.map((p,i)=>`<li class="${p[1]?'ok':i===sig?'sig':''}"><i>${p[1]?'✓':i+1}</i><span>${esc(p[0])}${i===sig?`<small>${esc(p[2])}</small>`:''}</span></li>`).join('')}</ol>`;
+}
+document.addEventListener('click',e=>{
+  const t=e.target;
+  if(t.closest('[data-pz-tog]')){PZ_OPEN=!PZ_OPEN;try{localStorage.setItem(KEY+'-pz',PZ_OPEN?'1':'0');}catch(x){}if(!PZ_OPEN){SEL_PZ='';renderDiagram();}renderPiezas();return;}
+  const pz=t.closest('[data-pz]');if(pz){SEL_PZ=SEL_PZ===pz.dataset.pz?'':pz.dataset.pz;SEL_LEV=0;SEL_LOOP='';renderLev();renderPiezas();renderDiagram();return;}
+  const a=t.closest('[data-pz-act]');if(a){const k=a.dataset.pzAct;SEL_PZ='';renderPiezas();renderDiagram();
+    if(k==='caja')nuevaCaja();else if(k==='dato')document.querySelector('#datos-p [data-act="dato"]')?.click();else if(k==='bucle'){POP={nuevoB:true};renderPop();}
+    else if(k==='flujo'){POP={nuevoF:true};renderPop();}
+    else if(k==='meta'){flash($('meta-p'));const i=$('meta-p').querySelector('[data-meta="valor"]');if(i)i.focus();}
+    else if(k==='paradigma'){const p=$('paradigma');flash(p);if(p)p.focus();}
+    return;}
+  if(t.closest('[data-pasos-x]')){try{localStorage.setItem(KEY+'-pasos-'+M.id,'1');}catch(x){}renderPasos();return;}
+  const nv=t.closest('[data-niv]');if(nv){const n=+nv.dataset.niv;$('help').hidden=false;$('help-btn').setAttribute('aria-expanded','true');SEL_LEV=n;SEL_PZ='';renderPiezas();renderLev();renderDiagram();$('lev').scrollIntoView({block:'center',behavior:'smooth'});return;}
+  const nf=t.closest('[data-nf]');if(nf){const c=$('nf-caja');if(c&&c.value){nuevoFlujo(c.value,nf.dataset.nf);}return;}
+});
+function nuevoFlujoCard(){
+  const opts=M.cajas.map(c=>`<option value="${esc(c.k)}">${esc(c.nombre)}</option>`).join('');
+  return `<div class="pop-h"><span class="pop-k">Nuevo flujo</span><button class="del" data-close aria-label="cerrar" style="color:var(--fg2);font-size:18px">×</button></div>
+    ${M.cajas.length?`<label>Sobre qué caja<select id="nf-caja">${opts}</select></label><div class="nb-tipos"><button class="tbtn" data-nf="in"><b>Entra</b><small>desde afuera hacia la caja: un sueldo, lluvia, clientes nuevos</small></button><button class="tbtn" data-nf="out"><b>Sale</b><small>de la caja hacia afuera: gastos, evaporación, bajas</small></button></div><p class="hint" style="margin:0">Para pasar de una caja a otra, abrí la caja y usá "→ pasa a otra caja".</p>`:'<p class="hint">Primero creá una caja.</p>'}`;
+}
+const nivChip=(n,extra)=>`<button class="niv" data-niv="${n}" title="palanca ${n} de Meadows: tocá para verla en la escalera">nivel ${n}${extra||''}</button>`;
 
 /* ---------- eventos ---------- */
 document.addEventListener('click',e=>{
