@@ -414,7 +414,7 @@ function fmtN(n,u){
   return u==='$'?'$ '+s+b:s+b+(u?' '+u:'');
 }
 function ent(k){return M.cajas.find(x=>x.k===k)||M.datos.find(x=>x.k===k)||M.flujos.find(x=>x.k===k);}
-function uniDe(k){const c=M.cajas.find(x=>x.k===k);if(c)return c.unidad||'';const p=M.datos.find(x=>x.k===k);if(p)return p.unidad||'';const f=M.flujos.find(x=>x.k===k);if(f)return uniDe(f.hacia||f.desde);return '';}
+function uniDe(k){const c=M.cajas.find(x=>x.k===k);if(c)return c.unidad||'';const p=M.datos.find(x=>x.k===k);if(p)return p.unidad||'';const f=M.flujos.find(x=>x.k===k);if(f)return uniDe(f.desde||f.hacia);return '';}
 const fmtK=(v,k)=>fmtN(v,uniDe(k));
 const nombre=k=>{const e=ent(k);return e?(e.nombre||e.k):k;};
 const metaUni=()=>M.meta.cajas.length?uniDe(M.meta.cajas[0]):'';
@@ -1396,7 +1396,7 @@ function cambiarTipo(f,tipo){
 function opW(f,id,val,kind,corto){
   const opt=(k,n,sel)=>`<option value="${esc(k)}"${sel?' selected':''}>${esc(n)}</option>`;
   if(kind==='caja')return `<select data-opsrc="${id}">${M.cajas.map(c=>opt(c.k,c.nombre,c.k===val)).join('')}</select>`;
-  const v=String(val??'');const isNum=v===''||esNum(v);const u=kind==='pct'?'%':uniDe(f.hacia||f.desde);
+  const v=String(val??'');const isNum=v===''||esNum(v);const u=kind==='pct'?'%':uniDe(f.desde||f.hacia);
   const P=M.datos.filter(p=>kind==='pct'?p.unidad==='%':p.unidad!=='%');const T=kind==='pct'?[]:M.flujos.filter(x=>tieneItems(x)&&x.k!==f.k);
   const sel=`<select data-opsrc="${id}" data-kind="${kind}" data-corto="${esc(corto||'')}" class="opsrc"><option value="#num"${isNum?' selected':''}>${kind==='pct'?'un porcentaje':'un número'}</option>${P.length?`<optgroup label="Parámetros">${P.map(p=>opt(p.k,p.nombre+' · '+fmtN(p.valor,p.unidad),p.k===v)).join('')}</optgroup>`:''}${T.length?`<optgroup label="Totales del tablero">${T.map(x=>opt(x.k,x.nombre+' · '+fmtK(ROWS[0]?ROWS[0][x.k]:0,x.k),x.k===v)).join('')}</optgroup>`:''}${isNum?'<option value="#new">↗ guardarlo como parámetro</option>':''}</select>`;
   if(isNum){const n=v===''?0:+v;return `<span class="opw"><span class="opn"><input type="number" step="any" data-opv="${id}" data-pct="${kind==='pct'?1:''}" value="${kind==='pct'?+(n*100).toFixed(4):n}"><i>${esc(u)}</i></span>${sel}</span>`;}
@@ -1419,7 +1419,7 @@ document.addEventListener('change',e=>{
   const el=e.target;if(!el.dataset||el.dataset.opsrc===undefined||!POP)return;const f=M.flujos.find(x=>x.k===POP.k);if(!f)return;
   prepPOP(f);const id=el.dataset.opsrc,v=el.value;
   if(v==='#num'){const cur=POP[id];const p=M.datos.find(x=>x.k===cur);POP[id]=p?String(+p.valor||0):(esNum(cur)?cur:valorDefecto(f,el.dataset.kind));}
-  else if(v==='#new'){const kind=el.dataset.kind;const cur=esNum(POP[id])?+POP[id]:+valorDefecto(f,kind);const nm=(el.dataset.corto||'valor')+' de '+(f.nombre||'flujo');const p=nuevoDato(nm.charAt(0).toUpperCase()+nm.slice(1),cur,kind==='pct'?'%':uniDe(f.hacia||f.desde));POP[id]=p.k;renderDatos();}
+  else if(v==='#new'){const kind=el.dataset.kind;const cur=esNum(POP[id])?+POP[id]:+valorDefecto(f,kind);const nm=(el.dataset.corto||'valor')+' de '+(f.nombre||'flujo');const p=nuevoDato(nm.charAt(0).toUpperCase()+nm.slice(1),cur,kind==='pct'?'%':uniDe(f.desde||f.hacia));POP[id]=p.k;renderDatos();}
   else POP[id]=v;
   const fo=componer2(POP.tipo,POP.a,POP.b,POP.c);if(fo)f.formula=fo;cambio(true);renderPop();
 });
@@ -1433,12 +1433,22 @@ function convLect(f){
   if(!f.conv||f.conv.v===''||f.conv.v==null)return `<div class="read" id="conv-lect">Sin conversión: salen ${fmtN(sale,ua)} y entran ${fmtN(sale,ub)}.</div>`;
   return `<div class="read" id="conv-lect">${TCUR?'En '+esc(M.unidad)+' '+TCUR:'Hoy'} salen <b>${fmtN(sale,ua)}</b> → entran <b>${fmtN(sale*fc,ub)}</b></div>`;
 }
+function convEnFormula(f){
+  if(f.conv&&f.conv.v!==''&&f.conv.v!=null)return null;if(!necesitaConv(f))return null;
+  const m=String(f.formula||'').match(/^(.*?)\s*(?:\*\s*1\s*)?\/\s*([A-Za-z_][A-Za-z0-9_]*)\s*$/);
+  if(!m||!m[1].trim()||!M.datos.some(p=>p.k===m[2]))return null;return {base:m[1].trim(),k:m[2]};
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('#pop [data-conv-fix]');if(!b||!POP)return;const f=M.flujos.find(x=>x.k===POP.k);if(!f)return;const fx=convEnFormula(f);if(!fx)return;
+  f.formula=fx.base;f.conv={uno:'hacia',v:fx.k};POP.tipo=undefined;POP._ok=0;POP.a=POP.b=POP.c=undefined;cambio(true);renderPop();
+});
 function convHtml(f){
   if(!f.desde||!f.hacia)return '';if(!necesitaConv(f)&&!f.conv)return '';
   const ua=uniDe(f.desde)||'unidad',ub=uniDe(f.hacia)||'unidad';const c=f.conv||{uno:'hacia',v:''};
   const uno=c.uno==='desde'?ua:ub,otro=c.uno==='desde'?ub:ua;const v=String(c.v??'');const isNum=v===''||esNum(v);
   const P=M.datos.filter(p=>p.unidad!=='%');const p=isNum?null:M.datos.find(x=>x.k===v);
-  return `<div class="sec conv"><span class="pop-k">Conversión de unidades</span>${!f.conv||v===''?`<span class="conv-av">Sale en <b>${esc(ua)}</b> y entra en <b>${esc(ub)}</b>: decí cuánto vale una en la otra.</span>`:''}
+  const fx=convEnFormula(f);
+  return `<div class="sec conv"><span class="pop-k">Conversión de unidades</span>${fx?`<div class="conv-av">La fórmula ya divide por <b>${esc(nombre(fx.k))}</b>. Así, de <b>${esc(nombre(f.desde))}</b> sale solo el monto convertido y esa caja casi no baja. Lo correcto es calcular en ${esc(ua)} y convertir acá. <button class="sm primary" data-conv-fix style="margin-top:6px">Arreglarlo</button></div>`:!f.conv||v===''?`<span class="conv-av">Sale en <b>${esc(ua)}</b> y entra en <b>${esc(ub)}</b>: decí cuánto vale una en la otra.</span>`:''}
     <div class="conv-r"><span>1 ${esc(uno)} =</span>${isNum?`<input type="number" step="any" data-conv-v value="${v}" placeholder="¿cuánto?">`:`<b class="conv-p">${esc(fmtN(p?p.valor:0,''))}</b>`}<span>${esc(otro)}</span><button class="sm" data-conv-swap ${isNum?'':'disabled'} title="dar vuelta la equivalencia">⇄</button></div>
     <select data-conv-src><option value="#num"${isNum?' selected':''}>un número</option>${P.length?`<optgroup label="Parámetros">${P.map(q=>`<option value="${esc(q.k)}"${q.k===v?' selected':''}>${esc(q.nombre)} · ${esc(fmtN(q.valor,q.unidad))}</option>`).join('')}</optgroup>`:''}${isNum?'<option value="#new">↗ guardarlo como parámetro</option>':''}</select>
     ${convLect(f)}</div>`;
