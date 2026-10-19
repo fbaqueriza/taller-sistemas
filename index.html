@@ -399,6 +399,15 @@ details.fold[open]>summary{margin-bottom:6px}
 .niv:hover{border-color:var(--accent);color:var(--accent-ink)}
 .panel h2 .niv{margin-left:auto;white-space:nowrap;flex:none}
 .niv{white-space:nowrap}
+.temas{display:flex;flex-wrap:wrap;gap:4px}
+.bib{display:grid;gap:4px;max-height:320px;overflow:auto}
+.bib-i{display:grid;grid-template-columns:44px minmax(0,1fr);gap:0 8px;text-align:left;padding:6px 8px;border-radius:7px}
+.bib-i b{font-size:13.5px;font-weight:600}
+.bib-i small{grid-column:2;color:var(--fg2);font-size:12px;line-height:1.3}
+.bib-d{grid-row:1/3;align-self:center;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;border-radius:5px;padding:3px 0;text-align:center}
+.bib-d.in{background:var(--good-soft);color:var(--good)}.bib-d.out{background:var(--crit-soft);color:var(--crit)}
+.bib-b{font-style:normal;font-family:var(--display);font-size:11px;padding:0 5px;border-radius:5px;color:#fff;margin-left:4px}
+.bib-b.ref{background:var(--good)}.bib-b.bal{background:var(--accent)}
 </style>
 
 <div class="app">
@@ -591,7 +600,7 @@ function tplCasa(){return {nombre:'Calefacción de una casa',unidad:'hora',
     {k:'perdida',nombre:'Pérdida de calor',desde:'temp',hacia:'',formula:'(temp - exterior) * aislacion'}],
   meta:{cajas:['temp'],sentido:'mas',valor:19,plazo:36,texto:'Estar cómodos sin derrochar'},
   paradigma:'Una casa cómoda gasta solo lo que necesita.'};}
-const EJ=[['Mis finanzas',tplFinanzas],['Población',tplPoblacion],['Calefacción (con retardo)',tplCasa]];
+const EJ=[['Mis finanzas',tplFinanzas],['Un hábito',tplHabito],['Peso y alimentación',tplAlimentacion],['Energía y estrés',tplSalud],['Población',tplPoblacion],['Calefacción (con retardo)',tplCasa]];
 
 /* ---------- estado ---------- */
 let LIB=[],M=null,DB=null,saveT=0,dirty=false;
@@ -957,7 +966,7 @@ function popCaja(s){
     <input type="text" class="big" data-c="nombre" value="${esc(s.nombre)}" placeholder="nombre de la caja">
     <div class="g2"><label>Hoy<input type="number" step="any" data-c="hoy" value="${s.hoy}"></label><label>Unidad<input type="text" data-c="unidad" value="${esc(s.unidad||'')}" placeholder="$, personas, °C"></label></div>
     <label class="check"><input type="checkbox" data-c="min0" ${s.min0?'checked':''}> No puede bajar de cero</label>
-    <div class="sec"><span class="pop-k">Entra</span>${ins.map(f=>li(f,'in')).join('')||'<span class="hint">nada</span>'}<div class="btns"><button class="sm primary" data-nuevo="in">+ entra</button></div></div>
+    <div class="sec"><span class="pop-k">Entra</span>${ins.map(f=>li(f,'in')).join('')||'<span class="hint">nada</span>'}<div class="btns"><button class="sm primary" data-nuevo="in">+ entra</button><button class="link sm" data-nf-ej="${esc(s.k)}">o uno de ejemplo</button></div></div>
     <div class="sec"><span class="pop-k">Sale</span>${outs.map(f=>li(f,'out')).join('')||'<span class="hint">nada</span>'}<div class="btns"><button class="sm primary" data-nuevo="out">+ sale</button>${otros.length?`<select data-nuevo-a style="width:auto"><option value="">→ pasa a otra caja…</option>${otros.map(x=>`<option value="${esc(x.k)}">${esc(x.nombre)}</option>`).join('')}</select>`:''}</div></div>
     <div class="sec"><span class="pop-k">Bucles</span><div class="btns"><button class="sm" data-bucle="R" data-caja="${esc(s.k)}" title="un flujo que entra en proporción a lo que ya hay">+ de refuerzo (crece sobre sí misma)</button><button class="sm" data-bucle="B" data-caja="${esc(s.k)}" title="un flujo que la acerca a un nivel deseado">+ de balance (busca un nivel)</button></div></div>
     <div class="sec">${POP.del?`<div class="confirm">Se borra la caja y los flujos que solo la conectaban a ella. <button class="sm" data-borrar-ok>Borrar</button> <button class="sm" data-borrar-no>Cancelar</button></div>`:`<div class="btns" style="justify-content:space-between"><button class="sm" data-copiar title="Ctrl+C · copia la caja con sus flujos hacia afuera">Copiar</button><button class="del" data-borrar>Borrar caja</button></div>`}</div>`;
@@ -1729,11 +1738,89 @@ document.addEventListener('click',e=>{
   const nf=t.closest('[data-nf]');if(nf){const c=$('nf-caja');if(c&&c.value){nuevoFlujo(c.value,nf.dataset.nf);}return;}
 });
 function nuevoFlujoCard(){
-  const opts=M.cajas.map(c=>`<option value="${esc(c.k)}">${esc(c.nombre)}</option>`).join('');
+  const opts=M.cajas.map(c=>`<option value="${esc(c.k)}"${POP&&POP.caja===c.k?' selected':''}>${esc(c.nombre)}</option>`).join('');
   return `<div class="pop-h"><span class="pop-k">Nuevo flujo</span><button class="del" data-close aria-label="cerrar" style="color:var(--fg2);font-size:18px">×</button></div>
-    ${M.cajas.length?`<label>Sobre qué caja<select id="nf-caja">${opts}</select></label><div class="nb-tipos"><button class="tbtn" data-nf="in"><b>Entra</b><small>desde afuera hacia la caja: un sueldo, lluvia, clientes nuevos</small></button><button class="tbtn" data-nf="out"><b>Sale</b><small>de la caja hacia afuera: gastos, evaporación, bajas</small></button></div><p class="hint" style="margin:0">Para pasar de una caja a otra, abrí la caja y usá "→ pasa a otra caja".</p>`:'<p class="hint">Primero creá una caja.</p>'}`;
+    ${M.cajas.length?`<label>Sobre qué caja<select id="nf-caja">${opts}</select></label><div class="nb-tipos"><button class="tbtn" data-nf="in"><b>Entra</b><small>desde afuera hacia la caja: un sueldo, lluvia, clientes nuevos</small></button><button class="tbtn" data-nf="out"><b>Sale</b><small>de la caja hacia afuera: gastos, evaporación, bajas</small></button></div><p class="hint" style="margin:0">Para pasar de una caja a otra, abrí la caja y usá "→ pasa a otra caja".</p>${biblioHtml()}`:'<p class="hint">Primero creá una caja.</p>'}`;
 }
 const nivChip=(n,extra)=>`<button class="niv" data-niv="${n}" title="palanca ${n} de Meadows: tocá para verla en la escalera">nivel ${n}${extra||''}</button>`;
+
+/* ---------- biblioteca de flujos de ejemplo ---------- */
+// f: fórmula con {c} = la caja elegida y {p0},{p1}… = los parámetros que se crean
+const BIBLIO=[
+ {t:'Finanzas',n:'Sueldo',d:'in',q:'Entra lo mismo cada período.',f:'{p0}',p:[['Sueldo',1000000,'$']]},
+ {t:'Finanzas',n:'Sueldo con aumentos',d:'in',q:'Arranca en un monto y crece un % por período.',f:'{p0} * (1 + {p1}) ^ t',p:[['Sueldo',1000000,'$'],['Aumento por período',0.015,'%']]},
+ {t:'Finanzas',n:'Gasto fijo',d:'out',q:'Alquiler, cuota, abono: sale lo mismo siempre.',f:'{p0}',p:[['Gasto fijo',300000,'$']]},
+ {t:'Finanzas',n:'Gasto que sigue a la inflación',d:'out',q:'Arranca en un monto y sube con la inflación.',f:'{p0} * (1 + {p1}) ^ t',p:[['Gasto',500000,'$'],['Inflación',0.02,'%']]},
+ {t:'Finanzas',n:'Interés de una deuda',d:'in',q:'La deuda crece un % sobre sí misma.',f:'{c} * {p0}',p:[['Interés de la deuda',0.06,'%']],b:'R'},
+ {t:'Finanzas',n:'Rendimiento de una inversión',d:'in',q:'La inversión rinde un % sobre lo que ya hay.',f:'{c} * {p0}',p:[['Rendimiento',0.02,'%']],b:'R'},
+ {t:'Finanzas',n:'Ahorrar lo que sobra',d:'out',q:'Saca un % de lo que pasa de un piso. Pasalo a otra caja para ahorrarlo.',f:'max(0, {c} - {p0}) * {p1}',p:[['Piso que no toco',500000,'$'],['Parte que ahorro',0.5,'%']],b:'B'},
+ {t:'Finanzas',n:'Pagar una deuda',d:'out',q:'Una cuota fija hasta que la deuda se termina.',f:'min({c}, {p0})',p:[['Cuota',100000,'$']]},
+ {t:'Hábitos',n:'Práctica',d:'in',q:'Cada vez que practicás, el hábito suma.',f:'{p0}',p:[['Prácticas por período',3,'veces']]},
+ {t:'Hábitos',n:'El hábito se refuerza',d:'in',q:'Cuanto más fuerte es el hábito, más fácil sostenerlo.',f:'{c} * {p0}',p:[['Refuerzo',0.08,'%']],b:'R'},
+ {t:'Hábitos',n:'Olvido',d:'out',q:'Si no se alimenta, el hábito se va perdiendo.',f:'{c} * {p0}',p:[['Olvido',0.1,'%']],b:'B'},
+ {t:'Hábitos',n:'Ir hacia una meta',d:'in',q:'Te acercás a un nivel deseado, más rápido cuanto más lejos estás.',f:'max(0, {p0} - {c}) * {p1}',p:[['Nivel deseado',30,''],['Qué tan rápido',0.2,'%']],b:'B'},
+ {t:'Alimentación',n:'Lo que comés',d:'in',q:'Calorías que entran por período.',f:'{p0}',p:[['Calorías que como',2200,'kcal']]},
+ {t:'Alimentación',n:'Metabolismo',d:'out',q:'El cuerpo gasta según su tamaño: más peso, más gasto.',f:'{c} * {p0}',p:[['Gasto por unidad',25,'kcal']],b:'B'},
+ {t:'Alimentación',n:'Ejercicio',d:'out',q:'Gasto extra por moverte.',f:'{p0}',p:[['Calorías del ejercicio',300,'kcal']]},
+ {t:'Alimentación',n:'Compras de la despensa',d:'in',q:'Reponés la despensa cuando baja de un nivel.',f:'max(0, {p0} - {c})',p:[['Despensa ideal',20,'unidades']],b:'B'},
+ {t:'Alimentación',n:'Consumo de la despensa',d:'out',q:'Se va consumiendo una parte de lo que hay.',f:'{c} * {p0}',p:[['Parte que se consume',0.3,'%']],b:'B'},
+ {t:'Salud',n:'Presión del día a día',d:'in',q:'El estrés que suma cada período.',f:'{p0}',p:[['Presión',8,'puntos']]},
+ {t:'Salud',n:'Descanso que baja el estrés',d:'out',q:'Cuanto más estrés, más se libera descansando.',f:'{c} * {p0}',p:[['Recuperación',0.15,'%']],b:'B'},
+ {t:'Salud',n:'Dormir recarga energía',d:'in',q:'Recargás hacia el máximo, más cuanto más vacío estás.',f:'max(0, {p0} - {c}) * {p1}',p:[['Energía máxima',100,'puntos'],['Recarga por noche',0.3,'%']],b:'B'},
+ {t:'Salud',n:'Entrenar',d:'in',q:'El estado físico sube con cada entrenamiento.',f:'{p0}',p:[['Entrenamientos',3,'puntos']]},
+ {t:'Salud',n:'Desentrenamiento',d:'out',q:'Sin entrenar, el estado físico se pierde de a poco.',f:'{c} * {p0}',p:[['Pérdida',0.03,'%']],b:'B'},
+ {t:'Otros',n:'Clientes por recomendación',d:'in',q:'Cada cliente trae nuevos: crecimiento boca a boca.',f:'{c} * {p0}',p:[['Recomendación',0.05,'%']],b:'R'},
+ {t:'Otros',n:'Clientes que se van',d:'out',q:'Una parte se va cada período.',f:'{c} * {p0}',p:[['Abandono',0.03,'%']],b:'B'},
+ {t:'Otros',n:'Tareas que llegan',d:'in',q:'Trabajo nuevo cada período.',f:'{p0}',p:[['Tareas nuevas',20,'tareas']]},
+ {t:'Otros',n:'Tareas que terminás',d:'out',q:'Hacés lo que podés, nunca más de lo que hay.',f:'min({c}, {p0})',p:[['Capacidad',15,'tareas']]},
+ {t:'Otros',n:'Lluvia',d:'in',q:'Agua que entra por período.',f:'{p0}',p:[['Lluvia',50,'litros']]},
+ {t:'Otros',n:'Evaporación',d:'out',q:'Se pierde una parte de lo que hay.',f:'{c} * {p0}',p:[['Evaporación',0.1,'%']],b:'B'}
+];
+const TEMAS=['Finanzas','Hábitos','Alimentación','Salud','Otros'];
+let TEMA='Finanzas';
+function biblioHtml(){
+  return `<div class="sec"><span class="pop-k">O elegí uno de ejemplo</span><div class="temas">${TEMAS.map(t=>`<button class="sm${t===TEMA?' primary':''}" data-tema="${t}">${t}</button>`).join('')}</div><div class="bib">${BIBLIO.filter(x=>x.t===TEMA).map(x=>`<button class="bib-i" data-bib="${BIBLIO.indexOf(x)}"><span class="bib-d ${x.d}">${x.d==='in'?'entra':'sale'}</span><b>${esc(x.n)}${x.b?` <i class="bib-b ${x.b==='R'?'ref':'bal'}">${x.b}</i>`:''}</b><small>${esc(x.q)}</small></button>`).join('')}</div></div>`;
+}
+function crearDeBiblio(i,caja){
+  const x=BIBLIO[i];const s=M.cajas.find(c=>c.k===caja);if(!x||!s)return;const snap=snapModelo();
+  const keys=x.p.map(([n,v,u])=>{const ex=M.datos.find(p=>p.nombre===n&&Math.abs((+p.valor||0)-v)<1e-12);if(ex)return ex.k;return nuevoDato(n,v,u==='$'?(s.unidad||'$'):u).k;});
+  let fo=x.f.replace(/\{c\}/g,s.k);keys.forEach((k,j)=>{fo=fo.split('{p'+j+'}').join(k);});
+  const f={k:keyLibre(x.n),nombre:x.n,desde:x.d==='out'?s.k:'',hacia:x.d==='in'?s.k:'',formula:fo,retardos:{},reglas:[]};
+  M.flujos.push(f);cambio(true);POP={k:f.k,snap,nuevo:true};renderPop();renderDiagram();renderDatos();
+}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('#pop [data-tema]');if(t){TEMA=t.dataset.tema;const c=$('nf-caja');const v=c&&c.value;renderPop();const c2=$('nf-caja');if(c2&&v)c2.value=v;return;}
+  const b=e.target.closest('#pop [data-bib]');if(b){const c=$('nf-caja');if(c&&c.value)crearDeBiblio(+b.dataset.bib,c.value);}
+  const n=e.target.closest('#pop [data-nf-ej]');if(n){POP={nuevoF:true,caja:n.dataset.nfEj};renderPop();}
+});
+
+/* ---------- sistemas de ejemplo ---------- */
+function tplHabito(){return {nombre:'Un hábito',unidad:'semana',
+  cajas:[{k:'habito',nombre:'Fuerza del hábito',hoy:10,unidad:'puntos',min0:true}],
+  datos:[{k:'practica',nombre:'Prácticas por semana',valor:3,unidad:'veces'},{k:'refuerzo',nombre:'Refuerzo',valor:0.06,unidad:'%'},{k:'olvido',nombre:'Olvido',valor:0.1,unidad:'%'}],
+  flujos:[{k:'practicar',nombre:'Práctica',desde:'',hacia:'habito',formula:'practica'},
+    {k:'reforzar',nombre:'El hábito se refuerza',desde:'',hacia:'habito',formula:'habito * refuerzo'},
+    {k:'olvidar',nombre:'Olvido',desde:'habito',hacia:'',formula:'habito * olvido'}],
+  meta:{cajas:['habito'],sentido:'mas',valor:60,plazo:26,texto:'Que salga solo, sin esfuerzo'},
+  paradigma:'Un hábito no se decide: se alimenta todas las semanas.'};}
+function tplAlimentacion(){return {nombre:'Peso y alimentación',unidad:'semana',
+  cajas:[{k:'peso',nombre:'Peso',hoy:80,unidad:'kg',min0:true}],
+  datos:[{k:'come',nombre:'Calorías por semana',valor:15400,unidad:'kcal'},{k:'metab',nombre:'Gasto por kg por semana',valor:175,unidad:'kcal'},{k:'ejercicio',nombre:'Ejercicio por semana',valor:2100,unidad:'kcal'},{k:'kcal_kg',nombre:'Calorías por kg',valor:7700,unidad:'kcal',externo:true}],
+  flujos:[{k:'comer',nombre:'Lo que comés',desde:'',hacia:'peso',formula:'come / kcal_kg'},
+    {k:'metabolismo',nombre:'Metabolismo',desde:'peso',hacia:'',formula:'peso * metab / kcal_kg'},
+    {k:'moverse',nombre:'Ejercicio',desde:'peso',hacia:'',formula:'ejercicio / kcal_kg'}],
+  meta:{cajas:['peso'],sentido:'menos',valor:76,plazo:26,texto:'Sentirme más liviano'},
+  paradigma:'El cuerpo busca un equilibrio: cambiar el peso es cambiar dónde está ese equilibrio.'};}
+function tplSalud(){return {nombre:'Energía y estrés',unidad:'día',
+  cajas:[{k:'energia',nombre:'Energía',hoy:60,unidad:'puntos',min0:true},{k:'estres',nombre:'Estrés',hoy:40,unidad:'puntos',min0:true,menos:true}],
+  datos:[{k:'presion',nombre:'Presión del día',valor:8,unidad:'puntos'},{k:'recup',nombre:'Recuperación al descansar',valor:0.15,unidad:'%'},{k:'maxe',nombre:'Energía máxima',valor:100,unidad:'puntos'},{k:'recarga',nombre:'Recarga al dormir',valor:0.3,unidad:'%'},{k:'trabajo',nombre:'Energía que pide el trabajo',valor:15,unidad:'puntos'},{k:'desgaste',nombre:'Desgaste por estrés',valor:0.05,unidad:'%'}],
+  flujos:[{k:'dormir',nombre:'Dormir',desde:'',hacia:'energia',formula:'max(0, maxe - energia) * recarga'},
+    {k:'trabajar',nombre:'Trabajo',desde:'energia',hacia:'',formula:'trabajo'},
+    {k:'desgastar',nombre:'Desgaste por estrés',desde:'energia',hacia:'',formula:'estres * desgaste'},
+    {k:'presionar',nombre:'Presión',desde:'',hacia:'estres',formula:'presion'},
+    {k:'descansar',nombre:'Descanso',desde:'estres',hacia:'',formula:'estres * recup',reglas:[{tipo:'si',a:'energia',op:'>',b:'30'}]}],
+  meta:{cajas:['estres'],sentido:'menos',valor:30,plazo:30,texto:'Llegar al fin de semana con energía'},
+  paradigma:'El descanso no es un premio: es parte del trabajo.'};}
 
 /* ---------- eventos ---------- */
 document.addEventListener('click',e=>{
