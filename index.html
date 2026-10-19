@@ -328,6 +328,13 @@ details.fold[open]>summary{margin-bottom:6px}
 .opn i{font-style:normal;color:var(--muted);font-size:13px;min-width:12px}
 .opn.opp{font-family:var(--mono);font-size:14px;justify-content:flex-end;padding-right:16px;color:var(--fg)}
 .opsrc{font-size:12.5px}
+.pop-ok{position:sticky;bottom:-14px;margin:4px -14px -14px;padding:10px 14px;background:var(--surface);border-top:1px solid var(--line);display:flex;gap:8px;align-items:center;justify-content:flex-end;border-radius:0 0 8px 8px}
+.pop-ok .hint{margin-right:auto}
+.pop-ok.activo{background:var(--accent-soft);border-top-color:var(--accent)}
+.pop-ok.activo .hint{color:var(--accent-ink);font-weight:600}
+.pop-ok button{white-space:nowrap;flex:none}
+.pop-ok button.primary{padding:6px 16px;font-weight:600}
+.pop-ok .hint{line-height:1.25}
 </style>
 
 <div class="app">
@@ -889,12 +896,31 @@ function miraHtml(f){
   return `<span class="hint">Las líneas punteadas del mapa: de qué caja depende este flujo y si la ve con retardo.</span>`+(mira.length?mira.map(S=>`<div class="mira"><span>${esc(nombre(S))}</span>${retSel(S)}</div>`).join(''):'<span class="hint">No mira ninguna caja: su valor no depende de cómo está el sistema.</span>');
 }
 function popMira(){const f=M.flujos.find(x=>x.k===POP?.k),el=$('pop-mira');if(f&&el)el.innerHTML=miraHtml(f);}
+const snapModelo=()=>JSON.stringify({cajas:M.cajas,flujos:M.flujos,datos:M.datos,meta:M.meta});
+function popFoot(){
+  const el=$('pop-ok');if(!el||!POP)return;
+  const mod=!!POP.snap&&snapModelo()!==POP.snap;const c=M.cajas.some(x=>x.k===POP.k);const que=c?'caja':'flujo';
+  el.className='pop-ok'+(mod||POP.nuevo?' activo':'');
+  el.innerHTML=POP.nuevo?`<button class="sm" data-pop-desc>Cancelar</button><button class="primary" data-pop-ok>✓ Crear ${que}</button>`
+    :mod?`<span class="hint">Cambios sin confirmar</span><button class="sm" data-pop-desc>Descartar</button><button class="primary" data-pop-ok>✓ Listo</button>`
+    :`<span class="hint">Sin cambios</span><button class="primary" data-pop-ok>✓ Listo</button>`;
+}
+function popConfirmar(){const fue=POP&&(POP.nuevo||(POP.snap&&snapModelo()!==POP.snap));popClose();if(fue){scheduleSave();setStatus('✓ Guardado');setTimeout(()=>setStatus(''),1800);}}
+function popDescartar(){
+  if(!POP||!POP.snap){popClose();return;}
+  const s=JSON.parse(POP.snap);M.cajas=s.cajas;M.flujos=s.flujos;M.datos=s.datos;M.meta=s.meta;
+  POP=null;$('pop').hidden=true;$('pop').innerHTML='';cambio(true);renderMeta();renderDatos();renderDiagram();setStatus('Cambios descartados');setTimeout(()=>setStatus(''),1800);
+}
+document.addEventListener('click',e=>{
+  if(e.target.closest('#pop [data-pop-ok]')){popConfirmar();return;}
+  if(e.target.closest('#pop [data-pop-desc]')){popDescartar();return;}
+});
 function renderPop(){
   if(!POP){$('pop').hidden=true;return;}
   const c=M.cajas.find(x=>x.k===POP.k),f=M.flujos.find(x=>x.k===POP.k);if(!c&&!f){popClose();return;}
-  const pop=$('pop');const sy=pop.scrollTop;pop.hidden=false;pop.innerHTML=c?popCaja(c):popFlujo(f);pop.scrollTop=sy;popPos();
+  const pop=$('pop');const sy=pop.scrollTop;pop.hidden=false;if(!POP.snap)POP.snap=snapModelo();pop.innerHTML=(c?popCaja(c):popFlujo(f))+'<div class="pop-ok" id="pop-ok"></div>';pop.scrollTop=sy;popFoot();popPos();
 }
-function popOpen(k){POP={k};renderPop();renderDiagram();renderDatos();}
+function popOpen(k,snap,nuevo){POP={k,snap:snap||snapModelo(),nuevo:!!nuevo};renderPop();renderDiagram();renderDatos();}
 function popClose(){POP=null;$('pop').hidden=true;$('pop').innerHTML='';renderDiagram();renderDatos();}
 function popPos(){const p=$('pop');if(!POP||p.hidden)return;const r=p.getBoundingClientRect();if(innerWidth>900&&(r.top<60||r.top>innerHeight-80))p.scrollIntoView({block:'nearest'});}
 function popRead(){const f=M.flujos.find(x=>x.k===POP?.k);const el=$('pop-read');if(!f||!el)return;if(tieneItems(f)){el.innerHTML=itemsRead(f);return;}try{const v=compile(f.formula).fn(escena(ROWS[TCUR]));el.innerHTML=`${leer(f.formula)} <b>= ${fmtK(v,f.k)}</b>${TCUR?' en '+M.unidad+' '+TCUR:' hoy'}`;}catch(e){el.innerHTML=`<span class="err">${esc(e.message)}</span>`;}}
@@ -910,18 +936,18 @@ function renombrar(viejo,nuevo){
   LAY.key=layKey();if(M.lay)M.lay.key=LAY.key;
   if(POP&&POP.k===viejo)POP.k=nuevo;if(DATO_OPEN===viejo)DATO_OPEN=nuevo;
 }
-function nuevaCaja(){const n='Caja '+(M.cajas.length+1);const c={k:keyLibre(n),nombre:n,hoy:0,unidad:M.cajas[0]?M.cajas[0].unidad:'',min0:true};M.cajas.push(c);if(!M.meta.cajas.length)M.meta.cajas=[c.k];cambio(true);renderMeta();popOpen(c.k);const i=$('pop').querySelector('.big');if(i){i.focus();i.select();}}
+function nuevaCaja(){const snap=snapModelo();const n='Caja '+(M.cajas.length+1);const c={k:keyLibre(n),nombre:n,hoy:0,unidad:M.cajas[0]?M.cajas[0].unidad:'',min0:true};M.cajas.push(c);if(!M.meta.cajas.length)M.meta.cajas=[c.k];cambio(true);renderMeta();popOpen(c.k,snap,true);const i=$('pop').querySelector('.big');if(i){i.focus();i.select();}}
 function nuevoDato(nombreD,valor,unidad){const p={k:keyLibre(nombreD||'parametro'),nombre:nombreD||'Parámetro',valor:+valor||0,unidad:unidad||''};M.datos.push(p);return p;}
 function nuevoFlujo(caja,dir,to){
-  const s=M.cajas.find(x=>x.k===caja);const n=dir==='in'?'entrada':to?'pase':'salida';
+  const snap=snapModelo();const s=M.cajas.find(x=>x.k===caja);const n=dir==='in'?'entrada':to?'pase':'salida';
   const f={k:keyLibre(n),nombre:'',desde:dir==='in'?'':s.k,hacia:dir==='in'?s.k:(to||''),formula:'0',retardos:{},reglas:[]};M.flujos.push(f);
-  cambio(true);POP={k:f.k,tipo:'fijo',a:'0'};renderPop();renderDiagram();const i=$('pop').querySelector('.big');if(i)i.focus();
+  cambio(true);POP={k:f.k,tipo:'fijo',a:'0',snap,nuevo:true};renderPop();renderDiagram();const i=$('pop').querySelector('.big');if(i)i.focus();
 }
 function nuevoBucle(tipo,caja){
-  const s=M.cajas.find(x=>x.k===caja);if(!s)return;let f;
+  const s=M.cajas.find(x=>x.k===caja);if(!s)return;let f;const snap=snapModelo();
   if(tipo==='R'){const p=nuevoDato('Crecimiento de '+s.nombre,0.05,'%');f={k:keyLibre('crecimiento_'+s.k),nombre:'Crecimiento de '+s.nombre,desde:'',hacia:s.k,formula:`${s.k} * ${p.k}`,retardos:{},reglas:[]};}
   else{const mv=M.meta.cajas.length===1&&M.meta.cajas[0]===s.k&&M.meta.valor!==null&&M.meta.valor!==''?+M.meta.valor:null;const n=nuevoDato('Nivel deseado de '+s.nombre,mv??(Math.abs(+s.hoy||0)>0?Math.abs(+s.hoy)*2:100),s.unidad);const r=nuevoDato('Rapidez de ajuste de '+s.nombre,0.2,'%');f={k:keyLibre('ajuste_'+s.k),nombre:'Ajuste de '+s.nombre,desde:'',hacia:s.k,formula:`max(0, ${n.k} - ${s.k}) * ${r.k}`,retardos:{},reglas:[]};}
-  M.flujos.push(f);cambio(true);POP={k:f.k};renderPop();renderDiagram();renderDatos();
+  M.flujos.push(f);cambio(true);POP={k:f.k,snap,nuevo:true};renderPop();renderDiagram();renderDatos();
 }
 function borrarCaja(k){
   M.cajas=M.cajas.filter(c=>c.k!==k);
@@ -941,7 +967,7 @@ function renderTiempo(){
 
 /* ---------- cálculo ---------- */
 let CT=0;
-function compute(){ROWS=simular(M);if(TCUR>ROWS.length-1)TCUR=ROWS.length-1;renderTiempo();renderMetaEstado();scheduleReco();}
+function compute(){ROWS=simular(M);if(TCUR>ROWS.length-1)TCUR=ROWS.length-1;renderTiempo();renderMetaEstado();scheduleReco();popFoot();}
 function scheduleCompute(){if(CT)return;CT=requestAnimationFrame(()=>{CT=0;compute();});}
 function cambio(estructura){dirty=true;if(estructura)LAY.key='';compute();scheduleSave();}
 
@@ -1422,7 +1448,7 @@ document.addEventListener('click',e=>{
   // tarjeta
   if(!t.closest('#pop'))return;
   if(d.close!==undefined){popClose();return;}
-  if(d.go){POP={k:d.go};renderPop();renderDiagram();renderDatos();return;}
+  if(d.go){POP={k:d.go,snap:snapModelo()};renderPop();renderDiagram();renderDatos();return;}
   if(d.nuevo){nuevoFlujo(POP.k,d.nuevo);return;}
   if(d.borrar!==undefined){const esC=M.cajas.some(c=>c.k===POP.k);if(esC){POP.del=true;renderPop();}else{M.flujos=M.flujos.filter(f=>f.k!==POP.k);POP=null;$('pop').hidden=true;cambio(true);renderDatos();}return;}
   if(d.borrarNo!==undefined){POP.del=false;renderPop();return;}
