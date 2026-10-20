@@ -408,6 +408,20 @@ details.fold[open]>summary{margin-bottom:6px}
 .bib-d.in{background:var(--good-soft);color:var(--good)}.bib-d.out{background:var(--crit-soft);color:var(--crit)}
 .bib-b{font-style:normal;font-family:var(--display);font-size:11px;padding:0 5px;border-radius:5px;color:#fff;margin-left:4px}
 .bib-b.ref{background:var(--good)}.bib-b.bal{background:var(--accent)}
+.guia{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}
+.guia summary{cursor:pointer;font-weight:600;font-size:14px}
+.guia summary small{font-weight:400;color:var(--fg2);margin-left:6px}
+.guia p{margin:8px 0;font-size:13.5px;line-height:1.5;color:var(--fg2)}
+.jug-h{font-family:var(--mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:10px 0 6px}
+.jug-h small{font-family:var(--body);text-transform:none;letter-spacing:0;font-size:12px;margin-left:4px}
+.jugs{display:grid;gap:4px;margin-bottom:8px}
+.jug{display:grid;text-align:left;gap:1px;padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
+.jug b{font-size:13.5px;font-weight:600}.jug small{font-size:12px;color:var(--fg2);line-height:1.35}
+.jug:hover{border-color:var(--accent)}
+.jug.on{border-color:var(--accent);background:var(--accent-soft)}
+.fuentes{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:10px;font-size:12px}
+.fuentes span{font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);width:100%}
+.fuentes a{color:var(--accent-ink)}
 </style>
 
 <div class="app">
@@ -600,7 +614,7 @@ function tplCasa(){return {nombre:'Calefacción de una casa',unidad:'hora',
     {k:'perdida',nombre:'Pérdida de calor',desde:'temp',hacia:'',formula:'(temp - exterior) * aislacion'}],
   meta:{cajas:['temp'],sentido:'mas',valor:19,plazo:36,texto:'Estar cómodos sin derrochar'},
   paradigma:'Una casa cómoda gasta solo lo que necesita.'};}
-const EJ=[['Mis finanzas',tplFinanzas],['Un hábito',tplHabito],['Peso y alimentación',tplAlimentacion],['Energía y estrés',tplSalud],['Población',tplPoblacion],['Calefacción (con retardo)',tplCasa]];
+const EJ=[['Mis finanzas',tplFinanzas],['Deudas, ahorro y estilo de vida',tplPlata],['Un hábito (Hábitos atómicos)',tplHabito],['Peso, hambre y metabolismo',tplAlimentacion],['Sueño, estrés y energía',tplSalud],['Población',tplPoblacion],['Calefacción (con retardo)',tplCasa]];
 
 /* ---------- estado ---------- */
 let LIB=[],M=null,DB=null,saveT=0,dirty=false;
@@ -870,7 +884,7 @@ function renderMeta(){
     <input type="text" data-meta="texto" value="${esc(mt.texto||'')}" placeholder="Para qué (opcional)">
     <div class="estado" id="meta-estado"></div>
   </div>
-  <div class="para"><label for="paradigma">Paradigma <small class="muted" style="font-weight:400">la idea de fondo desde la que surge este sistema</small> ${nivChip(2)}</label><textarea id="paradigma" data-m="paradigma" rows="2" placeholder="Por ejemplo: la plata es tiempo libre, no seguridad.">${esc(M.paradigma||'')}</textarea></div>`;
+  <div class="para"><label for="paradigma">Paradigma <small class="muted" style="font-weight:400">la idea de fondo desde la que surge este sistema</small> ${nivChip(2)}</label><textarea id="paradigma" data-m="paradigma" rows="2" placeholder="Por ejemplo: la plata es tiempo libre, no seguridad.">${esc(M.paradigma||'')}</textarea></div>${guiaHtml()}`;
   renderMetaEstado();
 }
 function renderMetaEstado(){
@@ -884,7 +898,7 @@ function renderMetaEstado(){
 
 /* ---------- parámetros ---------- */
 let DATO_OPEN='',DATO_DEL='';
-function rango(p){const v=+p.valor||0,a=Math.abs(v);if(p.unidad==='%'||(a>0&&a<=1))return {min:0,max:Math.max(0.1,Math.min(1,a*3||0.1)),step:0.001};const mx=a?a*3:100;return {min:v<0?-mx:0,max:mx,step:nice(mx/200)};}
+function rango(p){const v=+p.valor||0,a=Math.abs(v);if(p.unidad==='%'||(a>0&&a<=1))return {min:0,max:Math.max(0.1,Math.min(1,a*3||1)),step:0.001};const mx=a?a*3:100;return {min:v<0?-mx:0,max:mx,step:nice(mx/200)};}
 function usosDe(k){const out=[];for(const f of M.flujos){if(varsDe(f.formula).includes(k)||f.reglas.some(r=>r.a===k||r.b===k)||(f.conv&&f.conv.v===k)||(f.reparto||[]).some(x=>x.conv&&x.conv.v===k))out.push(f.nombre||f.k);}return out;}
 function renderDatos(){
   const used=new Set(POP&&POP.kind==='flujo'?varsDe((M.flujos.find(f=>f.k===POP.k)||{}).formula||''):[]);
@@ -1749,26 +1763,42 @@ const nivChip=(n,extra)=>`<button class="niv" data-niv="${n}" title="palanca ${n
 const BIBLIO=[
  {t:'Finanzas',n:'Sueldo',d:'in',q:'Entra lo mismo cada período.',f:'{p0}',p:[['Sueldo',1000000,'$']]},
  {t:'Finanzas',n:'Sueldo con aumentos',d:'in',q:'Arranca en un monto y crece un % por período.',f:'{p0} * (1 + {p1}) ^ t',p:[['Sueldo',1000000,'$'],['Aumento por período',0.015,'%']]},
+ {t:'Finanzas',n:'Aguinaldo',d:'in',q:'Medio sueldo extra cada 6 meses.',f:'if(t - 6 * floor(t / 6) == {p1}, {p0}, 0)',p:[['Medio aguinaldo',1500000,'$'],['Meses hasta el primero',2,'meses']]},
  {t:'Finanzas',n:'Gasto fijo',d:'out',q:'Alquiler, cuota, abono: sale lo mismo siempre.',f:'{p0}',p:[['Gasto fijo',300000,'$']]},
  {t:'Finanzas',n:'Gasto que sigue a la inflación',d:'out',q:'Arranca en un monto y sube con la inflación.',f:'{p0} * (1 + {p1}) ^ t',p:[['Gasto',500000,'$'],['Inflación',0.02,'%']]},
- {t:'Finanzas',n:'Interés de una deuda',d:'in',q:'La deuda crece un % sobre sí misma.',f:'{c} * {p0}',p:[['Interés de la deuda',0.06,'%']],b:'R'},
- {t:'Finanzas',n:'Rendimiento de una inversión',d:'in',q:'La inversión rinde un % sobre lo que ya hay.',f:'{c} * {p0}',p:[['Rendimiento',0.02,'%']],b:'R'},
+ {t:'Finanzas',n:'Imprevisto de una sola vez',d:'out',q:'Un golpe en un mes: un arreglo, una mudanza, un problema de salud.',f:'min({c}, if(t == {p0}, {p1}, 0))',p:[['Mes del imprevisto',6,'meses'],['Costo del imprevisto',5000000,'$']]},
+ {t:'Finanzas',n:'La inflación se come la plata quieta',d:'out',q:'La plata que no rinde pierde valor cada mes (medido en pesos de hoy).',f:'{c} * {p0}',p:[['Inflación mensual',0.02,'%']],b:'B'},
+ {t:'Finanzas',n:'Interés de una deuda',d:'in',q:'La deuda crece un % sobre sí misma: el interés compuesto en contra.',f:'{c} * {p0}',p:[['Interés mensual',0.08,'%']],b:'R'},
+ {t:'Finanzas',n:'Pagar una parte del saldo',d:'out',q:'Pagás un % de lo que debés. Si es menor que el interés, la deuda igual crece.',f:'{c} * {p0}',p:[['Parte del saldo que pago',0.3,'%']],b:'B'},
+ {t:'Finanzas',n:'Pagar una cuota fija',d:'out',q:'Una cuota fija hasta que la deuda se termina.',f:'min({c}, {p0})',p:[['Cuota',100000,'$']]},
+ {t:'Finanzas',n:'Rendimiento de una inversión',d:'in',q:'La inversión rinde un % sobre lo que ya hay: el interés compuesto a favor.',f:'{c} * {p0}',p:[['Rendimiento',0.004,'%']],b:'R'},
  {t:'Finanzas',n:'Ahorrar lo que sobra',d:'out',q:'Saca un % de lo que pasa de un piso. Pasalo a otra caja para ahorrarlo.',f:'max(0, {c} - {p0}) * {p1}',p:[['Piso que no toco',500000,'$'],['Parte que ahorro',0.5,'%']],b:'B'},
- {t:'Finanzas',n:'Pagar una deuda',d:'out',q:'Una cuota fija hasta que la deuda se termina.',f:'min({c}, {p0})',p:[['Cuota',100000,'$']]},
+ {t:'Finanzas',n:'Completar un fondo de emergencia',d:'in',q:'Llena el fondo hasta una meta: rápido cuando falta mucho, despacio al final.',f:'max(0, {p0} - {c}) * {p1}',p:[['Meta del fondo',7500000,'$'],['Ritmo de llenado',0.1,'%']],b:'B'},
+ {t:'Finanzas',n:'Retiro sostenible (regla del 4 %)',d:'out',q:'Sacás por mes la doceava parte del 4 % anual de lo invertido (Bengen, 1994).',f:'{c} * {p0} / 12',p:[['Retiro anual',0.04,'%']],b:'B'},
  {t:'Hábitos',n:'Práctica',d:'in',q:'Cada vez que practicás, el hábito suma.',f:'{p0}',p:[['Prácticas por período',3,'veces']]},
- {t:'Hábitos',n:'El hábito se refuerza',d:'in',q:'Cuanto más fuerte es el hábito, más fácil sostenerlo.',f:'{c} * {p0}',p:[['Refuerzo',0.08,'%']],b:'R'},
- {t:'Hábitos',n:'Olvido',d:'out',q:'Si no se alimenta, el hábito se va perdiendo.',f:'{c} * {p0}',p:[['Olvido',0.1,'%']],b:'B'},
+ {t:'Hábitos',n:'Cada repetición se graba',d:'in',q:'El automatismo crece rápido al principio y se frena cerca del techo (Lally, 2010).',f:'{p0} * {p1} * (100 - {c})',p:[['Cuánto se graba cada repetición',0.045,'%'],['Parte de los días que lo hacés',0.7,'%']],b:'B'},
+ {t:'Hábitos',n:'Se olvida si no lo hacés',d:'out',q:'Un día suelto pesa poco; una racha sin hacerlo pesa mucho.',f:'{c} * {p0} * (1 - {p1})',p:[['Olvido sin práctica',0.03,'%'],['Parte de los días que lo hacés',0.7,'%']],b:'B'},
+ {t:'Hábitos',n:'Mejorar 1 % por día',d:'in',q:'Cada día practicado sumás un poco sobre lo que ya sabés: interés compuesto (Clear).',f:'{c} * {p0} * {p1}',p:[['Mejora por día practicado',0.01,'%'],['Parte de los días que lo hacés',0.7,'%']],b:'R'},
+ {t:'Hábitos',n:'Votos por tu identidad',d:'in',q:'Cada vez que lo hacés es un voto por la persona que querés ser (Clear).',f:'{p0} * {p1} * (100 - {c})',p:[['Peso de cada voto',0.03,'%'],['Parte de los días que lo hacés',0.7,'%']],b:'B'},
+ {t:'Hábitos',n:'Satisfacción de anotarlo',d:'in',q:'Tachar el día en un registro es una recompensa inmediata (cuarta ley de Clear).',f:'{p0} * {p1}',p:[['Puntos por día anotado',1,'puntos'],['Parte de los días que lo hacés',0.7,'%']]},
+ {t:'Hábitos',n:'Aburrimiento',d:'out',q:'Las ganas se gastan solas con la rutina.',f:'{c} * {p0}',p:[['Tendencia al aburrimiento',0.03,'%']],b:'B'},
  {t:'Hábitos',n:'Ir hacia una meta',d:'in',q:'Te acercás a un nivel deseado, más rápido cuanto más lejos estás.',f:'max(0, {p0} - {c}) * {p1}',p:[['Nivel deseado',30,''],['Qué tan rápido',0.2,'%']],b:'B'},
- {t:'Alimentación',n:'Lo que comés',d:'in',q:'Calorías que entran por período.',f:'{p0}',p:[['Calorías que como',2200,'kcal']]},
- {t:'Alimentación',n:'Metabolismo',d:'out',q:'El cuerpo gasta según su tamaño: más peso, más gasto.',f:'{c} * {p0}',p:[['Gasto por unidad',25,'kcal']],b:'B'},
- {t:'Alimentación',n:'Ejercicio',d:'out',q:'Gasto extra por moverte.',f:'{p0}',p:[['Calorías del ejercicio',300,'kcal']]},
+ {t:'Alimentación',n:'Lo que comés',d:'in',q:'Calorías por día pasadas a kg por semana.',f:'7 * {p0} / {p1}',p:[['Calorías por día',2400,'kcal'],['Calorías por kg',7700,'kcal']]},
+ {t:'Alimentación',n:'Gasto que baja con el peso',d:'out',q:'Un cuerpo más liviano gasta menos: por eso bajar se frena (Hall, 2011).',f:'7 * {p0} * {c} / {p1}',p:[['Gasto por kg por día',30,'kcal'],['Calorías por kg',7700,'kcal']],b:'B'},
+ {t:'Alimentación',n:'Hambre que sube al bajar',d:'in',q:'Por cada kg perdido el apetito pide unas 100 kcal más por día (Polidori, 2016).',f:'7 * {p0} * max(0, {p1} - {c}) / {p2}',p:[['Hambre extra por kg perdido',100,'kcal'],['Peso de partida',85,'kg'],['Calorías por kg',7700,'kcal']],b:'B'},
+ {t:'Alimentación',n:'Ejercicio (con compensación)',d:'out',q:'Quema según tu peso, pero el cuerpo compensa una parte moviéndose menos o comiendo más.',f:'7 * {p0} * {p1} * {c} * (1 - {p2}) / {p3}',p:[['Minutos por día',30,'min'],['kcal por kg por minuto',0.07,'kcal'],['Parte que el cuerpo compensa',0.3,'%'],['Calorías por kg',7700,'kcal']],b:'B'},
+ {t:'Alimentación',n:'Agua del arranque',d:'out',q:'Las primeras semanas se va agua y glucógeno, no grasa.',f:'{p0} * {p1} * (1 - {p1}) ^ t',p:[['Agua que se va al empezar',1,'kg'],['Rapidez',0.5,'%']]},
+ {t:'Alimentación',n:'Rebote al dejar la dieta',d:'in',q:'Desde una semana dada volvés a comer como antes.',f:'if(t > {p0}, 7 * {p1} / {p2}, 0)',p:[['Semana en que dejás la dieta',26,'semanas'],['Calorías que volvés a sumar por día',500,'kcal'],['Calorías por kg',7700,'kcal']]},
  {t:'Alimentación',n:'Compras de la despensa',d:'in',q:'Reponés la despensa cuando baja de un nivel.',f:'max(0, {p0} - {c})',p:[['Despensa ideal',20,'unidades']],b:'B'},
  {t:'Alimentación',n:'Consumo de la despensa',d:'out',q:'Se va consumiendo una parte de lo que hay.',f:'{c} * {p0}',p:[['Parte que se consume',0.3,'%']],b:'B'},
+ {t:'Salud',n:'Te falta sueño',d:'in',q:'Cada día que dormís menos de lo que necesitás, la deuda de sueño crece (Van Dongen, 2003).',f:'max(0, {p0} - {p1})',p:[['Horas que necesitás',8,'horas'],['Horas que dormís',7,'horas']]},
+ {t:'Salud',n:'El cuerpo recupera sueño',d:'out',q:'Una parte de la deuda se paga sola, con sueño más profundo.',f:'{c} * {p0}',p:[['Recuperación por día',0.15,'%']],b:'B'},
  {t:'Salud',n:'Presión del día a día',d:'in',q:'El estrés que suma cada período.',f:'{p0}',p:[['Presión',8,'puntos']]},
  {t:'Salud',n:'Descanso que baja el estrés',d:'out',q:'Cuanto más estrés, más se libera descansando.',f:'{c} * {p0}',p:[['Recuperación',0.15,'%']],b:'B'},
  {t:'Salud',n:'Dormir recarga energía',d:'in',q:'Recargás hacia el máximo, más cuanto más vacío estás.',f:'max(0, {p0} - {c}) * {p1}',p:[['Energía máxima',100,'puntos'],['Recarga por noche',0.3,'%']],b:'B'},
- {t:'Salud',n:'Entrenar',d:'in',q:'El estado físico sube con cada entrenamiento.',f:'{p0}',p:[['Entrenamientos',3,'puntos']]},
- {t:'Salud',n:'Desentrenamiento',d:'out',q:'Sin entrenar, el estado físico se pierde de a poco.',f:'{c} * {p0}',p:[['Pérdida',0.03,'%']],b:'B'},
+ {t:'Salud',n:'El ejercicio te pone en forma',d:'in',q:'Cada minuto de ejercicio suma estado físico (modelo de Banister).',f:'{p0} * {p1}',p:[['Minutos de ejercicio por día',30,'min'],['Puntos por minuto',0.05,'puntos']]},
+ {t:'Salud',n:'Se pierde la forma',d:'out',q:'El estado físico dura unas 6 semanas si dejás de entrenar.',f:'{c} / {p0}',p:[['Días que dura la forma',42,'días']],b:'B'},
+ {t:'Salud',n:'Se pasa el cansancio',d:'out',q:'El cansancio de entrenar se va en una semana.',f:'{c} / {p0}',p:[['Días que dura el cansancio',7,'días']],b:'B'},
  {t:'Otros',n:'Clientes por recomendación',d:'in',q:'Cada cliente trae nuevos: crecimiento boca a boca.',f:'{c} * {p0}',p:[['Recomendación',0.05,'%']],b:'R'},
  {t:'Otros',n:'Clientes que se van',d:'out',q:'Una parte se va cada período.',f:'{c} * {p0}',p:[['Abandono',0.03,'%']],b:'B'},
  {t:'Otros',n:'Tareas que llegan',d:'in',q:'Trabajo nuevo cada período.',f:'{p0}',p:[['Tareas nuevas',20,'tareas']]},
@@ -1788,39 +1818,199 @@ function crearDeBiblio(i,caja){
   const f={k:keyLibre(x.n),nombre:x.n,desde:x.d==='out'?s.k:'',hacia:x.d==='in'?s.k:'',formula:fo,retardos:{},reglas:[]};
   M.flujos.push(f);cambio(true);POP={k:f.k,snap,nuevo:true};renderPop();renderDiagram();renderDatos();
 }
+
+/* ---------- guía de cada ejemplo: de dónde sale y qué probar ---------- */
+function conGuia(m,g){g.base={};for(const p of m.datos)g.base[p.k]=p.valor;m.guia=g;return m;}
+function guiaHtml(){
+  const g=M.guia;if(!g||!g.q)return '';
+  const act=g.activa??-1;
+  return `<details class="guia"${g.abierta?' open':''}><summary>Sobre este ejemplo <small>cómo funciona y qué probar</small></summary>
+  <p>${esc(g.q)}</p>
+  ${(g.jugadas||[]).length?`<div class="jug-h">Probá <small>cada jugada cambia parámetros; mirá el gráfico</small></div><div class="jugs">${g.jugadas.map((j,i)=>`<button class="jug${act===i?' on':''}" data-jug="${i}"><b>${esc(j.n)}</b><small>${esc(j.q)}</small></button>`).join('')}</div>${act>=0?'<button class="sm" data-jug="-1">↺ Volver a los valores del ejemplo</button>':''}`:''}
+  ${(g.fuentes||[]).length?`<div class="fuentes"><span>Fuentes</span>${g.fuentes.map(([t,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>`).join('')}</div>`:''}
+</details>`;
+}
+function jugar(i){
+  const g=M.guia;if(!g||!g.base)return;const j=i>=0?g.jugadas[i]:null;
+  for(const p of M.datos){if(!(p.k in g.base))continue;p.valor=j&&p.k in j.set?j.set[p.k]:g.base[p.k];}
+  g.activa=j?i:-1;g.abierta=true;renderMeta();renderDatos();cambio(false);
+}
+document.addEventListener('toggle',e=>{if(e.target.matches&&e.target.matches('details.guia')&&M&&M.guia)M.guia.abierta=e.target.open;},true);
 document.addEventListener('click',e=>{
   const t=e.target.closest('#pop [data-tema]');if(t){TEMA=t.dataset.tema;const c=$('nf-caja');const v=c&&c.value;renderPop();const c2=$('nf-caja');if(c2&&v)c2.value=v;return;}
   const b=e.target.closest('#pop [data-bib]');if(b){const c=$('nf-caja');if(c&&c.value)crearDeBiblio(+b.dataset.bib,c.value);}
   const n=e.target.closest('#pop [data-nf-ej]');if(n){POP={nuevoF:true,caja:n.dataset.nfEj};renderPop();}
+  const j=e.target.closest('[data-jug]');if(j){jugar(+j.dataset.jug);}
 });
 
-/* ---------- sistemas de ejemplo ---------- */
-function tplHabito(){return {nombre:'Un hábito',unidad:'semana',
-  cajas:[{k:'habito',nombre:'Fuerza del hábito',hoy:10,unidad:'puntos',min0:true}],
-  datos:[{k:'practica',nombre:'Prácticas por semana',valor:3,unidad:'veces'},{k:'refuerzo',nombre:'Refuerzo',valor:0.06,unidad:'%'},{k:'olvido',nombre:'Olvido',valor:0.1,unidad:'%'}],
-  flujos:[{k:'practicar',nombre:'Práctica',desde:'',hacia:'habito',formula:'practica'},
-    {k:'reforzar',nombre:'El hábito se refuerza',desde:'',hacia:'habito',formula:'habito * refuerzo'},
-    {k:'olvidar',nombre:'Olvido',desde:'habito',hacia:'',formula:'habito * olvido'}],
-  meta:{cajas:['habito'],sentido:'mas',valor:60,plazo:26,texto:'Que salga solo, sin esfuerzo'},
-  paradigma:'Un hábito no se decide: se alimenta todas las semanas.'};}
-function tplAlimentacion(){return {nombre:'Peso y alimentación',unidad:'semana',
-  cajas:[{k:'peso',nombre:'Peso',hoy:80,unidad:'kg',min0:true}],
-  datos:[{k:'come',nombre:'Calorías por semana',valor:15400,unidad:'kcal'},{k:'metab',nombre:'Gasto por kg por semana',valor:175,unidad:'kcal'},{k:'ejercicio',nombre:'Ejercicio por semana',valor:2100,unidad:'kcal'},{k:'kcal_kg',nombre:'Calorías por kg',valor:7700,unidad:'kcal',externo:true}],
-  flujos:[{k:'comer',nombre:'Lo que comés',desde:'',hacia:'peso',formula:'come / kcal_kg'},
-    {k:'metabolismo',nombre:'Metabolismo',desde:'peso',hacia:'',formula:'peso * metab / kcal_kg'},
-    {k:'moverse',nombre:'Ejercicio',desde:'peso',hacia:'',formula:'ejercicio / kcal_kg'}],
-  meta:{cajas:['peso'],sentido:'menos',valor:76,plazo:26,texto:'Sentirme más liviano'},
-  paradigma:'El cuerpo busca un equilibrio: cambiar el peso es cambiar dónde está ese equilibrio.'};}
-function tplSalud(){return {nombre:'Energía y estrés',unidad:'día',
-  cajas:[{k:'energia',nombre:'Energía',hoy:60,unidad:'puntos',min0:true},{k:'estres',nombre:'Estrés',hoy:40,unidad:'puntos',min0:true,menos:true}],
-  datos:[{k:'presion',nombre:'Presión del día',valor:8,unidad:'puntos'},{k:'recup',nombre:'Recuperación al descansar',valor:0.15,unidad:'%'},{k:'maxe',nombre:'Energía máxima',valor:100,unidad:'puntos'},{k:'recarga',nombre:'Recarga al dormir',valor:0.3,unidad:'%'},{k:'trabajo',nombre:'Energía que pide el trabajo',valor:15,unidad:'puntos'},{k:'desgaste',nombre:'Desgaste por estrés',valor:0.05,unidad:'%'}],
-  flujos:[{k:'dormir',nombre:'Dormir',desde:'',hacia:'energia',formula:'max(0, maxe - energia) * recarga'},
-    {k:'trabajar',nombre:'Trabajo',desde:'energia',hacia:'',formula:'trabajo'},
-    {k:'desgastar',nombre:'Desgaste por estrés',desde:'energia',hacia:'',formula:'estres * desgaste'},
-    {k:'presionar',nombre:'Presión',desde:'',hacia:'estres',formula:'presion'},
-    {k:'descansar',nombre:'Descanso',desde:'estres',hacia:'',formula:'estres * recup',reglas:[{tipo:'si',a:'energia',op:'>',b:'30'}]}],
-  meta:{cajas:['estres'],sentido:'menos',valor:30,plazo:30,texto:'Llegar al fin de semana con energía'},
-  paradigma:'El descanso no es un premio: es parte del trabajo.'};}
+/* ---------- sistemas de ejemplo (investigados) ---------- */
+function tplPlata(){return conGuia({nombre:'Deudas, ahorro y estilo de vida',unidad:'mes',
+  cajas:[
+   {k:'pesos',nombre:'Cuenta sueldo',hoy:300000,unidad:'$',min0:true},
+   {k:'fondo',nombre:'Fondo de emergencia',hoy:1500000,unidad:'$',min0:true},
+   {k:'dolares',nombre:'Ahorro en dólares',hoy:2000,unidad:'USD',min0:true},
+   {k:'deuda',nombre:'Deuda de tarjeta',hoy:1200000,unidad:'$',min0:true,menos:true},
+   {k:'nivel_vida',nombre:'Nivel de vida (gasto por mes)',hoy:2500000,unidad:'$/mes',min0:true}],
+  datos:[
+   {k:'ingreso',nombre:'Sueldo de hoy',valor:3000000,unidad:'$'},
+   {k:'aumento_sueldo',nombre:'Aumento mensual del sueldo',valor:0.022,unidad:'%'},
+   {k:'inflacion',nombre:'Inflación mensual',valor:0.02,unidad:'%',externo:true},
+   {k:'dolar',nombre:'Precio del dólar',valor:1500,unidad:'$',externo:true},
+   {k:'propension',nombre:'Parte del sueldo que me acostumbro a gastar',valor:0.85,unidad:'%'},
+   {k:'rapidez_sube',nombre:'Qué tan rápido me acostumbro a gastar más',valor:0.15,unidad:'%'},
+   {k:'rapidez_baja',nombre:'Qué tan rápido logro gastar menos',valor:0.03,unidad:'%'},
+   {k:'tasa_tarjeta',nombre:'Interés mensual de la tarjeta',valor:0.08,unidad:'%',externo:true},
+   {k:'parte_pago',nombre:'Parte del resumen que pago cada mes',valor:0.3,unidad:'%'},
+   {k:'meses_fondo',nombre:'Fondo de emergencia deseado (meses de gasto)',valor:3,unidad:'meses'},
+   {k:'ritmo_fondo',nombre:'Ritmo para completar el fondo',valor:0.05,unidad:'%'},
+   {k:'tasa_fondo',nombre:'Rendimiento mensual del fondo en pesos',valor:0.016,unidad:'%',externo:true},
+   {k:'rend_usd',nombre:'Rendimiento mensual de los dólares invertidos',valor:0.004,unidad:'%'},
+   {k:'mes_imprevisto',nombre:'Mes del imprevisto',valor:6,unidad:'meses'},
+   {k:'monto_imprevisto',nombre:'Costo del imprevisto',valor:5000000,unidad:'$',externo:true}],
+  flujos:[
+   {k:'cobro',nombre:'Sueldo (en pesos de hoy)',desde:'',hacia:'pesos',formula:'ingreso * ((1 + aumento_sueldo) / (1 + inflacion)) ^ t'},
+   {k:'gasto',nombre:'Gastos del mes',desde:'pesos',hacia:'',formula:'min(nivel_vida, pesos + cobro)'},
+   {k:'imprevisto',nombre:'Imprevisto pagado con el fondo',desde:'fondo',hacia:'',formula:'min(fondo, if(t == mes_imprevisto, monto_imprevisto, 0))'},
+   {k:'con_tarjeta',nombre:'Lo que no alcanza va a la tarjeta',desde:'',hacia:'deuda',formula:'nivel_vida - gasto + if(t == mes_imprevisto, monto_imprevisto, 0) - imprevisto'},
+   {k:'intereses',nombre:'Intereses de la tarjeta (menos inflación)',desde:'',hacia:'deuda',formula:'deuda * (tasa_tarjeta - inflacion)'},
+   {k:'cancela',nombre:'Deuda que cancelo',desde:'deuda',hacia:'',formula:'min(deuda * parte_pago, pesos + cobro - gasto)'},
+   {k:'pago_tarjeta',nombre:'Pago de la tarjeta',desde:'pesos',hacia:'',formula:'cancela'},
+   {k:'al_fondo',nombre:'Ahorro al fondo de emergencia',desde:'pesos',hacia:'fondo',formula:'min(pesos + cobro - gasto - pago_tarjeta, max(0, meses_fondo * nivel_vida - fondo) * ritmo_fondo)'},
+   {k:'a_dolares',nombre:'Compra de dólares con lo que sobra',desde:'pesos',hacia:'dolares',formula:'pesos + cobro - gasto - pago_tarjeta - al_fondo',conv:{uno:'hacia',v:'dolar'}},
+   {k:'rinde_fondo',nombre:'Rendimiento del fondo (menos inflación)',desde:'',hacia:'fondo',formula:'fondo * (tasa_fondo - inflacion)'},
+   {k:'rinde_dolares',nombre:'Rendimiento de los dólares',desde:'',hacia:'dolares',formula:'dolares * rend_usd'},
+   {k:'cambio_nivel',nombre:'Me acostumbro a otro nivel de vida',desde:'',hacia:'nivel_vida',formula:'(cobro * propension - nivel_vida) * if(cobro * propension > nivel_vida, rapidez_sube, rapidez_baja)'}],
+  meta:{cajas:['dolares'],sentido:'mas',valor:20000,plazo:60,texto:'Un año de gastos guardado en dólares'},
+  paradigma:'La plata es tiempo: cada peso que no se va en intereses ni en costumbres nuevas es libertad futura.'},
+ {q:'Todo está en pesos de hoy: la inflación ya está descontada del sueldo, del fondo y de la deuda. Hay dos bucles de refuerzo que compiten: el interés de la tarjeta (en contra) y el rendimiento de los dólares (a favor). El fondo de emergencia es un bucle de balance que se llena hasta 3 meses de gasto y frena el imprevisto del mes 6 para que no termine en la tarjeta. El nivel de vida persigue al sueldo: sube rápido y baja lento, el "efecto trinquete" que hace que los aumentos no se noten.',
+  jugadas:[
+   {n:'Gastar todo lo que entra',q:'El imprevisto queda en la tarjeta y la deuda se dispara.',set:{propension:1}},
+   {n:'Pagar solo el mínimo',q:'La deuda crece aunque pagues todos los meses.',set:{parte_pago:0.05}},
+   {n:'Pagar todo el resumen',q:'La deuda desaparece en pocos meses.',set:{parte_pago:1}},
+   {n:'Ahorrar primero',q:'Gastar el 75 % del sueldo: la meta llega antes del plazo.',set:{propension:0.75}},
+   {n:'El sueldo pierde contra la inflación',q:'Inflación 3 %: el gasto baja más lento que el sueldo y vuelve la tarjeta.',set:{inflacion:0.03}},
+   {n:'Sin fondo de emergencia',q:'El imprevisto va entero a la tarjeta, pero igual juntás más dólares: el fondo en pesos pierde contra la inflación. El colchón tiene un costo.',set:{meses_fondo:0}}],
+  fuentes:[['Efecto trinquete (Duesenberry)','https://en.wikipedia.org/wiki/James_Duesenberry'],['Ahorro líquido de las familias (Reserva Federal)','https://www.federalreserve.gov/econres/notes/feds-notes/assessing-families-liquid-savings-using-the-survey-of-consumer-finances-20181119.htm'],['Regla del 4 % (Bengen, Trinity)','https://en.wikipedia.org/wiki/4%25_rule'],['El dólar como ahorro en Argentina (BCRA)','https://ideas.repec.org/p/bcr/wpaper/202195.html']]});}
+
+function tplHabito(){return conGuia({nombre:'Un hábito que se vuelve parte de vos',unidad:'día',
+  cajas:[
+   {k:'constancia',nombre:'Días por semana que lo hacés',hoy:0,unidad:'días/semana',min0:true},
+   {k:'automatismo',nombre:'Automatismo (sale solo)',hoy:0,unidad:'puntos',min0:true},
+   {k:'identidad',nombre:'Me veo como alguien que lo hace',hoy:10,unidad:'puntos',min0:true},
+   {k:'ganas',nombre:'Ganas',hoy:80,unidad:'puntos',min0:true},
+   {k:'nivel',nombre:'Nivel (minutos que hacés cómodo)',hoy:10,unidad:'minutos',min0:true}],
+  datos:[
+   {k:'tamano',nombre:'Tamaño del hábito',valor:20,unidad:'minutos'},
+   {k:'friccion',nombre:'Fricción para empezar',valor:0.3,unidad:'%'},
+   {k:'obvio',nombre:'Qué tan a la vista está la señal',valor:0.8,unidad:'%'},
+   {k:'recompensa',nombre:'Recompensa inmediata',valor:1,unidad:'puntos'},
+   {k:'registro',nombre:'Anoto cada día (registro)',valor:0,unidad:'%'},
+   {k:'rescate',nombre:'Nunca fallar dos veces',valor:0,unidad:'%'},
+   {k:'aprendizaje',nombre:'Cuánto se graba cada repetición',valor:0.045,unidad:'%',externo:true},
+   {k:'olvido',nombre:'Olvido sin práctica',valor:0.03,unidad:'%',externo:true},
+   {k:'aburrimiento_base',nombre:'Tendencia al aburrimiento',valor:0.03,unidad:'%',externo:true},
+   {k:'mejora',nombre:'Mejora por día practicado',valor:0.01,unidad:'%',externo:true},
+   {k:'umbral',nombre:'Nivel en que se empieza a notar',valor:13,unidad:'minutos',externo:true}],
+  flujos:[
+   {k:'hacerlo',nombre:'Lo hacés hoy',desde:'',hacia:'constancia',formula:'max(rescate, min(1, max(0, min(1, obvio + registro * 0.2) * (automatismo + (100 - automatismo) * min(1, (0.6 * ganas + 0.4 * identidad) / 55)) / 100 - friccion * tamano / 30)))'},
+   {k:'queda_atras',nombre:'Días que salen de la semana',desde:'constancia',hacia:'',formula:'constancia / 7'},
+   {k:'automatizar',nombre:'Cada repetición se graba',desde:'',hacia:'automatismo',formula:'aprendizaje * constancia / 7 * (100 - automatismo)'},
+   {k:'olvidar',nombre:'Se olvida si no lo hacés',desde:'automatismo',hacia:'',formula:'olvido * automatismo * (1 - constancia / 7)'},
+   {k:'votos',nombre:'Votos por quien querés ser',desde:'',hacia:'identidad',formula:'0.03 * constancia / 7 * (100 - identidad)'},
+   {k:'dudas',nombre:'Votos en contra',desde:'identidad',hacia:'',formula:'olvido * identidad * (1 - constancia / 7)'},
+   {k:'entrenar',nombre:'Mejorás 1 % por día',desde:'',hacia:'nivel',formula:'mejora * constancia / 7 * min(nivel, tamano)'},
+   {k:'satisfaccion',nombre:'Satisfacción de hacerlo',desde:'',hacia:'ganas',formula:'(recompensa + registro) * constancia / 7'},
+   {k:'se_nota',nombre:'Ver resultados',desde:'',hacia:'ganas',formula:'max(0, nivel - umbral) * 0.5 * constancia / 7',reglas:[{tipo:'si',a:'nivel',op:'>',b:'umbral'},{tipo:'max',b:'2'}]},
+   {k:'aburrirse',nombre:'Aburrimiento',desde:'ganas',hacia:'',formula:'ganas * aburrimiento_base * (automatismo / 100 + nivel / (nivel + tamano))'}],
+  meta:{cajas:['automatismo'],sentido:'mas',valor:80,plazo:180,texto:'Que salga solo, sin pensarlo'},
+  paradigma:'No subís al nivel de tus metas: caés al nivel de tus sistemas.'},
+ {q:'Basado en Hábitos atómicos (James Clear) y en el estudio de Lally (2010). Cada repetición graba un poco de automatismo, que llega a su techo en unos 66 días de práctica diaria, y cada vez que lo hacés es un voto por tu identidad. Las 4 leyes de Clear son parámetros: obvio (señal a la vista), atractivo (recompensa), fácil (fricción y tamaño) y satisfactorio (registro). Los resultados se notan recién al pasar un umbral: es la meseta del potencial latente, y por eso las ganas del principio se gastan antes de ver frutos.',
+  jugadas:[
+   {n:'Anotalo cada día',q:'Con registro, el automatismo llega a la meta cerca del día 70.',set:{registro:1}},
+   {n:'Más fricción',q:'Si empezar cuesta el doble, el hábito se abandona.',set:{friccion:0.6}},
+   {n:'Más fricción, pero nunca fallar dos veces',q:'La regla de no fallar dos veces lo sostiene igual.',set:{friccion:0.6,rescate:0.5}},
+   {n:'Regla de los 2 minutos',q:'Se instala fácil, pero se vuelve aburrido: después hay que agrandarlo.',set:{tamano:2}},
+   {n:'Desafío justo y registro',q:'10 minutos y anotarlo: el punto justo de Ricitos de Oro.',set:{tamano:10,registro:1}}],
+  fuentes:[['Atomic Habits (James Clear)','https://jamesclear.com/atomic-habits'],['Lally et al. 2010: cuánto tarda un hábito','https://doi.org/10.1002/ejsp.674'],['Wood y Neal 2007: hábitos y contexto','https://dornsife.usc.edu/wendy-wood/wp-content/uploads/sites/183/2023/10/wood.neal_.2007psychrev_a_new_look_at_habits_and_the_interface_between_habits_and_goals.pdf'],['Harkin et al. 2016: registrar el progreso','https://eprints.whiterose.ac.uk/91437/']]});}
+
+function tplAlimentacion(){return conGuia({nombre:'Peso, hambre y metabolismo',unidad:'semana',
+  cajas:[
+   {k:'grasa',nombre:'Grasa corporal',hoy:26,unidad:'kg',min0:true,menos:true},
+   {k:'musculo',nombre:'Músculo y órganos',hoy:57,unidad:'kg',min0:true},
+   {k:'reserva',nombre:'Agua y glucógeno',hoy:2,unidad:'kg',min0:true},
+   {k:'hambre',nombre:'Hambre extra',hoy:0,unidad:'kcal/día',min0:true,menos:true}],
+  datos:[
+   {k:'come_antes',nombre:'Lo que comías antes (por día)',valor:2600,unidad:'kcal'},
+   {k:'recorte',nombre:'Calorías que recortás por día',valor:500,unidad:'kcal'},
+   {k:'dieta_hasta',nombre:'Hasta qué semana hacés la dieta',valor:52,unidad:'semanas'},
+   {k:'cedes',nombre:'Parte del hambre extra que terminás comiendo',valor:0.5,unidad:'%'},
+   {k:'ejercicio_min',nombre:'Ejercicio aeróbico (minutos por día)',valor:0,unidad:'min'},
+   {k:'fuerza',nombre:'Sesiones de fuerza por semana (con proteína)',valor:0,unidad:'sesiones'},
+   {k:'compensa',nombre:'Parte del ejercicio que el cuerpo compensa',valor:0.3,unidad:'%',externo:true},
+   {k:'hambre_kg',nombre:'Hambre extra por cada kg perdido',valor:100,unidad:'kcal/día',externo:true},
+   {k:'adapta',nombre:'Ahorro del metabolismo por kg perdido',valor:5,unidad:'kcal/día',externo:true},
+   {k:'parte_musculo',nombre:'Parte del peso perdido que es músculo',valor:0.25,unidad:'%',externo:true},
+   {k:'kcal_kg',nombre:'Calorías por kg de peso',valor:7500,unidad:'kcal',externo:true},
+   {k:'peso_ref',nombre:'Peso al que tu cuerpo está acostumbrado',valor:85,unidad:'kg',externo:true}],
+  flujos:[
+   {k:'sube_hambre',nombre:'Sube el hambre',desde:'',hacia:'hambre',formula:'max(0, hambre_kg * max(0, peso_ref - (grasa + musculo + reserva)) - hambre) * 0.2'},
+   {k:'baja_hambre',nombre:'Se calma el hambre',desde:'hambre',hacia:'',formula:'max(0, hambre - hambre_kg * max(0, peso_ref - (grasa + musculo + reserva))) * 0.2'},
+   {k:'comida',nombre:'Lo que comés',desde:'',hacia:'grasa',formula:'7 * (come_antes - if(t <= dieta_hasta, recorte, 0) + hambre * if(t <= dieta_hasta, cedes, 1)) * (1 - parte_musculo) / kcal_kg'},
+   {k:'gasto',nombre:'Lo que gastás',desde:'grasa',hacia:'',formula:'7 * (370 + 21.6 * musculo + 11.75 * (grasa + musculo + reserva) + 0.07 * (grasa + musculo + reserva) * ejercicio_min * (1 - compensa) - adapta * max(0, peso_ref - (grasa + musculo + reserva))) * (1 - parte_musculo) / kcal_kg'},
+   {k:'pierde_musculo',nombre:'Se pierde músculo',desde:'musculo',hacia:'',formula:'max(0, gasto - comida) * parte_musculo / (1 - parte_musculo)'},
+   {k:'gana_musculo',nombre:'Se gana músculo',desde:'',hacia:'musculo',formula:'max(0, comida - gasto) * parte_musculo / (1 - parte_musculo) + 0.02 * min(fuerza, 3)'},
+   {k:'vacia_reserva',nombre:'Se va el agua',desde:'reserva',hacia:'',formula:'max(0, reserva - max(0.8, 2 - 5 * max(0, 1 - comida / gasto))) * 0.5'},
+   {k:'llena_reserva',nombre:'Vuelve el agua',desde:'',hacia:'reserva',formula:'max(0, max(0.8, 2 - 5 * max(0, 1 - comida / gasto)) - reserva) * 0.5'}],
+  meta:{cajas:['grasa','musculo','reserva'],sentido:'menos',valor:78,plazo:52,texto:'Bajar 7 kg en un año y sostenerlo'},
+  paradigma:'El cuerpo defiende su peso: bajar es mover el equilibrio, no solo sumar sacrificios.'},
+ {q:'Basado en el modelo de Kevin Hall (NIH). La regla de "7700 kcal = 1 kg" promete demasiado, porque hay dos bucles de balance que frenan la bajada. El primero es que un cuerpo más liviano gasta menos. El segundo, más fuerte, es que por cada kg perdido el apetito pide unas 100 kcal más por día (Polidori, 2016). Por eso el peso baja rápido al principio (mucho es agua), se estanca cerca de los 6 meses y rebota si volvés a comer como antes. Un cuarto de lo que se pierde es músculo, salvo que entrenes fuerza.',
+  jugadas:[
+   {n:'Dejar la dieta a los 6 meses',q:'Primero vuelve el agua, después la grasa: el rebote.',set:{dieta_hasta:26}},
+   {n:'Ejercicio y fuerza',q:'30 minutos por día y 3 sesiones de fuerza: menos grasa y más músculo.',set:{ejercicio_min:30,fuerza:3}},
+   {n:'Domar el hambre',q:'Más proteína, fibra y sueño: cedés menos al hambre extra.',set:{cedes:0.2}},
+   {n:'Recorte extremo',q:'1000 kcal menos por día: cae rápido, pero el hambre se vuelve enorme.',set:{recorte:1000}},
+   {n:'Lo que promete la regla de 7700',q:'Sin hambre ni ahorro del cuerpo: la bajada que nunca pasa.',set:{hambre_kg:0,adapta:0}}],
+  fuentes:[['Hall et al. 2011, The Lancet','https://pmc.ncbi.nlm.nih.gov/articles/PMC3880593'],['Body Weight Planner (NIDDK)','https://www.niddk.nih.gov/research-funding/at-niddk/labs-branches/laboratory-biological-modeling/integrative-physiology-section/research/body-weight-planner'],['Polidori et al. 2016: el apetito al bajar','https://www.biorxiv.org/content/10.1101/051045v1.full.pdf+html'],['Hall y Kahan 2018: mantener el peso','https://pmc.ncbi.nlm.nih.gov/articles/PMC5764193'],['Levine 1999: movimiento cotidiano (NEAT)','https://pubmed.ncbi.nlm.nih.gov/9880251/']]});}
+
+function tplSalud(){return conGuia({nombre:'Sueño, estrés y energía',unidad:'día',
+  cajas:[
+   {k:'deuda',nombre:'Deuda de sueño',hoy:4,unidad:'horas',min0:true,menos:true},
+   {k:'energia',nombre:'Energía',hoy:60,unidad:'puntos',min0:true},
+   {k:'estres',nombre:'Estrés acumulado',hoy:35,unidad:'puntos',min0:true,menos:true},
+   {k:'forma',nombre:'Estado físico',hoy:10,unidad:'puntos',min0:true},
+   {k:'fatiga',nombre:'Cansancio del entrenamiento',hoy:0,unidad:'puntos',min0:true,menos:true}],
+  datos:[
+   {k:'cama',nombre:'Horas en la cama',valor:7,unidad:'horas'},
+   {k:'carga',nombre:'Presión del trabajo por día',valor:7,unidad:'puntos'},
+   {k:'entreno',nombre:'Minutos de ejercicio por día',valor:0,unidad:'min'},
+   {k:'recup',nombre:'Parte del estrés que soltás al descansar',valor:0.3,unidad:'%'},
+   {k:'gasto_dia',nombre:'Energía que pide un día normal',valor:12,unidad:'puntos'},
+   {k:'necesito',nombre:'Horas que necesita tu cuerpo',valor:8,unidad:'horas',externo:true},
+   {k:'insomnio',nombre:'Sueño que roba cada punto de estrés',valor:0.015,unidad:'horas',externo:true},
+   {k:'paga',nombre:'Deuda de sueño que se recupera sola por día',valor:0.15,unidad:'%',externo:true},
+   {k:'pesa_deuda',nombre:'Energía que quita cada hora de deuda',valor:1.5,unidad:'puntos',externo:true},
+   {k:'carga_ej',nombre:'Puntos por minuto de ejercicio',valor:0.05,unidad:'puntos',externo:true}],
+  flujos:[
+   {k:'falta',nombre:'Dormís menos de lo que necesitás',desde:'',hacia:'deuda',formula:'max(0, necesito - max(4, cama - insomnio * estres))'},
+   {k:'repone',nombre:'Recuperás sueño',desde:'deuda',hacia:'',formula:'max(0, max(4, cama - insomnio * estres) - necesito) + deuda * paga'},
+   {k:'entrena_forma',nombre:'El ejercicio te pone en forma',desde:'',hacia:'forma',formula:'entreno * carga_ej'},
+   {k:'desentrena',nombre:'Se pierde la forma',desde:'forma',hacia:'',formula:'forma / 42'},
+   {k:'entrena_fatiga',nombre:'El ejercicio cansa',desde:'',hacia:'fatiga',formula:'entreno * carga_ej'},
+   {k:'se_pasa',nombre:'Se pasa el cansancio',desde:'fatiga',hacia:'',formula:'fatiga / 7'},
+   {k:'recarga',nombre:'Descansar recarga',desde:'',hacia:'energia',formula:'max(0, 100 + 0.3 * forma - pesa_deuda * deuda - fatiga - energia) * 0.5'},
+   {k:'gasta',nombre:'El día te gasta',desde:'energia',hacia:'',formula:'gasto_dia + 0.1 * estres'},
+   {k:'presion',nombre:'Presión del día',desde:'',hacia:'estres',formula:'carga'},
+   {k:'suelta',nombre:'Soltás estrés',desde:'estres',hacia:'',formula:'estres * recup * energia / 100 * (1 + forma / 100)'}],
+  meta:{cajas:['energia'],sentido:'mas',valor:70,plazo:90,texto:'Llegar al viernes con energía'},
+  paradigma:'El descanso no es un premio: es parte del trabajo.'},
+ {q:'Dormir menos de lo que necesitás acumula una deuda de sueño que baja la energía día a día (Van Dongen, 2003). Con poca energía soltás menos estrés, y el estrés a su vez te roba sueño: es un bucle de refuerzo que, pasado un umbral, se vuelve una espiral de burnout (Homer, 1985). El ejercicio sigue el modelo de Banister: el cansancio llega rápido y se va en una semana, el estado físico llega lento y dura unas seis. Por eso entrenar primero cansa y después da energía.',
+  jugadas:[
+   {n:'Dormir 8 horas',q:'Se paga la deuda de sueño y la energía sube, pero no alcanza para la meta.',set:{cama:8}},
+   {n:'30 minutos de ejercicio',q:'Las primeras dos semanas cansa más; después rinde.',set:{entreno:30}},
+   {n:'Las dos cosas',q:'Dormir bien y moverse: la meta se cumple.',set:{cama:8,entreno:30}},
+   {n:'Más presión: burnout',q:'Con presión 12, el estrés le gana a la recuperación y la energía se derrumba.',set:{carga:12}},
+   {n:'Más presión, pero durmiendo bien',q:'Con 8 horas no se derrumba, pero el estrés sigue subiendo: dormir solo no alcanza.',set:{carga:12,cama:8}}],
+  fuentes:[['Van Dongen et al. 2003: deuda de sueño','https://pubmed.ncbi.nlm.nih.gov/12683469/'],['Homer 1985: modelo dinámico del burnout','https://doi.org/10.1002/sdr.4260010105'],['McEwen: carga alostática','https://pubmed.ncbi.nlm.nih.gov/9428819/'],['Clarke y Skiba 2013: el modelo fitness–fatiga de Banister','https://pubmed.ncbi.nlm.nih.gov/23728131/']]});}
 
 /* ---------- eventos ---------- */
 document.addEventListener('click',e=>{
