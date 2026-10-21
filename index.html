@@ -283,6 +283,11 @@ textarea{resize:vertical}
 .res-bar i{display:block;height:100%;background:var(--crit)}
 .res-pie{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;min-height:24px}
 .res-pie .ok{color:var(--good)}.res-pie .no{color:var(--crit)}
+.reales{background:var(--accent-soft);border-radius:10px;padding:10px 14px;display:grid;gap:8px;font-size:13.5px;color:var(--fg)}
+.reales p{margin:0}
+.reales textarea{width:100%;box-sizing:border-box;font:12px/1.4 var(--mono);border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:var(--surface);color:var(--fg);resize:vertical}
+.reales .btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.real-err{color:var(--crit);font-size:12.5px}
 .tb-grid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:24px;align-items:start}
 .tb-izq{display:grid;gap:12px;justify-items:center;position:sticky;top:70px}
 .tb-torta{width:220px;height:220px}
@@ -512,6 +517,7 @@ details.fold[open]>summary{margin-bottom:6px}
   </main>
   <section id="tablero" hidden>
     <div class="tb-top"><div class="tb-lados" id="tb-lados"></div><div class="tb-res" id="tb-res"></div></div>
+    <div class="reales" id="tb-reales" hidden></div>
     <div class="panel" id="tb-cuerpo"></div>
   </section>
 </div>
@@ -1446,6 +1452,7 @@ function renderTab(){
   const per=perillasLado(lado);
   $('tb-cuerpo').innerHTML=`<div class="tb-grid"><div class="tb-izq"><div id="tb-torta"></div><p class="tb-lect" id="tb-lect"></p><div id="tb-evo"></div>${per}</div><div class="tb-der"><div class="tb-lista">${F.map((x,i)=>filaHtml(x,i,tot,u)).join('')||`<p class="hint">Todavía no hay ${E[lado].toLowerCase()}.</p>`}</div><button class="sm primary" data-tb-add>+ ${E.un[lado]}</button></div></div>`;
   renderTabNums();
+  renderReales();
 }
 function perillasLado(lado){
   const ks=new Set();for(const x of filas(lado))if(x.it&&x.it.crece)ks.add(x.it.crece);
@@ -1476,6 +1483,66 @@ function agregarItem(lado){
   const crece=lado==='sal'&&M.datos.some(p=>p.k==='inflacion')?'inflacion':'';
   const it={id:uid(),nombre:'',monto:0,cada:M.unidad==='año'?'anio':'mes',crece};f.items.push(it);return it;
 }
+
+/* ---------- datos reales: lo que se copia en la página de gastos (formato 'finanzas-reales') ---------- */
+let REAL={open:false,txt:'',err:''};
+function realesResumen(){
+  const R=M.reales,u=tabU(),n=R.meses.length;const nm=x=>MESES[+x.mes.slice(5,7)-1]+' '+x.mes.slice(2,4);
+  const prom=k=>R.meses.reduce((a,x)=>a+(+(x.totales||{})[k]||0),0)/n;const ti=prom('ingresos'),tg=prom('gastos'),ta=prom('ahorro');
+  const cuando=n===1?nm(R.meses[0]):nm(R.meses[0])+' a '+nm(R.meses[n-1])+' ('+n+' meses)';
+  return `Tus ingresos y gastos salen de tus datos reales de <b>${esc(cuando)}</b>. En promedio entraron <b>${fmtN(ti,u)}</b> y gastaste <b>${fmtN(tg,u)}</b> por mes${ta>0?`; ahorraste <b>${fmtN(ta,u)}</b>, el ${nf1.format(ti>0?ta/ti*100:0)} % de lo que entró`:''}. Lo extraordinario cuenta como una vez por año.`;
+}
+function renderReales(){
+  const el=$('tb-reales');if(!el)return;
+  if(VISTA!=='tab'||!etq().plata){el.hidden=true;return;}
+  el.hidden=false;
+  if(REAL.open){
+    if(!el.querySelector('#real-txt')){el.innerHTML=`<p><b>Cargar datos reales.</b> En tu página de gastos tocá «Llevar al taller de sistemas» y pegá acá lo que se copió. Reemplaza tus ingresos y gastos por los reales, por categoría.</p><textarea id="real-txt" rows="4" placeholder="Pegá acá los datos" aria-label="Datos reales"></textarea><div class="btns"><button class="sm primary" data-real-usar>Usar estos datos</button><button class="sm" data-real-cancel>Cancelar</button><span class="real-err" id="real-err"></span></div>`;$('real-txt').value=REAL.txt;}
+    $('real-err').textContent=REAL.err;return;
+  }
+  el.innerHTML=M.reales
+    ?`<p>${realesResumen()}</p><div class="btns"><button class="sm" data-real-open>Actualizar con más meses</button>${M.realesAntes?'<button class="sm" data-real-volver>Volver a como estaba</button>':''}</div>`
+    :`<p>¿Tenés tus números reales? Cargalos desde tu página de gastos y el modelo arranca de ahí.</p><div class="btns"><button class="sm primary" data-real-open>Cargar datos reales</button></div>`;
+}
+function ladoFlujo(lado){
+  const L=bordes()[lado];let f=L.find(x=>Array.isArray(x.items))||L[0];
+  if(!f){const it=agregarItem(lado);if(!it)return null;f=itemPorId(it.id).f;f.items=[];}
+  return f;
+}
+function aplicarReales(txt){
+  let d;try{d=JSON.parse(String(txt).trim());}catch(e){return 'No reconozco ese texto. Copialo de nuevo desde la página de gastos.';}
+  if(!d||d.formato!=='finanzas-reales'||!Array.isArray(d.meses)||!d.meses.length)return 'Esos no son datos de la página de gastos.';
+  if(M.unidad!=='mes'&&M.unidad!=='año')return 'Tu modelo tiene que medir el tiempo en meses o en años.';
+  const n=d.meses.length,anual=M.unidad==='año';
+  const sumar=campo=>{const acc=new Map();for(const m of d.meses)for(const x of (m[campo]||[])){const o=acc.get(x.nombre)||{nombre:String(x.nombre||''),suma:0,tipo:x.tipo||''};o.suma+=+x.monto||0;acc.set(x.nombre,o);}return [...acc.values()].filter(o=>o.suma>0).sort((a,b)=>b.suma-a.suma);};
+  const ING=sumar('ingresos'),GAS=sumar('gastos');
+  if(!ING.length&&!GAS.length)return 'Esos datos no tienen ingresos ni gastos.';
+  const fe=ladoFlujo('ent'),fs=ladoFlujo('sal');if(!fe||!fs)return 'Tu modelo necesita una caja de plata para recibir los datos.';
+  const ex=k=>M.datos.some(p=>p.k===k)?k:'';
+  const copia=f=>({k:f.k,items:Array.isArray(f.items)?JSON.parse(JSON.stringify(f.items)):null,formula:f.formula});
+  if(!M.realesAntes)M.realesAntes={ent:copia(fe),sal:copia(fs)};
+  const porMes=o=>Math.round(o.suma/n);
+  const comun=(o,crece)=>({id:uid(),nombre:o.nombre,monto:anual?porMes(o)*12:porMes(o),cada:anual?'anio':'mes',crece,real:true});
+  fe.items=ING.map(o=>comun(o,ex('aumento')));
+  // Lo extraordinario (un viaje, por ejemplo) se toma como algo que pasa una vez por año.
+  fs.items=GAS.map(o=>o.tipo==='extra'?{id:uid(),nombre:o.nombre,monto:Math.round(o.suma*(n>=12?12/n:1)),cada:'anio',crece:ex('inflacion'),real:true}:comun(o,ex('inflacion')));
+  M.reales={cargado:new Date().toISOString().slice(0,10),meses:d.meses.map(m=>({mes:String(m.mes),totales:m.totales||{}}))};
+  return '';
+}
+function volverReales(){
+  const A=M.realesAntes;if(!A)return;
+  for(const lado of ['ent','sal']){const s=A[lado];const f=M.flujos.find(x=>x.k===s.k);if(!f)continue;if(s.items)f.items=s.items;else{delete f.items;f.formula=s.formula||'0';}}
+  delete M.realesAntes;delete M.reales;
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest&&e.target.closest('#tb-reales button');if(!b)return;const d=b.dataset;
+  if(d.realOpen!==undefined){REAL={open:true,txt:'',err:''};renderReales();const t=$('real-txt');if(t)t.focus();return;}
+  if(d.realCancel!==undefined){REAL={open:false,txt:'',err:''};renderReales();return;}
+  if(d.realUsar!==undefined){const t=$('real-txt');const err=aplicarReales(t?t.value:REAL.txt);if(err){REAL.err=err;renderReales();return;}
+    REAL={open:false,txt:'',err:''};ORDEN={ent:[],sal:[]};SNAP=snapItems();ABIERTO='';cambio(true);renderTab();return;}
+  if(d.realVolver!==undefined){volverReales();ORDEN={ent:[],sal:[]};SNAP=snapItems();ABIERTO='';cambio(true);renderTab();return;}
+});
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='real-txt')REAL.txt=e.target.value;});
 document.addEventListener('click',e=>{
   const t=e.target;
   if(t.closest('#tab-btn')){setVista(VISTA==='tab'?'mapa':'tab');return;}
