@@ -457,6 +457,9 @@ details.fold[open]>summary{margin-bottom:6px}
 .acc>button,.acc .mwrap>button{white-space:nowrap}
 .status:empty{display:none}
 @media (max-width:640px){.acc{margin-left:0}.clock{flex-basis:100%}}
+.gc-pz{display:flex;flex-wrap:wrap;gap:3px;margin:2px 0 4px}
+.gc-pz span{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;padding:0 6px;line-height:16px;border-radius:8px;border:1px dashed var(--line);color:var(--muted)}
+.gc-pz span.on{border-style:solid;border-color:var(--fg2);color:var(--fg)}
 </style>
 
 <div class="app">
@@ -538,7 +541,7 @@ function fmtN(n,u){
 function ent(k){return M.cajas.find(x=>x.k===k)||M.datos.find(x=>x.k===k)||M.flujos.find(x=>x.k===k);}
 function uniDe(k){const c=M.cajas.find(x=>x.k===k);if(c)return c.unidad||'';const p=M.datos.find(x=>x.k===k);if(p)return p.unidad||'';const f=M.flujos.find(x=>x.k===k);if(f)return uniDe(f.desde||f.hacia);return '';}
 const fmtK=(v,k)=>fmtN(v,uniDe(k));
-const nombre=k=>{const e=ent(k);return e?(e.nombre||e.k):k;};
+const nombre=k=>{const e=ent(k);return e?(e.nombre||e.k):k==='t'?'el tiempo':k;};
 const metaUni=()=>M.meta.cajas.length?uniDe(M.meta.cajas[0]):'';
 
 /* ---------- expresiones ---------- */
@@ -622,7 +625,7 @@ function leer(src){
 
 /* ---------- ejemplos ---------- */
 function tplVacio(){return {nombre:'Sistema nuevo',unidad:'mes',cajas:[],flujos:[],datos:[],meta:{cajas:[],sentido:'mas',valor:null,plazo:24,texto:''},paradigma:''};}
-function tplFinanzas(){return {nombre:'Mis finanzas',unidad:'mes',
+function tplFinanzas(){return conGuia({nombre:'Mis finanzas',unidad:'mes',
   cajas:[{k:'pesos',nombre:'Pesos disponibles',hoy:400000,unidad:'$',min0:true},{k:'ahorro',nombre:'Ahorro invertido',hoy:0,unidad:'$',min0:true}],
   inicio:hoyYM(),
   datos:[{k:'aumento',nombre:'Aumento mensual del ingreso',valor:0.016,unidad:'%'},
@@ -634,7 +637,21 @@ function tplFinanzas(){return {nombre:'Mis finanzas',unidad:'mes',
     {k:'ahorrar',nombre:'Ahorrar',desde:'pesos',hacia:'ahorro',formula:'max(0, pesos - colchon * gasto) * parte'},
     {k:'rinde',nombre:'Rendimiento',desde:'',hacia:'ahorro',formula:'ahorro * tasa'}],
   meta:{cajas:['pesos','ahorro'],sentido:'mas',valor:30000000,plazo:24,texto:'Un año de libertad para elegir proyectos'},
-  paradigma:'La plata es tiempo libre: cada mes ahorrado es un mes de libertad.'};}
+  pos0:{pesos:{x:-200,y:0},ahorro:{x:250,y:0}},
+  paradigma:'La plata es tiempo libre: cada mes ahorrado es un mes de libertad.'},
+ {q:'Tu plata mes a mes. Lo que entra y lo que sale se arma con su desglose en "Entradas y salidas". Lo que queda se acumula en pesos, y cuando pasa de un colchón de meses de gasto, una parte se va al ahorro, que rinde sobre sí mismo.',
+  mapa:[
+   {p:['flujo','parametro'],n:'Ingreso',q:'El sueldo entra cada mes y crece con el aumento. Abrí "Entradas y salidas" para sumar otros ingresos.',ks:['cobro','pesos']},
+   {p:['flujo','parametro'],n:'Gastos',q:'Cada concepto del desglose sigue a la inflación. Las vacaciones aparecen solo en enero.',ks:['gasto','pesos']},
+   {p:['B','info'],n:'El colchón',q:'Ahorrar mira cuánto hay en pesos y cuánto gastás: solo se ahorra lo que pasa de un colchón de meses de gasto. Cuanto más sobra, más se ahorra, y eso vacía el sobrante.',ks:['pesos','ahorrar','gasto']},
+   {p:['R'],n:'El ahorro rinde',q:'El rendimiento se calcula sobre lo ahorrado: más ahorro, más rendimiento.',ks:['ahorro','rinde']},
+   {p:['parametro'],n:'La carrera entre aumento e inflación',q:'Es el número que más mueve todo: si el sueldo sube menos que los precios, el sobrante se achica mes a mes.',ks:['cobro','gasto']}],
+  jugadas:[
+   {n:'Aumentos más bajos',q:'Con 1 % por mes casi no queda nada para ahorrar.',set:{aumento:0.01}},
+   {n:'Inflación del 3 %',q:'Los gastos le ganan al sueldo y la plata se agota.',set:{inflacion:0.03}},
+   {n:'Un colchón de 1 mes',q:'El ahorro arranca cerca del mes 10.',set:{colchon:1}},
+   {n:'Aumentos que le ganan a la inflación',q:'Con 3 % por mes, el ahorro despega.',set:{aumento:0.03}}],
+  fuentes:[]});}
 function tplPoblacion(){return {nombre:'Población',unidad:'año',
   cajas:[{k:'poblacion',nombre:'Población',hoy:1000,unidad:'personas',min0:true}],
   datos:[{k:'natalidad',nombre:'Natalidad',valor:0.04,unidad:'%'},{k:'mortalidad',nombre:'Mortalidad',valor:0.015,unidad:'%'},{k:'capacidad',nombre:'Capacidad del territorio',valor:5000,unidad:'personas',externo:true}],
@@ -791,7 +808,8 @@ function layout(force){
   }else{
     const n=S.length,R0=n<=1?0:Math.max(170,n*62);
     S.forEach((s,i)=>{const a=Math.PI+2*Math.PI*i/Math.max(1,n);P[s.k]={x:R0*Math.cos(a),y:R0*Math.sin(a)*0.8,st:1};});
-    ubicar();fuerzas(P,360);
+    const P0=M.pos0||{};for(const s of S)if(P0[s.k])P[s.k]={x:P0[s.k].x,y:P0[s.k].y,st:1,fix:1};for(const f of F)if(P0[f.k])P[f.k]={x:P0[f.k].x,y:P0[f.k].y,fix:1};
+    ubicar();fuerzas(P,360);for(const p of Object.values(P))delete p.fix;
   }
   const sig={};for(const f of M.flujos)sig[f.k]=sigF(f);LAY={key,pos:P,T:fitT(P),sig};M.lay={key,pos:structuredClone(P),T:{...LAY.T},sig};
 }
@@ -1126,7 +1144,7 @@ function renderAvisosMapa(){
 document.addEventListener('click',e=>{const b=e.target.closest('[data-am-open]');if(b)popOpen(b.dataset.amOpen);});
 function renderTiempo(){
   const sc=$('scrub');sc.max=ROWS.length-1;if(document.activeElement!==sc)sc.value=TCUR;$('tl').textContent=(TCUR?(M.unidad+' '+TCUR+' de '+(ROWS.length-1)+(M.unidad==='mes'?' · '+fechaTxt(TCUR):'')):'hoy')+'';if(!RUN)$('play').textContent=TCUR>=ROWS.length-1&&TCUR>0?'↺ De nuevo':'▶ Simular';
-  LINKS=enlaces(ROWS[TCUR]);LOOPS=bucles(LINKS);renderAvisosMapa();renderPiezas();renderPasos();if(POP&&POP.bucle){const act=document.activeElement;if(!(act&&act.closest&&act.closest('#pop')&&['range','number'].includes(act.type)))renderPop();else{const b=LOOPS.find(x=>x.key===POP.bucle);const r=$('pop').querySelector('.read b');if(b&&r)r.textContent=nf1.format(b.g*100)+' %';}}renderLev();renderDiagram();renderChart();renderIO();if(VISTA==='tab')renderTab();if(POP&&M.flujos.some(f=>f.k===POP.k))popRead();
+  LINKS=enlaces(ROWS[TCUR]);LOOPS=bucles(LINKS);renderAvisosMapa();renderPiezas();renderPasos();guiaPz();if(POP&&POP.bucle){const act=document.activeElement;if(!(act&&act.closest&&act.closest('#pop')&&['range','number'].includes(act.type)))renderPop();else{const b=LOOPS.find(x=>x.key===POP.bucle);const r=$('pop').querySelector('.read b');if(b&&r)r.textContent=nf1.format(b.g*100)+' %';}}renderLev();renderDiagram();renderChart();renderIO();if(VISTA==='tab')renderTab();if(POP&&M.flujos.some(f=>f.k===POP.k))popRead();
 }
 
 /* ---------- cálculo ---------- */
@@ -1856,31 +1874,37 @@ function crearDeBiblio(i,caja){
 }
 
 /* ---------- guía de cada ejemplo: cómo está armado, qué probar, de dónde sale ---------- */
-function conGuia(m,g,ej){g.base={};for(const p of m.datos)g.base[p.k]=p.valor;m.guia=g;if(ej){m.ej=ej;m.ejv=2;}return m;}
-const PZN={caja:'caja',flujo:'flujo',info:'información',retardo:'retardo',R:'bucle R',B:'bucle B',regla:'regla',paradigma:'paradigma',conv:'conversión'};
+const EJV={plata:3,habito:3,peso:3};
+function conGuia(m,g,ej,v){g.base={};for(const p of m.datos)g.base[p.k]=p.valor;m.guia=g;if(ej){m.ej=ej;m.ejv=v||1;}return m;}
+const PZN={parametro:'parámetro',caja:'caja',flujo:'flujo',info:'información',retardo:'retardo',R:'bucle R',B:'bucle B',regla:'regla',paradigma:'paradigma',conv:'conversión'};
 let GSEL=-1;
 function guiaSet(){const g=M&&M.guia;if(!g||GSEL<0||!g.mapa||!g.mapa[GSEL])return null;const S=new Set(g.mapa[GSEL].ks||[]);S.links=l=>S.has(l.from)&&S.has(l.to);S.loop=b=>b.edges.every(e=>S.has(e.from)&&S.has(e.via.k)&&S.has(e.to));return S;}
 const EJ_VIEJOS={'Un hábito':'habito','Un hábito que se vuelve parte de vos':'habito','Peso y alimentación':'peso','Peso, hambre y metabolismo':'peso','Deudas, ahorro y estilo de vida':'plata'};
 function renderGuia(){
   const el=$('guia-top');if(!el)return;const g=M.guia;
   const viejo=EJ_VIEJOS[M.nombre];
-  if(viejo&&(M.ejv||0)<2){el.hidden=false;el.className='panel gcard nuevo';el.innerHTML=`<div class="gc-h"><span class="gc-k">Ejemplo</span><b>Hay una versión nueva y más completa de este ejemplo</b><button class="sm primary" data-ej-key="${viejo}">Abrir la nueva</button></div>`;return;}
+  const vk=M.ej||viejo;
+  if(vk&&EJV[vk]&&(M.ejv||0)<EJV[vk]){el.hidden=false;el.className='panel gcard nuevo';el.innerHTML=`<div class="gc-h"><span class="gc-k">Ejemplo</span><b>Hay una versión nueva y más completa de este ejemplo</b><button class="sm primary" data-ej-key="${vk}">Abrir la nueva</button></div>`;return;}
   if(!g||!g.q){el.hidden=true;el.innerHTML='';return;}
   el.hidden=false;el.className='panel gcard'+(g.cerrada?' cerrada':'');const act=g.activa??-1;
   el.innerHTML=`<div class="gc-h"><span class="gc-k">Ejemplo</span><b>${esc(M.nombre)}</b><button class="sm" data-gc-tog>${g.cerrada?'Ver la guía':'Ocultar'}</button></div>`+(g.cerrada?'':`
   <p class="gc-q">${esc(g.q)}</p>
+  <div class="gc-pz" title="Piezas de Meadows que usa este ejemplo">${guiaPzHtml()}</div>
   <div class="gc-cols">
     ${(g.mapa||[]).length?`<div><div class="gc-t">Cómo está armado <small>tocá una para verla en el mapa</small></div><div class="gc-mapa">${g.mapa.map((it,i)=>`<button class="gm${GSEL===i?' on':''}" data-gmap="${i}"><b>${esc(it.n)}</b><span class="gm-ps">${(Array.isArray(it.p)?it.p:[it.p]).map(p=>`<i class="gm-p p-${p}">${PZN[p]||p}</i>`).join('')}</span>${GSEL===i?`<small>${esc(it.q)}</small>`:""}</button>`).join('')}</div></div>`:''}
     ${(g.jugadas||[]).length?`<div><div class="gc-t">Probá <small>mirá cómo cambia el gráfico</small></div><div class="jugs">${g.jugadas.map((j,i)=>`<button class="jug${act===i?' on':''}" data-jug="${i}"><b>${esc(j.n)}</b>${act===i?`<small>${esc(j.q)}</small>`:""}</button>`).join('')}</div>${act>=0?'<button class="sm" data-jug="-1">↺ Volver a los valores del ejemplo</button>':''}</div>`:''}
   </div>
   ${(g.fuentes||[]).length?`<details class="gc-f"><summary>Fuentes</summary><div class="fuentes">${g.fuentes.map(([t,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>`).join('')}</div></details>`:''}`);
 }
+const GPZ=['parametro','caja','flujo','info','retardo','bucle','regla','meta','paradigma'];
+function guiaPzHtml(){return GPZ.map(k=>PIEZAS.find(p=>p.k===k)).filter(Boolean).map(p=>`<span class="${pzCuenta(p)?'on':''}">${esc(p.n)}</span>`).join('');}
+function guiaPz(){const el=document.querySelector('#guia-top .gc-pz');if(el)el.innerHTML=guiaPzHtml();}
 function jugar(i){
   const g=M.guia;if(!g||!g.base)return;const j=i>=0?g.jugadas[i]:null;
   for(const p of M.datos){if(!(p.k in g.base))continue;p.valor=j&&p.k in j.set?j.set[p.k]:g.base[p.k];}
   g.activa=j?i:-1;renderGuia();renderDatos();cambio(false);
 }
-function abrirEj(key){const t={plata:tplPlata,habito:tplHabito,peso:tplAlimentacion}[key];if(!t)return;const ex=LIB.find(m=>m.ej===key&&m.ejv===2);GSEL=-1;if(ex)abrir(ex);else agregar(t());}
+function abrirEj(key){const t={plata:tplPlata,habito:tplHabito,peso:tplAlimentacion}[key];if(!t)return;const ex=LIB.find(m=>m.ej===key&&m.ejv===EJV[key]);GSEL=-1;if(ex)abrir(ex);else agregar(t());}
 document.addEventListener('click',e=>{
   const t=e.target.closest('#pop [data-tema]');if(t){TEMA=t.dataset.tema;const c=$('nf-caja');const v=c&&c.value;renderPop();const c2=$('nf-caja');if(c2&&v)c2.value=v;return;}
   const b=e.target.closest('#pop [data-bib]');if(b){const c=$('nf-caja');if(c&&c.value)crearDeBiblio(+b.dataset.bib,c.value);}
@@ -1911,6 +1935,7 @@ function tplPlata(){return conGuia({nombre:'Deudas, ahorro y estilo de vida',uni
    {k:'propension',nombre:'Parte del sueldo que me acostumbro a gastar',valor:0.85,unidad:'%'},
    {k:'rapidez_sube',nombre:'Qué tan rápido me acostumbro a gastar más',valor:0.15,unidad:'%'},
    {k:'rapidez_baja',nombre:'Qué tan rápido logro gastar menos',valor:0.03,unidad:'%'},
+   {k:'limite',nombre:'Límite de la tarjeta',valor:6000000,unidad:'$',externo:true},
    {k:'tasa_tarjeta',nombre:'Interés mensual de la tarjeta',valor:0.08,unidad:'%',externo:true},
    {k:'parte_pago',nombre:'Parte del resumen que pago cada mes',valor:0.3,unidad:'%'},
    {k:'meses_fondo',nombre:'Fondo de emergencia deseado (meses de gasto)',valor:3,unidad:'meses'},
@@ -1923,7 +1948,7 @@ function tplPlata(){return conGuia({nombre:'Deudas, ahorro y estilo de vida',uni
    {k:'cobro',nombre:'Sueldo (en pesos de hoy)',desde:'',hacia:'pesos',formula:'ingreso * ((1 + aumento_sueldo) / (1 + inflacion)) ^ t'},
    {k:'gasto',nombre:'Gastos del mes',desde:'pesos',hacia:'',formula:'min(nivel_vida, pesos + cobro)'},
    {k:'imprevisto',nombre:'Imprevisto pagado con el fondo',desde:'fondo',hacia:'',formula:'min(fondo, if(t == mes_imprevisto, monto_imprevisto, 0))'},
-   {k:'con_tarjeta',nombre:'Lo que no alcanza va a la tarjeta',desde:'',hacia:'deuda',formula:'nivel_vida - gasto + if(t == mes_imprevisto, monto_imprevisto, 0) - imprevisto'},
+   {k:'con_tarjeta',nombre:'Lo que no alcanza va a la tarjeta',desde:'',hacia:'deuda',formula:'nivel_vida - gasto + if(t == mes_imprevisto, monto_imprevisto, 0) - imprevisto',reglas:[{tipo:'si',a:'deuda',op:'<',b:'limite'}]},
    {k:'intereses',nombre:'Intereses de la tarjeta (menos inflación)',desde:'',hacia:'deuda',formula:'deuda * (tasa_tarjeta - inflacion)'},
    {k:'cancela',nombre:'Deuda que cancelo',desde:'deuda',hacia:'',formula:'min(deuda * parte_pago, pesos + cobro - gasto)'},
    {k:'pago_tarjeta',nombre:'Pago de la tarjeta',desde:'pesos',hacia:'',formula:'cancela'},
@@ -1932,79 +1957,73 @@ function tplPlata(){return conGuia({nombre:'Deudas, ahorro y estilo de vida',uni
    {k:'rinde_fondo',nombre:'Rendimiento del fondo (menos inflación)',desde:'',hacia:'fondo',formula:'fondo * (tasa_fondo - inflacion)'},
    {k:'rinde_dolares',nombre:'Rendimiento de los dólares',desde:'',hacia:'dolares',formula:'dolares * rend_usd'},
    {k:'cambio_nivel',nombre:'Me acostumbro a otro nivel de vida',desde:'',hacia:'nivel_vida',formula:'(cobro * propension - nivel_vida) * if(cobro * propension > nivel_vida, rapidez_sube, rapidez_baja)'}],
+  pos0:{pesos:{x:0,y:0},fondo:{x:-400,y:-200},dolares:{x:400,y:-200},deuda:{x:-400,y:220},nivel_vida:{x:400,y:220},cobro:{x:0,y:-170},gasto:{x:0,y:170},pago_tarjeta:{x:-190,y:90},al_fondo:{x:-200,y:-100},a_dolares:{x:200,y:-100},imprevisto:{x:-400,y:-370},rinde_fondo:{x:-610,y:-200},rinde_dolares:{x:610,y:-200},intereses:{x:-610,y:220},con_tarjeta:{x:-400,y:390},cancela:{x:-200,y:330},cambio_nivel:{x:400,y:390}},
   meta:{cajas:['dolares'],sentido:'mas',valor:20000,plazo:60,texto:'Un año de gastos guardado en dólares'},
   paradigma:'La plata es tiempo: cada peso que no se va en intereses ni en costumbres nuevas es libertad futura.'},
  {q:'Cinco cajas en pesos de hoy, con la inflación ya descontada. Dos bucles de interés compuesto compiten, uno en contra y otro a favor, y el nivel de vida persigue al sueldo como un trinquete.',
   mapa:[
    {p:['R'],n:'La deuda que crece sola',q:'El interés de la tarjeta se calcula sobre la deuda: más deuda, más interés. Si pagás menos que el interés, la deuda crece aunque pagues todos los meses.',ks:['deuda','intereses']},
    {p:['B'],n:'Pagar la tarjeta',q:'Pagás una parte del resumen: cuanto más debés, más pagás. Compite con el bucle de los intereses.',ks:['deuda','cancela']},
+   {p:['regla'],n:'El límite de la tarjeta',q:'Una regla: solo podés seguir gastando con la tarjeta mientras la deuda no pase el límite. Los intereses, en cambio, siguen corriendo.',ks:['con_tarjeta','deuda']},
    {p:['R'],n:'Los dólares que rinden',q:'El rendimiento se calcula sobre lo ahorrado: el mismo mecanismo que la deuda, pero a favor.',ks:['dolares','rinde_dolares']},
    {p:['B','info'],n:'El fondo de emergencia',q:'Se llena hasta 3 meses de gasto, más rápido cuanto más falta. Mira al nivel de vida para saber cuánto es suficiente.',ks:['fondo','al_fondo','nivel_vida']},
    {p:['caja','B'],n:'El trinquete del nivel de vida',q:'Tu gasto es una caja que persigue al sueldo: sube rápido cuando ganás más y baja muy lento cuando ganás menos.',ks:['nivel_vida','cambio_nivel','cobro']},
    {p:['flujo'],n:'El imprevisto',q:'Un golpe en el mes 6. Lo paga el fondo, y lo que no alcanza va a la tarjeta.',ks:['imprevisto','con_tarjeta','fondo','deuda']},
    {p:['conv'],n:'Pasar a dólares',q:'Lo que sobra cambia de unidad: sale en pesos y entra en dólares al precio del dólar.',ks:['pesos','a_dolares','dolares']}],
   jugadas:[
-   {n:'Gastar todo lo que entra',q:'El imprevisto queda en la tarjeta y la deuda se dispara.',set:{propension:1}},
+   {n:'Gastar todo lo que entra',q:'El imprevisto queda en la tarjeta, llega al límite y los intereses la siguen inflando.',set:{propension:1}},
    {n:'Pagar solo el mínimo',q:'La deuda crece aunque pagues todos los meses.',set:{parte_pago:0.05}},
    {n:'Pagar todo el resumen',q:'La deuda desaparece en pocos meses.',set:{parte_pago:1}},
    {n:'Ahorrar primero',q:'Gastar el 75 % del sueldo: la meta llega antes del plazo.',set:{propension:0.75}},
    {n:'El sueldo pierde contra la inflación',q:'Inflación 3 %: el gasto baja más lento que el sueldo y vuelve la tarjeta.',set:{inflacion:0.03}},
    {n:'Sin fondo de emergencia',q:'El imprevisto va entero a la tarjeta, pero igual juntás más dólares: el fondo en pesos pierde contra la inflación. El colchón tiene un costo.',set:{meses_fondo:0}}],
-  fuentes:[['Efecto trinquete (Duesenberry)','https://en.wikipedia.org/wiki/James_Duesenberry'],['Ahorro líquido de las familias (Reserva Federal)','https://www.federalreserve.gov/econres/notes/feds-notes/assessing-families-liquid-savings-using-the-survey-of-consumer-finances-20181119.htm'],['Regla del 4 % (Bengen, Trinity)','https://en.wikipedia.org/wiki/4%25_rule'],['El dólar como ahorro en Argentina (BCRA)','https://ideas.repec.org/p/bcr/wpaper/202195.html']]},'plata');}
+  fuentes:[['Efecto trinquete (Duesenberry)','https://en.wikipedia.org/wiki/James_Duesenberry'],['Ahorro líquido de las familias (Reserva Federal)','https://www.federalreserve.gov/econres/notes/feds-notes/assessing-families-liquid-savings-using-the-survey-of-consumer-finances-20181119.htm'],['Regla del 4 % (Bengen, Trinity)','https://en.wikipedia.org/wiki/4%25_rule'],['El dólar como ahorro en Argentina (BCRA)','https://ideas.repec.org/p/bcr/wpaper/202195.html']]},'plata',3);}
 
-function tplHabito(){return conGuia({nombre:'Un hábito que se vuelve parte de vos',unidad:'día',
+function tplHabito(){return conGuia({nombre:'Un hábito (Hábitos atómicos)',unidad:'día',
   cajas:[
    {k:'senal',nombre:'Señales a la vista',hoy:40,unidad:'puntos',min0:true},
-   {k:'constancia',nombre:'Días por semana que lo hacés',hoy:0,unidad:'días/semana',min0:true},
-   {k:'automatismo',nombre:'Automatismo (sale solo)',hoy:0,unidad:'puntos',min0:true},
-   {k:'ganas',nombre:'Ganas',hoy:70,unidad:'puntos',min0:true},
-   {k:'identidad',nombre:'Me veo como alguien que lo hace',hoy:10,unidad:'puntos',min0:true},
-   {k:'nivel',nombre:'Nivel: minutos que hacés cómodo',hoy:10,unidad:'minutos',min0:true}],
+   {k:'constancia',nombre:'Días por semana que lo hacés',hoy:0,unidad:'días',min0:true},
+   {k:'habito',nombre:'Hábito (sale solo)',hoy:0,unidad:'puntos',min0:true},
+   {k:'ganas',nombre:'Ganas',hoy:70,unidad:'puntos',min0:true}],
   datos:[
-   {k:'entorno',nombre:'Diseñar el entorno (obvio)',valor:0.6,unidad:'%'},
-   {k:'tamano',nombre:'Tamaño del hábito (fácil)',valor:20,unidad:'minutos'},
-   {k:'friccion',nombre:'Pasos para empezar (fácil)',valor:0.3,unidad:'%'},
-   {k:'recompensa',nombre:'Premio inmediato (satisfactorio)',valor:1,unidad:'puntos'},
-   {k:'registro',nombre:'Anotarlo cada día',valor:0,unidad:'%'},
+   {k:'entorno',nombre:'Cuánto preparás el entorno',valor:0.6,unidad:'%'},
+   {k:'friccion',nombre:'Cuánto cuesta empezar',valor:0.4,unidad:'%'},
+   {k:'premio',nombre:'Premio inmediato al terminar',valor:1,unidad:'puntos'},
    {k:'rescate',nombre:'Nunca fallar dos veces',valor:0,unidad:'%'},
    {k:'aprendizaje',nombre:'Cuánto se graba cada repetición',valor:0.045,unidad:'%',externo:true},
    {k:'olvido',nombre:'Olvido sin práctica',valor:0.03,unidad:'%',externo:true},
-   {k:'aburrimiento',nombre:'Tendencia al aburrimiento',valor:0.03,unidad:'%',externo:true},
-   {k:'mejora',nombre:'Mejora por día practicado',valor:0.01,unidad:'%',externo:true},
-   {k:'umbral',nombre:'Nivel en que se empieza a notar',valor:13,unidad:'minutos',externo:true}],
+   {k:'aburrimiento',nombre:'Aburrimiento de la rutina',valor:0.015,unidad:'%',externo:true}],
   flujos:[
-   {k:'poner_senal',nombre:'Poner señales (y cada repetición las refuerza)',desde:'',hacia:'senal',formula:'(entorno * 0.2 + 0.04 * constancia / 7) * (100 - senal)'},
-   {k:'senal_apaga',nombre:'Las señales se vuelven invisibles',desde:'senal',hacia:'',formula:'senal * 0.04'},
-   {k:'hacerlo',nombre:'Lo hacés hoy',desde:'',hacia:'constancia',formula:'min(1, max(0, senal / 100 * (automatismo + (100 - automatismo) * min(1, (0.6 * ganas + 0.4 * identidad) / 55)) / 100 - friccion * tamano / 30 * (1 - 0.7 * automatismo / 100)))'},
+   {k:'poner_senal',nombre:'Preparar el entorno',desde:'',hacia:'senal',formula:'entorno * 0.2 * (100 - senal)'},
+   {k:'senal_apaga',nombre:'Te acostumbrás y dejás de verlas',desde:'senal',hacia:'',formula:'senal * 0.04'},
+   {k:'hacerlo',nombre:'Lo hacés hoy',desde:'',hacia:'constancia',formula:'min(1, max(0, senal / 100 * (habito + (100 - habito) * ganas / 60) / 100 - friccion * (1 - habito / 100)))'},
    {k:'rescatar',nombre:'Nunca fallar dos veces',desde:'',hacia:'constancia',formula:'rescate * (1 - hacerlo)',reglas:[{tipo:'si',a:'constancia',op:'<',b:'3'}]},
-   {k:'queda_atras',nombre:'Días que salen de la semana',desde:'constancia',hacia:'',formula:'constancia / 7'},
-   {k:'automatizar',nombre:'Cada repetición se graba',desde:'',hacia:'automatismo',formula:'aprendizaje * constancia / 7 * (100 - automatismo)'},
-   {k:'olvidar',nombre:'Se olvida si no lo hacés',desde:'automatismo',hacia:'',formula:'olvido * automatismo * (1 - constancia / 7)'},
-   {k:'votos',nombre:'Votos por quien querés ser',desde:'',hacia:'identidad',formula:'0.03 * constancia / 7 * (100 - identidad)'},
-   {k:'dudas',nombre:'Votos en contra',desde:'identidad',hacia:'',formula:'olvido * identidad * (1 - constancia / 7)'},
-   {k:'entrenar',nombre:'Mejorás 1 % por día',desde:'',hacia:'nivel',formula:'mejora * constancia / 7 * min(nivel, tamano)'},
-   {k:'satisfaccion',nombre:'Premio al terminar',desde:'',hacia:'ganas',formula:'(recompensa + registro) * constancia / 7'},
-   {k:'se_nota',nombre:'Ver resultados (llegan tarde)',desde:'',hacia:'ganas',formula:'max(0, nivel - umbral) * 0.5 * constancia / 7',retardos:{nivel:21},reglas:[{tipo:'si',a:'nivel',op:'>',b:'umbral'},{tipo:'max',b:'2'}]},
-   {k:'aburrirse',nombre:'Aburrimiento',desde:'ganas',hacia:'',formula:'ganas * aburrimiento * (automatismo / 100 + nivel / (nivel + tamano))'}],
-  meta:{cajas:['automatismo'],sentido:'mas',valor:80,plazo:180,texto:'Que salga solo, sin pensarlo'},
-  paradigma:'No subís al nivel de tus metas: caés al nivel de tus sistemas.'},
-{q:'Basado en Hábitos atómicos (James Clear) y en el estudio de Lally (2010). Las cuatro leyes de Clear no son perillas sueltas: cada una es una parte de la estructura. Hay una caja de señales que se apaga sola, una fricción que el automatismo achica, un premio inmediato frente a resultados que llegan con retardo, una regla para no cortar la racha y una identidad que se refuerza con cada repetición.',
+   {k:'pasa',nombre:'Pasa la semana',desde:'constancia',hacia:'',formula:'constancia / 7'},
+   {k:'grabar',nombre:'Cada repetición se graba',desde:'',hacia:'habito',formula:'aprendizaje * constancia / 7 * (100 - habito)'},
+   {k:'olvidar',nombre:'Se olvida si no lo hacés',desde:'habito',hacia:'',formula:'olvido * habito * (1 - constancia / 7)'},
+   {k:'satisface',nombre:'Premio al terminar',desde:'',hacia:'ganas',formula:'premio * constancia / 7'},
+   {k:'resultados',nombre:'Ver resultados (tardan)',desde:'',hacia:'ganas',formula:'max(0, habito - 40) * 0.03 * constancia / 7',retardos:{habito:21}},
+   {k:'aburrirse',nombre:'Aburrimiento',desde:'ganas',hacia:'',formula:'ganas * aburrimiento * (0.5 + habito / 100)'}],
+  pos0:{senal:{x:-400,y:-200},hacerlo:{x:-200,y:-40},constancia:{x:0,y:-40},pasa:{x:0,y:-190},rescatar:{x:-200,y:90},grabar:{x:400,y:-190},habito:{x:400,y:-40},olvidar:{x:400,y:110},ganas:{x:0,y:230},satisface:{x:-200,y:230},resultados:{x:200,y:230},aburrirse:{x:0,y:370},poner_senal:{x:-580,y:-200},senal_apaga:{x:-400,y:-340}},
+  meta:{cajas:['habito'],sentido:'mas',valor:80,plazo:180,texto:'Que salga solo, sin pensarlo'},
+  paradigma:'Soy alguien que lo hace: cada repetición es un voto por esa persona.'},
+{q:'Basado en Hábitos atómicos (James Clear) y en Lally (2010). Cuatro cajas: las señales que te recuerdan hacerlo, los días que lo hacés, cuánto sale solo y las ganas. Las cuatro leyes de Clear no son perillas: cada una es una pieza distinta del sistema.',
   mapa:[
-   {p:['caja','info','B'],n:'1. Hacerlo obvio',q:'Las señales son una caja: el entorno las pone y la costumbre las apaga (dejás de ver lo que siempre está). Lo que hay en la caja informa a "Lo hacés hoy".',ks:['senal','poner_senal','senal_apaga','hacerlo','constancia']},
-   {p:['caja','B'],n:'2. Hacerlo atractivo',q:'Las ganas son una caja que el premio llena y el aburrimiento vacía. La rutina y lo demasiado fácil aceleran el aburrimiento: es la regla de Ricitos de Oro.',ks:['ganas','satisfaccion','aburrirse']},
-   {p:['R','info'],n:'3. Hacerlo fácil',q:'La fricción no es fija: cuanto más automático es el hábito, menos cuesta empezar. Repetir graba automatismo, y el automatismo facilita repetir.',ks:['constancia','automatismo','automatizar','hacerlo']},
-   {p:['retardo','info'],n:'4. Hacerlo satisfactorio',q:'El premio inmediato llega el mismo día. Los resultados llegan con 21 días de retardo y recién después de un umbral: es la meseta del potencial latente, donde casi todos abandonan.',ks:['satisfaccion','se_nota','nivel','entrenar','ganas']},
-   {p:['R','paradigma'],n:'Identidad',q:'Cada repetición es un voto por la persona que querés ser, y esa identidad te empuja a repetir. Cambiar quién creés que sos es cambiar el paradigma: la palanca más alta.',ks:['identidad','votos','dudas','hacerlo','constancia']},
-   {p:['regla'],n:'Nunca fallar dos veces',q:'Una regla: el flujo de rescate se activa solo cuando la constancia baja de 3 días por semana.',ks:['rescatar','constancia']},
-   {p:['B'],n:'El olvido',q:'Lo que no se practica se pierde: un día suelto pesa poco, una racha sin hacerlo pesa mucho.',ks:['automatismo','olvidar','identidad','dudas']}],
+   {p:['caja','info'],n:'1. Obvio',q:'Las señales son una caja: preparar el entorno las llena y la costumbre las apaga (dejás de ver lo que siempre está). Cuántas hay le informa a "Lo hacés hoy".',ks:['senal','poner_senal','senal_apaga','hacerlo']},
+   {p:['caja','B'],n:'2. Atractivo',q:'Las ganas son una caja: el premio la llena y la rutina la vacía. Las ganas empujan a hacerlo mientras el hábito todavía no sale solo.',ks:['ganas','satisface','aburrirse','hacerlo']},
+   {p:['R'],n:'3. Fácil',q:'Cuesta empezar, pero cuanto más automático es el hábito, menos cuesta: repetir graba el hábito y el hábito facilita repetir.',ks:['constancia','grabar','habito','hacerlo']},
+   {p:['retardo'],n:'4. Satisfactorio',q:'El premio llega el mismo día. Los resultados llegan con 21 días de retardo y recién cuando el hábito pasa de 40: es la meseta del potencial latente, donde casi todos abandonan.',ks:['satisface','resultados','habito','ganas']},
+   {p:['regla'],n:'Nunca fallar dos veces',q:'Una regla: si la constancia baja de 3 días por semana, hacés aunque sea la versión mínima.',ks:['rescatar','constancia']},
+   {p:['B'],n:'El olvido',q:'Lo que no se practica se pierde: un día suelto pesa poco, una racha sin hacerlo pesa mucho.',ks:['habito','olvidar','constancia']},
+   {p:['paradigma'],n:'Identidad',q:'Clear propone cambiar primero quién creés que sos ("soy alguien que entrena") y después las metas. Eso es trabajar sobre el paradigma, la palanca más alta.',ks:[]}],
   jugadas:[
-   {n:'Diseñar el entorno a fondo',q:'Todo a la vista y a mano: el hábito llega a la meta.',set:{entorno:1}},
-   {n:'Un entorno que no ayuda',q:'Con pocas señales, el hábito se va apagando aunque empieces con ganas.',set:{entorno:0.3}},
-   {n:'Más fricción',q:'Si empezar cuesta el doble, el hábito muere.',set:{friccion:0.6}},
-   {n:'Más fricción, pero nunca fallar dos veces',q:'La regla sostiene el hábito aunque cueste.',set:{friccion:0.6,rescate:1}},
-   {n:'Sin premio inmediato',q:'Las ganas se agotan en la meseta, antes de ver resultados.',set:{recompensa:0}},
-   {n:'Desafío justo y anotarlo',q:'10 minutos y registrarlo cada día: llega a la meta.',set:{tamano:10,registro:1}}],
-  fuentes:[['Atomic Habits (James Clear)','https://jamesclear.com/atomic-habits'],['Lally et al. 2010: cuánto tarda un hábito','https://doi.org/10.1002/ejsp.674'],['Wood y Neal 2007: hábitos y contexto','https://dornsife.usc.edu/wendy-wood/wp-content/uploads/sites/183/2023/10/wood.neal_.2007psychrev_a_new_look_at_habits_and_the_interface_between_habits_and_goals.pdf'],['Harkin et al. 2016: registrar el progreso','https://eprints.whiterose.ac.uk/91437/']]},'habito');}
+   {n:'Preparar el entorno a fondo',q:'Todo a la vista: el hábito llega a la meta.',set:{entorno:1}},
+   {n:'Un entorno que no ayuda',q:'Con pocas señales, el hábito se apaga aunque empieces con ganas.',set:{entorno:0.3}},
+   {n:'Hacerlo más fácil',q:'Si empezar cuesta menos, el hábito casi llega solo.',set:{friccion:0.25}},
+   {n:'Más difícil',q:'Si empezar cuesta más, el hábito muere en la meseta.',set:{friccion:0.6}},
+   {n:'Más difícil, pero nunca fallar dos veces',q:'La regla lo sostiene aunque cueste.',set:{friccion:0.6,rescate:1}},
+   {n:'Sin premio inmediato',q:'Las ganas se agotan antes de que lleguen los resultados.',set:{premio:0}}],
+  fuentes:[['Atomic Habits (James Clear)','https://jamesclear.com/atomic-habits'],['Lally et al. 2010: cuánto tarda un hábito','https://doi.org/10.1002/ejsp.674'],['Wood y Neal 2007: hábitos y contexto','https://dornsife.usc.edu/wendy-wood/wp-content/uploads/sites/183/2023/10/wood.neal_.2007psychrev_a_new_look_at_habits_and_the_interface_between_habits_and_goals.pdf']]},'habito',3);}
 
 function tplAlimentacion(){return conGuia({nombre:'Peso, hambre y metabolismo',unidad:'semana',
   cajas:[
@@ -2015,7 +2034,7 @@ function tplAlimentacion(){return conGuia({nombre:'Peso, hambre y metabolismo',u
   datos:[
    {k:'come_antes',nombre:'Lo que comías antes (por día)',valor:2600,unidad:'kcal'},
    {k:'recorte',nombre:'Calorías que recortás por día',valor:500,unidad:'kcal'},
-   {k:'dieta_hasta',nombre:'Hasta qué semana hacés la dieta',valor:52,unidad:'semanas'},
+   {k:'dieta_hasta',nombre:'Semanas que dura la dieta',valor:52,unidad:'semanas'},
    {k:'cedes',nombre:'Parte del hambre extra que terminás comiendo',valor:0.5,unidad:'%'},
    {k:'ejercicio_min',nombre:'Ejercicio aeróbico (minutos por día)',valor:0,unidad:'min'},
    {k:'fuerza',nombre:'Sesiones de fuerza por semana (con proteína)',valor:0,unidad:'sesiones'},
@@ -2026,23 +2045,24 @@ function tplAlimentacion(){return conGuia({nombre:'Peso, hambre y metabolismo',u
    {k:'kcal_kg',nombre:'Calorías por kg de peso',valor:7500,unidad:'kcal',externo:true},
    {k:'peso_ref',nombre:'Peso al que tu cuerpo está acostumbrado',valor:85,unidad:'kg',externo:true}],
   flujos:[
-   {k:'sube_hambre',nombre:'Sube el hambre',desde:'',hacia:'hambre',formula:'max(0, hambre_kg * max(0, peso_ref - (grasa + musculo + reserva)) - hambre) * 0.2'},
-   {k:'baja_hambre',nombre:'Se calma el hambre',desde:'hambre',hacia:'',formula:'max(0, hambre - hambre_kg * max(0, peso_ref - (grasa + musculo + reserva))) * 0.2'},
-   {k:'comida',nombre:'Lo que comés',desde:'',hacia:'grasa',formula:'7 * (come_antes - if(t <= dieta_hasta, recorte, 0) + hambre * if(t <= dieta_hasta, cedes, 1)) * (1 - parte_musculo) / kcal_kg'},
+   {k:'ajusta_hambre',nombre:'El hambre se acomoda al peso perdido',desde:'',hacia:'hambre',formula:'(hambre_kg * max(0, peso_ref - (grasa + musculo + reserva)) - hambre) * 0.2',retardos:{grasa:2,musculo:2,reserva:2}},
+   {k:'comida',nombre:'Lo que comés',desde:'',hacia:'grasa',formula:'7 * (come_antes + hambre * if(t < dieta_hasta, cedes, 1)) * (1 - parte_musculo) / kcal_kg'},
+   {k:'dieta',nombre:'Lo que dejás de comer (dieta)',desde:'grasa',hacia:'',formula:'7 * recorte * (1 - parte_musculo) / kcal_kg',reglas:[{tipo:'si',a:'t',op:'<',b:'dieta_hasta'}]},
    {k:'gasto',nombre:'Lo que gastás',desde:'grasa',hacia:'',formula:'7 * (370 + 21.6 * musculo + 11.75 * (grasa + musculo + reserva) + 0.07 * (grasa + musculo + reserva) * ejercicio_min * (1 - compensa) - adapta * max(0, peso_ref - (grasa + musculo + reserva))) * (1 - parte_musculo) / kcal_kg'},
-   {k:'pierde_musculo',nombre:'Se pierde músculo',desde:'musculo',hacia:'',formula:'max(0, gasto - comida) * parte_musculo / (1 - parte_musculo)'},
-   {k:'gana_musculo',nombre:'Se gana músculo',desde:'',hacia:'musculo',formula:'max(0, comida - gasto) * parte_musculo / (1 - parte_musculo) + 0.02 * min(fuerza, 3)'},
-   {k:'vacia_reserva',nombre:'Se va el agua',desde:'reserva',hacia:'',formula:'max(0, reserva - max(0.8, 2 - 5 * max(0, 1 - comida / gasto))) * 0.5'},
-   {k:'llena_reserva',nombre:'Vuelve el agua',desde:'',hacia:'reserva',formula:'max(0, max(0.8, 2 - 5 * max(0, 1 - comida / gasto)) - reserva) * 0.5'}],
+   {k:'pierde_musculo',nombre:'Se pierde músculo',desde:'musculo',hacia:'',formula:'max(0, gasto + dieta - comida) * parte_musculo / (1 - parte_musculo)'},
+   {k:'gana_musculo',nombre:'Se gana músculo',desde:'',hacia:'musculo',formula:'max(0, comida - gasto - dieta) * parte_musculo / (1 - parte_musculo) + 0.02 * min(fuerza, 3)'},
+   {k:'vacia_reserva',nombre:'Se va el agua',desde:'reserva',hacia:'',formula:'max(0, reserva - max(0.8, 2 - 5 * max(0, 1 - comida / (gasto + dieta)))) * 0.5'},
+   {k:'llena_reserva',nombre:'Vuelve el agua',desde:'',hacia:'reserva',formula:'max(0, max(0.8, 2 - 5 * max(0, 1 - comida / (gasto + dieta))) - reserva) * 0.5'}],
+  pos0:{grasa:{x:0,y:0},comida:{x:-230,y:0},gasto:{x:230,y:0},dieta:{x:0,y:170},hambre:{x:-380,y:-230},ajusta_hambre:{x:-600,y:-230},musculo:{x:460,y:-230},pierde_musculo:{x:460,y:-380},gana_musculo:{x:650,y:-230},reserva:{x:460,y:230},vacia_reserva:{x:460,y:380},llena_reserva:{x:650,y:230}},
   meta:{cajas:['grasa','musculo','reserva'],sentido:'menos',valor:78,plazo:52,texto:'Bajar 7 kg en un año y sostenerlo'},
   paradigma:'El cuerpo defiende su peso: bajar es mover el equilibrio, no solo sumar sacrificios.'},
  {q:'Basado en el modelo de Kevin Hall (NIH). La regla de "7700 kcal = 1 kg" promete demasiado, porque el cuerpo tiene dos bucles de balance que defienden su peso. Por eso el peso baja rápido al principio, se estanca cerca de los 6 meses y rebota si volvés a comer como antes.',
   mapa:[
    {p:['B'],n:'Un cuerpo más liviano gasta menos',q:'El gasto depende del peso: al bajar, gastás menos y el mismo recorte rinde cada vez menos.',ks:['grasa','gasto','musculo']},
-   {p:['caja','B','retardo'],n:'El hambre que sube',q:'Por cada kg perdido el apetito pide unas 100 kcal más por día, y se acomoda despacio. Es el freno más fuerte (Polidori, 2016).',ks:['hambre','sube_hambre','baja_hambre','comida','grasa']},
+   {p:['caja','B','retardo'],n:'El hambre que sube',q:'Por cada kg perdido el apetito pide unas 100 kcal más por día. El cuerpo lo registra con dos semanas de retardo y se acomoda despacio. Es el freno más fuerte (Polidori, 2016).',ks:['hambre','ajusta_hambre','comida','grasa','musculo','reserva']},
    {p:['caja'],n:'Agua y glucógeno',q:'La primera semana se va 1 kg de agua, no de grasa. Vuelve apenas comés como antes.',ks:['reserva','vacia_reserva','llena_reserva']},
    {p:['flujo'],n:'Músculo',q:'Un cuarto de lo que se pierde es músculo, y menos músculo es menos gasto. La fuerza lo protege.',ks:['musculo','pierde_musculo','gana_musculo']},
-   {p:['regla'],n:'Fin de la dieta',q:'Desde la semana elegida volvés a comer como antes y dejás de frenar el hambre.',ks:['comida']},
+   {p:['regla'],n:'La dieta',q:'Lo que dejás de comer es un flujo con una regla: solo corre mientras dure la dieta. Cuando termina, también dejás de frenar el hambre.',ks:['dieta','comida','grasa']},
    {p:['paradigma'],n:'Mover el equilibrio',q:'Pensar el peso como un equilibrio, y no como una suma de sacrificios, cambia qué hacés: hábitos sostenibles en lugar de recortes extremos.',ks:[]}],
   jugadas:[
    {n:'Dejar la dieta a los 6 meses',q:'Primero vuelve el agua, después la grasa: el rebote.',set:{dieta_hasta:26}},
@@ -2050,7 +2070,7 @@ function tplAlimentacion(){return conGuia({nombre:'Peso, hambre y metabolismo',u
    {n:'Domar el hambre',q:'Más proteína, fibra y sueño: cedés menos al hambre extra.',set:{cedes:0.2}},
    {n:'Recorte extremo',q:'1000 kcal menos por día: cae rápido, pero el hambre se vuelve enorme.',set:{recorte:1000}},
    {n:'Lo que promete la regla de 7700',q:'Sin hambre ni ahorro del cuerpo: la bajada que nunca pasa.',set:{hambre_kg:0,adapta:0}}],
-  fuentes:[['Hall et al. 2011, The Lancet','https://pmc.ncbi.nlm.nih.gov/articles/PMC3880593'],['Body Weight Planner (NIDDK)','https://www.niddk.nih.gov/research-funding/at-niddk/labs-branches/laboratory-biological-modeling/integrative-physiology-section/research/body-weight-planner'],['Polidori et al. 2016: el apetito al bajar','https://www.biorxiv.org/content/10.1101/051045v1.full.pdf+html'],['Hall y Kahan 2018: mantener el peso','https://pmc.ncbi.nlm.nih.gov/articles/PMC5764193'],['Levine 1999: movimiento cotidiano (NEAT)','https://pubmed.ncbi.nlm.nih.gov/9880251/']]},'peso');}
+  fuentes:[['Hall et al. 2011, The Lancet','https://pmc.ncbi.nlm.nih.gov/articles/PMC3880593'],['Body Weight Planner (NIDDK)','https://www.niddk.nih.gov/research-funding/at-niddk/labs-branches/laboratory-biological-modeling/integrative-physiology-section/research/body-weight-planner'],['Polidori et al. 2016: el apetito al bajar','https://www.biorxiv.org/content/10.1101/051045v1.full.pdf+html'],['Hall y Kahan 2018: mantener el peso','https://pmc.ncbi.nlm.nih.gov/articles/PMC5764193'],['Levine 1999: movimiento cotidiano (NEAT)','https://pubmed.ncbi.nlm.nih.gov/9880251/']]},'peso',3);}
 
 
 /* ---------- eventos ---------- */
