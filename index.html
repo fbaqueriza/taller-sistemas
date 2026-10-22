@@ -283,11 +283,6 @@ textarea{resize:vertical}
 .res-bar i{display:block;height:100%;background:var(--crit)}
 .res-pie{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;min-height:24px}
 .res-pie .ok{color:var(--good)}.res-pie .no{color:var(--crit)}
-.reales{background:var(--accent-soft);border-radius:10px;padding:10px 14px;display:grid;gap:8px;font-size:13.5px;color:var(--fg)}
-.reales p{margin:0}
-.reales textarea{width:100%;box-sizing:border-box;font:12px/1.4 var(--mono);border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:var(--surface);color:var(--fg);resize:vertical}
-.reales .btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.real-err{color:var(--crit);font-size:12.5px}
 .tb-grid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:24px;align-items:start}
 .tb-izq{display:grid;gap:12px;justify-items:center;position:sticky;top:70px}
 .tb-torta{width:220px;height:220px}
@@ -465,6 +460,36 @@ details.fold[open]>summary{margin-bottom:6px}
 .gc-pz{display:flex;flex-wrap:wrap;gap:3px;margin:2px 0 4px}
 .gc-pz span{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;padding:0 6px;line-height:16px;border-radius:8px;border:1px dashed var(--line);color:var(--muted)}
 .gc-pz span.on{border-style:solid;border-color:var(--fg2);color:var(--fg)}
+body[data-vista="1"] #reco-p,body[data-vista="1"] #meta-p,body[data-vista="1"] #loopchips,body[data-vista="1"] .piezas,body[data-vista="1"] #tab-btn,body[data-vista="1"] #pop details.fold,body[data-vista="1"] .niv,
+body[data-vista="2"] .piezas,body[data-vista="2"] #tab-btn,body[data-vista="2"] #pop details.fold{display:none!important}
+body[data-tut="-1"] #diagram .empty,body[data-tut="-1"] .maptools,body[data-tut="-1"] .chartpanel,body[data-vista="1"] #datos-p.vacio{display:none}
+.ej-i.on{border-color:var(--accent);background:var(--accent-soft)}
+@keyframes focoP{0%,100%{outline-offset:2px;outline-color:var(--accent)}50%{outline-offset:6px;outline-color:transparent}}
+@keyframes focoS{0%,100%{stroke-width:2.5}50%{stroke-width:5}}
+body[data-foco~="addcaja"] #add-caja,body[data-foco~="addcaja"] #diagram .empty [data-act="caja"],
+body[data-foco~="crear"] #pop [data-pop-ok],body[data-foco~="entra"] #pop [data-nuevo="in"],body[data-foco~="sale"] #pop [data-nuevo="out"],
+body[data-foco~="play"] #play,body[data-foco~="param"] #pop select.opsrc,body[data-foco~="param"] #datos-p input[type=range],
+body[data-foco~="ejemplo"] #pop [data-nf-ej],body[data-foco~="ejemplo"] #pop [data-tema="Finanzas"]:not(.primary),body[data-foco~="ejemplo"] #pop [data-bibn="Rendimiento de una inversión"],
+body[data-foco~="meta"] #meta-p [data-meta="valor"]{outline:2.5px solid var(--accent);outline-offset:2px;animation:focoP 1.3s ease-in-out infinite}
+body[data-foco~="caja"]:has(#pop[hidden]) #diagram .snode .box{stroke:var(--accent);animation:focoS 1.3s ease-in-out infinite}
+.coach{background:var(--accent-soft);border:1.5px solid var(--accent);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.co-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.co-n{font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--accent-ink)}
+.co-dots{display:flex;gap:4px}.co-dots i{width:8px;height:8px;border-radius:50%;background:var(--surface);border:1px solid var(--accent)}
+.co-dots i.ok{background:var(--accent)}.co-dots i.cur{background:var(--accent);box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--accent)}
+.co-h .link{margin-left:auto}
+.co-t{display:block;font-family:var(--display);font-size:17px;margin:8px 0 2px}
+.coach p{margin:4px 0;font-size:14px;line-height:1.5;color:var(--fg2);max-width:72ch}
+.coach p.co-haz{color:var(--fg)}
+.coach p.co-ok{color:var(--good);font-weight:500}
+.co-nav{display:flex;gap:14px;align-items:center;justify-content:flex-end;margin-top:6px}
+.co-op{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin-top:12px}
+.co-b{display:grid;gap:3px;text-align:left;padding:11px 13px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+.co-b b{font-size:14.5px}.co-b small{font-size:12.5px;color:var(--fg2);line-height:1.35}
+.co-b:hover{border-color:var(--accent)}
+.co-b.primary{background:var(--accent);border-color:var(--accent);color:#fff}.co-b.primary small{color:rgba(255,255,255,.88)}
+.coach.bienv{padding:20px 22px}
+.co-tit{font-family:var(--display);font-size:22px;margin:0 0 6px;display:block}
 </style>
 
 <div class="app">
@@ -473,10 +498,11 @@ details.fold[open]>summary{margin-bottom:6px}
     <div class="mwrap"><button id="model-btn" class="model-btn" aria-haspopup="true">…</button><div id="model-menu" class="drop" hidden></div></div>
     <div class="clock"><button id="play" class="primary" aria-label="Simular el tiempo">▶ Simular</button><button id="speed" class="sm" title="Velocidad de la simulación">1×</button><input type="range" id="scrub" min="0" max="24" value="0" aria-label="Momento"><span class="tl" id="tl">hoy</span></div>
     <span class="status" id="status"></span>
-    <div class="acc"><div class="mwrap ejw"><button id="ej-btn" class="sm primary">Ejemplos ▾</button><div id="ej-menu" class="drop ej-drop" hidden></div></div><button id="tab-btn" class="sm">Entradas y salidas</button><button id="help-btn" class="sm" aria-expanded="false">Cómo funciona</button></div>
+    <div class="acc"><div class="mwrap ejw"><button id="vista-btn" class="sm">Mostrar ▾</button><div id="vista-menu" class="drop ej-drop" hidden></div></div><div class="mwrap ejw"><button id="ej-btn" class="sm primary">Ejemplos ▾</button><div id="ej-menu" class="drop ej-drop" hidden></div></div><button id="tab-btn" class="sm">Entradas y salidas</button><button id="help-btn" class="sm" aria-expanded="false">Cómo funciona</button></div>
   </header>
 
   <div class="panel help" id="help" hidden style="margin-bottom:14px">
+    <p style="margin:0 0 10px"><button class="primary sm" data-tut-nuevo>Hacer el recorrido para empezar</button> <span class="hint">7 pasos: armás tu primer sistema con ayuda.</span></p>
     <div class="lev" id="lev"></div>
     <p style="margin:14px 0 0"><b>Cómo se arma.</b> Todo se crea tocando el mapa.</p>
     <ul>
@@ -517,7 +543,6 @@ details.fold[open]>summary{margin-bottom:6px}
   </main>
   <section id="tablero" hidden>
     <div class="tb-top"><div class="tb-lados" id="tb-lados"></div><div class="tb-res" id="tb-res"></div></div>
-    <div class="reales" id="tb-reales" hidden></div>
     <div class="panel" id="tb-cuerpo"></div>
   </section>
 </div>
@@ -961,6 +986,7 @@ let DATO_OPEN='',DATO_DEL='';
 function rango(p){const v=+p.valor||0,a=Math.abs(v);if(p.unidad==='%'||(a>0&&a<=1))return {min:0,max:Math.max(0.1,Math.min(1,a*3||1)),step:0.001};const mx=a?a*3:100;return {min:v<0?-mx:0,max:mx,step:nice(mx/200)};}
 function usosDe(k){const out=[];for(const f of M.flujos){if(varsDe(f.formula).includes(k)||f.reglas.some(r=>r.a===k||r.b===k)||(f.conv&&f.conv.v===k)||(f.reparto||[]).some(x=>x.conv&&x.conv.v===k))out.push(f.nombre||f.k);}return out;}
 function renderDatos(){
+  $('datos-p').classList.toggle('vacio',!M.datos.length);
   const used=new Set(POP&&POP.kind==='flujo'?varsDe((M.flujos.find(f=>f.k===POP.k)||{}).formula||''):[]);
   $('datos-p').innerHTML=`<h2>Parámetros <small>movelos y mirá el mapa</small>${nivChip(12)}</h2>`+(M.datos.length?'':`<p class="hint">Los números que usan los flujos: tasas, montos, límites. Aparecen cuando armás un flujo.</p>`)+M.datos.map(p=>{
     const R=rango(p),u=usosDe(p.k);
@@ -1452,7 +1478,6 @@ function renderTab(){
   const per=perillasLado(lado);
   $('tb-cuerpo').innerHTML=`<div class="tb-grid"><div class="tb-izq"><div id="tb-torta"></div><p class="tb-lect" id="tb-lect"></p><div id="tb-evo"></div>${per}</div><div class="tb-der"><div class="tb-lista">${F.map((x,i)=>filaHtml(x,i,tot,u)).join('')||`<p class="hint">Todavía no hay ${E[lado].toLowerCase()}.</p>`}</div><button class="sm primary" data-tb-add>+ ${E.un[lado]}</button></div></div>`;
   renderTabNums();
-  renderReales();
 }
 function perillasLado(lado){
   const ks=new Set();for(const x of filas(lado))if(x.it&&x.it.crece)ks.add(x.it.crece);
@@ -1483,66 +1508,6 @@ function agregarItem(lado){
   const crece=lado==='sal'&&M.datos.some(p=>p.k==='inflacion')?'inflacion':'';
   const it={id:uid(),nombre:'',monto:0,cada:M.unidad==='año'?'anio':'mes',crece};f.items.push(it);return it;
 }
-
-/* ---------- datos reales: lo que se copia en la página de gastos (formato 'finanzas-reales') ---------- */
-let REAL={open:false,txt:'',err:''};
-function realesResumen(){
-  const R=M.reales,u=tabU(),n=R.meses.length;const nm=x=>MESES[+x.mes.slice(5,7)-1]+' '+x.mes.slice(2,4);
-  const prom=k=>R.meses.reduce((a,x)=>a+(+(x.totales||{})[k]||0),0)/n;const ti=prom('ingresos'),tg=prom('gastos'),ta=prom('ahorro');
-  const cuando=n===1?nm(R.meses[0]):nm(R.meses[0])+' a '+nm(R.meses[n-1])+' ('+n+' meses)';
-  return `Tus ingresos y gastos salen de tus datos reales de <b>${esc(cuando)}</b>. En promedio entraron <b>${fmtN(ti,u)}</b> y gastaste <b>${fmtN(tg,u)}</b> por mes${ta>0?`; ahorraste <b>${fmtN(ta,u)}</b>, el ${nf1.format(ti>0?ta/ti*100:0)} % de lo que entró`:''}. Lo extraordinario cuenta como una vez por año.`;
-}
-function renderReales(){
-  const el=$('tb-reales');if(!el)return;
-  if(VISTA!=='tab'||!etq().plata){el.hidden=true;return;}
-  el.hidden=false;
-  if(REAL.open){
-    if(!el.querySelector('#real-txt')){el.innerHTML=`<p><b>Cargar datos reales.</b> En tu página de gastos tocá «Llevar al taller de sistemas» y pegá acá lo que se copió. Reemplaza tus ingresos y gastos por los reales, por categoría.</p><textarea id="real-txt" rows="4" placeholder="Pegá acá los datos" aria-label="Datos reales"></textarea><div class="btns"><button class="sm primary" data-real-usar>Usar estos datos</button><button class="sm" data-real-cancel>Cancelar</button><span class="real-err" id="real-err"></span></div>`;$('real-txt').value=REAL.txt;}
-    $('real-err').textContent=REAL.err;return;
-  }
-  el.innerHTML=M.reales
-    ?`<p>${realesResumen()}</p><div class="btns"><button class="sm" data-real-open>Actualizar con más meses</button>${M.realesAntes?'<button class="sm" data-real-volver>Volver a como estaba</button>':''}</div>`
-    :`<p>¿Tenés tus números reales? Cargalos desde tu página de gastos y el modelo arranca de ahí.</p><div class="btns"><button class="sm primary" data-real-open>Cargar datos reales</button></div>`;
-}
-function ladoFlujo(lado){
-  const L=bordes()[lado];let f=L.find(x=>Array.isArray(x.items))||L[0];
-  if(!f){const it=agregarItem(lado);if(!it)return null;f=itemPorId(it.id).f;f.items=[];}
-  return f;
-}
-function aplicarReales(txt){
-  let d;try{d=JSON.parse(String(txt).trim());}catch(e){return 'No reconozco ese texto. Copialo de nuevo desde la página de gastos.';}
-  if(!d||d.formato!=='finanzas-reales'||!Array.isArray(d.meses)||!d.meses.length)return 'Esos no son datos de la página de gastos.';
-  if(M.unidad!=='mes'&&M.unidad!=='año')return 'Tu modelo tiene que medir el tiempo en meses o en años.';
-  const n=d.meses.length,anual=M.unidad==='año';
-  const sumar=campo=>{const acc=new Map();for(const m of d.meses)for(const x of (m[campo]||[])){const o=acc.get(x.nombre)||{nombre:String(x.nombre||''),suma:0,tipo:x.tipo||''};o.suma+=+x.monto||0;acc.set(x.nombre,o);}return [...acc.values()].filter(o=>o.suma>0).sort((a,b)=>b.suma-a.suma);};
-  const ING=sumar('ingresos'),GAS=sumar('gastos');
-  if(!ING.length&&!GAS.length)return 'Esos datos no tienen ingresos ni gastos.';
-  const fe=ladoFlujo('ent'),fs=ladoFlujo('sal');if(!fe||!fs)return 'Tu modelo necesita una caja de plata para recibir los datos.';
-  const ex=k=>M.datos.some(p=>p.k===k)?k:'';
-  const copia=f=>({k:f.k,items:Array.isArray(f.items)?JSON.parse(JSON.stringify(f.items)):null,formula:f.formula});
-  if(!M.realesAntes)M.realesAntes={ent:copia(fe),sal:copia(fs)};
-  const porMes=o=>Math.round(o.suma/n);
-  const comun=(o,crece)=>({id:uid(),nombre:o.nombre,monto:anual?porMes(o)*12:porMes(o),cada:anual?'anio':'mes',crece,real:true});
-  fe.items=ING.map(o=>comun(o,ex('aumento')));
-  // Lo extraordinario (un viaje, por ejemplo) se toma como algo que pasa una vez por año.
-  fs.items=GAS.map(o=>o.tipo==='extra'?{id:uid(),nombre:o.nombre,monto:Math.round(o.suma*(n>=12?12/n:1)),cada:'anio',crece:ex('inflacion'),real:true}:comun(o,ex('inflacion')));
-  M.reales={cargado:new Date().toISOString().slice(0,10),meses:d.meses.map(m=>({mes:String(m.mes),totales:m.totales||{}}))};
-  return '';
-}
-function volverReales(){
-  const A=M.realesAntes;if(!A)return;
-  for(const lado of ['ent','sal']){const s=A[lado];const f=M.flujos.find(x=>x.k===s.k);if(!f)continue;if(s.items)f.items=s.items;else{delete f.items;f.formula=s.formula||'0';}}
-  delete M.realesAntes;delete M.reales;
-}
-document.addEventListener('click',e=>{
-  const b=e.target.closest&&e.target.closest('#tb-reales button');if(!b)return;const d=b.dataset;
-  if(d.realOpen!==undefined){REAL={open:true,txt:'',err:''};renderReales();const t=$('real-txt');if(t)t.focus();return;}
-  if(d.realCancel!==undefined){REAL={open:false,txt:'',err:''};renderReales();return;}
-  if(d.realUsar!==undefined){const t=$('real-txt');const err=aplicarReales(t?t.value:REAL.txt);if(err){REAL.err=err;renderReales();return;}
-    REAL={open:false,txt:'',err:''};ORDEN={ent:[],sal:[]};SNAP=snapItems();ABIERTO='';cambio(true);renderTab();return;}
-  if(d.realVolver!==undefined){volverReales();ORDEN={ent:[],sal:[]};SNAP=snapItems();ABIERTO='';cambio(true);renderTab();return;}
-});
-document.addEventListener('input',e=>{if(e.target&&e.target.id==='real-txt')REAL.txt=e.target.value;});
 document.addEventListener('click',e=>{
   const t=e.target;
   if(t.closest('#tab-btn')){setVista(VISTA==='tab'?'mapa':'tab');return;}
@@ -1658,7 +1623,7 @@ document.addEventListener('change',e=>{
   const el=e.target;if(!el.dataset||el.dataset.opsrc===undefined||!POP)return;const f=M.flujos.find(x=>x.k===POP.k);if(!f)return;
   prepPOP(f);const id=el.dataset.opsrc,v=el.value;
   if(v==='#num'){const cur=POP[id];const p=M.datos.find(x=>x.k===cur);POP[id]=p?String(+p.valor||0):(esNum(cur)?cur:valorDefecto(f,el.dataset.kind));}
-  else if(v==='#new'){const kind=el.dataset.kind;const cur=esNum(POP[id])?+POP[id]:+valorDefecto(f,kind);const nm=(el.dataset.corto||'valor')+' de '+(f.nombre||'flujo');const p=nuevoDato(nm.charAt(0).toUpperCase()+nm.slice(1),cur,kind==='pct'?'%':uniDe(f.desde||f.hacia));POP[id]=p.k;renderDatos();}
+  else if(v==='#new'){const kind=el.dataset.kind;const cur=esNum(POP[id])?+POP[id]:+valorDefecto(f,kind);const fn=f.nombre||'flujo';const nm=(el.dataset.corto||'valor')+' de '+(/^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]/.test(fn)?fn.charAt(0).toLowerCase()+fn.slice(1):fn);const p=nuevoDato(nm.charAt(0).toUpperCase()+nm.slice(1),cur,kind==='pct'?'%':uniDe(f.desde||f.hacia));POP[id]=p.k;renderDatos();}
   else POP[id]=v;
   const fo=componer2(POP.tipo,POP.a,POP.b,POP.c);if(fo)f.formula=fo;cambio(true);renderPop();
 });
@@ -1852,11 +1817,12 @@ function pasos(){return [
   ['Armá un bucle',LOOPS.length>0,'"+ bucle" en la fila de arriba. Ahí empieza el pensamiento sistémico.']
 ];}
 function renderPasos(){
+  if(renderCoach())return;
   const el=$('pasos');if(!el)return;let oculto=false;try{oculto=localStorage.getItem(KEY+'-pasos-'+M.id)==='1';}catch(e){}
   const P=pasos();const hechos=P.filter(p=>p[1]).length;
   if(oculto||hechos===P.length||M.guia||M.ej){el.hidden=true;return;}
   const sig=P.findIndex(p=>!p[1]);
-  el.hidden=false;el.innerHTML=`<div class="ps-h"><b>Primeros pasos</b><span class="muted">${hechos} de ${P.length}</span><button class="del" data-pasos-x aria-label="ocultar" title="ocultar">×</button></div><ol class="ps">${P.map((p,i)=>`<li class="${p[1]?'ok':i===sig?'sig':''}"><i>${p[1]?'✓':i+1}</i><span>${esc(p[0])}${i===sig?`<small>${esc(p[2])}</small>`:''}</span></li>`).join('')}</ol>`;
+  el.hidden=false;el.className='pasos';el.innerHTML=`<div class="ps-h"><b>Primeros pasos</b><span class="muted">${hechos} de ${P.length}</span><button class="del" data-pasos-x aria-label="ocultar" title="ocultar">×</button></div><ol class="ps">${P.map((p,i)=>`<li class="${p[1]?'ok':i===sig?'sig':''}"><i>${p[1]?'✓':i+1}</i><span>${esc(p[0])}${i===sig?`<small>${esc(p[2])}</small>`:''}</span></li>`).join('')}</ol>`;
 }
 document.addEventListener('click',e=>{
   const t=e.target;
@@ -1930,7 +1896,7 @@ const BIBLIO=[
 const TEMAS=['Finanzas','Hábitos','Alimentación','Salud','Otros'];
 let TEMA='Finanzas';
 function biblioHtml(){
-  return `<div class="sec"><span class="pop-k">O elegí uno de ejemplo</span><div class="temas">${TEMAS.map(t=>`<button class="sm${t===TEMA?' primary':''}" data-tema="${t}">${t}</button>`).join('')}</div><div class="bib">${BIBLIO.filter(x=>x.t===TEMA).map(x=>`<button class="bib-i" data-bib="${BIBLIO.indexOf(x)}"><span class="bib-d ${x.d}">${x.d==='in'?'entra':'sale'}</span><b>${esc(x.n)}${x.b?` <i class="bib-b ${x.b==='R'?'ref':'bal'}">${x.b}</i>`:''}</b><small>${esc(x.q)}</small></button>`).join('')}</div></div>`;
+  return `<div class="sec"><span class="pop-k">O elegí uno de ejemplo</span><div class="temas">${TEMAS.map(t=>`<button class="sm${t===TEMA?' primary':''}" data-tema="${t}">${t}</button>`).join('')}</div><div class="bib">${BIBLIO.filter(x=>x.t===TEMA).map(x=>`<button class="bib-i" data-bib="${BIBLIO.indexOf(x)}" data-bibn="${esc(x.n)}"><span class="bib-d ${x.d}">${x.d==='in'?'entra':'sale'}</span><b>${esc(x.n)}${x.b?` <i class="bib-b ${x.b==='R'?'ref':'bal'}">${x.b}</i>`:''}</b><small>${esc(x.q)}</small></button>`).join('')}</div></div>`;
 }
 function crearDeBiblio(i,caja){
   const x=BIBLIO[i];const s=M.cajas.find(c=>c.k===caja);if(!x||!s)return;const snap=snapModelo();
@@ -1971,7 +1937,7 @@ function jugar(i){
   for(const p of M.datos){if(!(p.k in g.base))continue;p.valor=j&&p.k in j.set?j.set[p.k]:g.base[p.k];}
   g.activa=j?i:-1;renderGuia();renderDatos();cambio(false);
 }
-function abrirEj(key){const t={plata:tplPlata,habito:tplHabito,peso:tplAlimentacion}[key];if(!t)return;const ex=LIB.find(m=>m.ej===key&&m.ejv===EJV[key]);GSEL=-1;if(ex)abrir(ex);else agregar(t());}
+function abrirEj(key){if(VISTA_N<2)setVistaN(2,true);const t={plata:tplPlata,habito:tplHabito,peso:tplAlimentacion}[key];if(!t)return;const ex=LIB.find(m=>m.ej===key&&m.ejv===EJV[key]);GSEL=-1;if(ex)abrir(ex);else agregar(t());}
 document.addEventListener('click',e=>{
   const t=e.target.closest('#pop [data-tema]');if(t){TEMA=t.dataset.tema;const c=$('nf-caja');const v=c&&c.value;renderPop();const c2=$('nf-caja');if(c2&&v)c2.value=v;return;}
   const b=e.target.closest('#pop [data-bib]');if(b){const c=$('nf-caja');if(c&&c.value)crearDeBiblio(+b.dataset.bib,c.value);}
@@ -1980,7 +1946,7 @@ document.addEventListener('click',e=>{
   const gm=e.target.closest('[data-gmap]');if(gm){const i=+gm.dataset.gmap;GSEL=GSEL===i?-1:i;SEL_PZ='';SEL_LEV=0;SEL_LOOP='';renderGuia();renderDiagram();return;}
   if(e.target.closest('[data-gc-tog]')&&M.guia){M.guia.cerrada=!M.guia.cerrada;if(M.guia.cerrada)GSEL=-1;renderGuia();renderDiagram();scheduleSave();return;}
   const eb=e.target.closest('#ej-btn');const em=$('ej-menu');
-  if(eb){em.hidden=!em.hidden;if(!em.hidden)em.innerHTML=`<span class="k">Abrí un ejemplo y jugá con él</span>${EJ.map(([n,,key,q],i)=>`<button class="ej-i" ${key?`data-ej-key="${key}"`:`data-ej="${i}"`}><b>${esc(n)}</b><small>${esc(q||'')}</small></button>`).join('')}`;return;}
+  if(eb){em.hidden=!em.hidden;if(!em.hidden)em.innerHTML=`<span class="k">Para empezar</span><button class="ej-i" data-tut-nuevo><b>Recorrido en 7 pasos</b><small>Armá tu primer sistema con ayuda, desde una caja hasta un bucle y una meta.</small></button><span class="k">Ejemplos armados para jugar</span>${EJ.map(([n,,key,q],i)=>`<button class="ej-i" ${key?`data-ej-key="${key}"`:`data-ej="${i}"`}><b>${esc(n)}</b><small>${esc(q||'')}</small></button>`).join('')}`;return;}
   if(em&&!em.hidden&&!e.target.closest('#ej-menu'))em.hidden=true;
   if(em&&e.target.closest('#ej-menu [data-ej],#ej-menu [data-ej-key]'))em.hidden=true;
   const ek=e.target.closest('[data-ej-key]');if(ek){abrirEj(ek.dataset.ejKey);return;}
@@ -2140,6 +2106,85 @@ function tplAlimentacion(){return conGuia({nombre:'Peso, hambre y metabolismo',u
   fuentes:[['Hall et al. 2011, The Lancet','https://pmc.ncbi.nlm.nih.gov/articles/PMC3880593'],['Body Weight Planner (NIDDK)','https://www.niddk.nih.gov/research-funding/at-niddk/labs-branches/laboratory-biological-modeling/integrative-physiology-section/research/body-weight-planner'],['Polidori et al. 2016: el apetito al bajar','https://www.biorxiv.org/content/10.1101/051045v1.full.pdf+html'],['Hall y Kahan 2018: mantener el peso','https://pmc.ncbi.nlm.nih.gov/articles/PMC5764193'],['Levine 1999: movimiento cotidiano (NEAT)','https://pubmed.ncbi.nlm.nih.gov/9880251/']]},'peso',3);}
 
 
+/* ---------- vista por niveles: de lo simple a lo completo ---------- */
+const VISTAS=[[1,'Lo básico','Cajas, flujos y parámetros. Para empezar.'],[2,'Bucles y metas','Suma los bucles, la meta y las recomendaciones.'],[3,'Todo','Todas las piezas: retardos, reglas, tablero de entradas y salidas.']];
+let VISTA_N=3;try{const v=+localStorage.getItem(KEY+'-vista');if(v>=1&&v<=3)VISTA_N=v;}catch(e){}
+function setVistaN(n,quieto){VISTA_N=Math.max(1,Math.min(3,n));document.body.dataset.vista=VISTA_N;try{localStorage.setItem(KEY+'-vista',VISTA_N);}catch(e){}renderVistaN();if(!quieto&&M){renderDiagram();}}
+function renderVistaN(){const b=$('vista-btn');if(b)b.textContent='Mostrar: '+VISTAS[VISTA_N-1][1].toLowerCase()+' ▾';const m=$('vista-menu');if(m&&!m.hidden)m.innerHTML=vistaMenu();}
+function vistaMenu(){return `<span class="k">Qué mostrar</span>${VISTAS.map(([n,t,q])=>`<button class="ej-i${n===VISTA_N?' on':''}" data-vista-n="${n}"><b>${n}. ${esc(t)}</b><small>${esc(q)}</small></button>`).join('')}`;}
+
+/* ---------- recorrido guiado ---------- */
+const valHoy=k=>Math.abs(+((ROWS[0]||{})[k])||0);
+const confirmado=()=>!(POP&&POP.nuevo);
+const TUT=[
+ {t:'Una caja guarda lo que se acumula',q:'Todo sistema tiene algo que se junta con el tiempo: plata, agua, kilos, ganas. Eso es una caja. Vamos a armar tus ahorros.',
+  haz:'Tocá "+ caja", llamala "Ahorros" y en "Hoy" poné cuánto tenés. Después tocá "Crear caja".',ok:()=>M.cajas.length>0&&confirmado(),
+  bien:'Ya tenés tu primera caja. El número de adentro es lo que hay acumulado hoy.',foco:'addcaja crear'},
+ {t:'Un flujo la llena',q:'Una caja solo cambia por sus flujos, como una bañera: lo que entra por la canilla la llena y lo que sale por el desagüe la vacía.',
+  haz:'Tocá la caja y después "+ entra". Ponele un nombre ("Lo que ahorro") y un monto por mes. Después "Crear flujo".',ok:()=>confirmado()&&M.flujos.some(f=>!f.desde&&destinos(f).length&&valHoy(f.k)>0),
+  bien:'La válvula del mapa es el flujo. La nube del otro lado significa "afuera del sistema": de dónde viene no nos importa ahora.',foco:'caja entra crear'},
+ {t:'Mirá cómo se mueve',q:'Simular es adelantar el tiempo: el taller calcula mes a mes cuánto entra y cuánto sale.',
+  haz:'Tocá "▶ Simular", arriba. Mirá cómo cambia la caja y la línea del gráfico.',ok:()=>SIMULADO||TCUR>0,inicio:()=>{SIMULADO=false;},
+  bien:'La caja sube lo mismo cada mes: una línea recta. Así se comporta un flujo fijo.',foco:'play'},
+ {t:'Otro flujo la vacía',q:'Casi siempre algo también sale: gastos, imprevistos, lo que se rompe.',
+  haz:'Tocá la caja y "+ sale". Poné un monto menor que lo que entra y "Crear flujo". Después volvé a simular.',ok:()=>confirmado()&&M.flujos.some(f=>f.desde&&!f.hacia&&valHoy(f.k)>0),
+  bien:'Ahora sube más despacio: la caja cambia por la diferencia entre lo que entra y lo que sale. Si sale más de lo que entra, baja.',foco:'caja sale crear'},
+ {t:'Los parámetros son las perillas',q:'Los montos se pueden guardar como parámetros: perillas que movés para probar "¿y si…?". Es la forma más fácil de cambiar un sistema, aunque no la más poderosa.',
+  haz:'Tocá un flujo. Donde está el monto, abrí el menú y elegí "↗ guardarlo como parámetro". Aparece a la derecha: movelo y mirá el gráfico.',ok:()=>M.datos.length>0&&confirmado(),
+  bien:'Movelo con el deslizador de la derecha y mirá cómo cambia todo al instante.',foco:'param'},
+ {t:'Un bucle: el sistema se mueve solo',q:'Hasta ahora los flujos eran fijos. Lo interesante empieza cuando un flujo depende de la caja misma: el rendimiento de una inversión crece con lo que ya tenés.',vista:2,
+  haz:'Tocá la caja, elegí "o uno de ejemplo" y en Finanzas, "Rendimiento de una inversión". Después "Crear flujo" y simulá.',ok:()=>confirmado()&&LOOPS.length>0,
+  bien:'Apareció un bucle de refuerzo (R): más ahorro, más rendimiento, más ahorro. La línea se curva hacia arriba. Los bucles de balance (B) hacen lo contrario: empujan hacia un equilibrio, como un termostato.',foco:'caja ejemplo crear'},
+ {t:'Una meta',q:'La meta dice hacia dónde querés que vaya el sistema. Con una meta, el taller prueba cada perilla y te recomienda cuál mover.',vista:2,
+  haz:'En "Meta", a la derecha, poné hasta cuánto querés llegar y en cuántos meses.',ok:()=>M.meta.cajas.length>0&&M.meta.valor!==null&&M.meta.valor!=='',
+  bien:'Debajo aparecen las recomendaciones: qué parámetro mover para llegar.',foco:'meta'},
+ {t:'Ya sabés modelar',fin:true,q:'Caja, flujo, parámetro, bucle y meta son el corazón de cualquier sistema. Cuando quieras, hay más piezas: retardos (lo que tarda en notarse), reglas ("solo si…") y paradigma (la idea de fondo).'}
+];
+function tutActivo(){return !!(M&&M.tut&&M.tut.i!==undefined&&M.tut.i!==null);}
+function tutIr(i){if(!M.tut)M.tut={};M.tut.i=i;const s=TUT[i];if(s){if(s.inicio)s.inicio();if(s.vista&&VISTA_N<s.vista)setVistaN(s.vista,true);}scheduleSave();renderCoach(true);renderDiagram();}
+function tutSalir(){if(M.tut)M.tut.i=null;document.body.dataset.foco='';document.body.dataset.tut='';scheduleSave();$('pasos').hidden=true;renderPasos();renderDiagram();}
+function nuevoRecorrido(){const m=normalize({...tplVacio(),nombre:'Mis ahorros',unidad:'mes'});m.id=uid();m.tut={i:0};LIB.push(m);setVistaN(1,true);abrir(m);scheduleSave();renderCoach(true);}
+let COACH_K='';
+function renderCoach(force){
+  const el=$('pasos');if(!el)return false;if(!tutActivo()){document.body.dataset.foco='';document.body.dataset.tut='';return false;}
+  const i=M.tut.i;document.body.dataset.tut=String(i);
+  if(i<0){const k='w';if(!force&&COACH_K===k&&!el.hidden)return true;COACH_K=k;el.hidden=false;el.className='pasos coach bienv';document.body.dataset.foco='';
+    el.innerHTML=`<h2 class="co-tit">Bienvenido al taller de sistemas</h2>
+    <p>Tu plata, un hábito, tu peso: todo funciona como un sistema. Hay cosas que se acumulan, flujos que las llenan y vacían, y bucles que hacen que crezcan o se frenen solas. Acá lo dibujás y ves cómo se mueve en el tiempo.</p>
+    <div class="co-op">
+      <button class="co-b primary" data-tut-go="0"><b>Aprender en 7 pasos</b><small>Armás tu primer sistema con ayuda. Unos 5 minutos.</small></button>
+      <button class="co-b" data-tut-ej><b>Ver un ejemplo armado</b><small>Un hábito, tus finanzas o tu peso, con guía para jugar.</small></button>
+      <button class="co-b" data-tut-libre><b>Armar el mío</b><small>Ya sé cómo funciona: quiero empezar de cero.</small></button>
+    </div>`;return true;}
+  const s=TUT[i];if(!s){tutSalir();return false;}
+  const hecho=!s.fin&&s.ok();const k=i+'|'+hecho;if(!force&&COACH_K===k&&!el.hidden)return true;COACH_K=k;
+  document.body.dataset.foco=hecho||s.fin?'':(s.foco||'');
+  el.hidden=false;el.className='pasos coach';
+  const NP=TUT.filter(x=>!x.fin).length;const dots=TUT.filter(x=>!x.fin).map((_,j)=>`<i class="${j<i?'ok':j===i?'cur':''}"></i>`).join('');
+  el.innerHTML=`<div class="co-h"><span class="co-n">${s.fin?'Recorrido completo':'Paso '+(i+1)+' de '+NP}</span><span class="co-dots">${dots}</span><button class="link sm" data-tut-x>Salir del recorrido</button></div>
+   <b class="co-t">${esc(s.t)}</b><p>${esc(s.q)}</p>
+   ${s.fin?`<div class="co-op">
+      <button class="co-b primary" data-tut-ej><b>Ver ejemplos completos</b><small>Un hábito según Hábitos atómicos, finanzas con deuda y ahorro, peso y hambre.</small></button>
+      <button class="co-b" data-tut-todo><b>Mostrar todas las piezas</b><small>Retardos, reglas, información, paradigma y las 12 palancas de Meadows.</small></button>
+      <button class="co-b" data-tut-x><b>Seguir con mi sistema</b><small>Agregá cajas y flujos a tu gusto.</small></button></div>`
+    :hecho?`<p class="co-ok">✓ ${esc(s.bien)}</p><div class="co-nav">${i>0?'<button class="link sm" data-tut-go="'+(i-1)+'">← Atrás</button>':''}<button class="primary sm" data-tut-go="${i+1}">Siguiente →</button></div>`
+    :`<p class="co-haz"><b>Hacé esto:</b> ${esc(s.haz)}</p><div class="co-nav">${i>0?'<button class="link sm" data-tut-go="'+(i-1)+'">← Atrás</button>':''}<button class="link sm" data-tut-go="${i+1}">Saltear este paso</button></div>`}`;
+  return true;
+}
+document.addEventListener('click',e=>{
+  const t=e.target;
+  const vb=t.closest('#vista-btn'),vm=$('vista-menu');
+  if(vb){vm.hidden=!vm.hidden;if(!vm.hidden)vm.innerHTML=vistaMenu();return;}
+  const vn=t.closest('[data-vista-n]');if(vn){setVistaN(+vn.dataset.vistaN);if(vm)vm.hidden=true;return;}
+  if(vm&&!vm.hidden&&!t.closest('#vista-menu'))vm.hidden=true;
+  const g=t.closest('[data-tut-go]');if(g){tutIr(+g.dataset.tutGo);return;}
+  if(t.closest('[data-tut-x]')){tutSalir();return;}
+  if(t.closest('[data-tut-todo]')){setVistaN(3);tutSalir();return;}
+  if(t.closest('[data-tut-libre]')){setVistaN(3);tutSalir();return;}
+  if(t.closest('[data-tut-ej]')){if(VISTA_N<2)setVistaN(2);tutSalir();const em=$('ej-menu');setTimeout(()=>{const b=$('ej-btn');if(b&&em&&em.hidden)b.click();},0);return;}
+  if(t.closest('[data-tut-nuevo]')){const em=$('ej-menu');if(em)em.hidden=true;nuevoRecorrido();return;}
+});
+
 /* ---------- eventos ---------- */
 document.addEventListener('click',e=>{
   const t=e.target,b=t.closest('button');
@@ -2230,9 +2275,9 @@ window.addEventListener('resize',()=>{clearTimeout(window.__rz);window.__rz=setT
 
 /* ---------- arranque ---------- */
 try{const r=localStorage.getItem(KEY);if(r){const L=JSON.parse(r);if(Array.isArray(L)&&L.length)LIB=L.map(normalize);}}catch(e){}
-if(!LIB.length)LIB=EJ.map(([,f])=>{const m=normalize(f());return m;});
+if(!LIB.length){const m=normalize({...tplVacio(),nombre:'Mis ahorros',unidad:'mes'});m.tut={i:-1};LIB=[m];VISTA_N=1;}
+document.body.dataset.vista=VISTA_N;renderVistaN();
 let cur=null;try{cur=localStorage.getItem(KEY+'-cur');}catch(e){}
-try{if(localStorage.getItem(KEY+'-help')!=='0'&&!localStorage.getItem(KEY)){$('help').hidden=false;$('help-btn').setAttribute('aria-expanded','true');}}catch(e){}
 abrir(LIB.find(x=>x.id===cur)||LIB[0]);renderPaste();setStatus('');setVista(location.hash==='#tablero'?'tab':'mapa');initDb();
 })();
 </script>
