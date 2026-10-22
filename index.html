@@ -495,6 +495,17 @@ body[data-foco~="caja"]:has(#pop[hidden]) #diagram .snode .box{stroke:var(--acce
 .co-b.primary{background:var(--accent);border-color:var(--accent);color:#fff}.co-b.primary small{color:rgba(255,255,255,.88)}
 .coach.bienv{padding:20px 22px}
 .co-tit{font-family:var(--display);font-size:22px;margin:0 0 6px;display:block}
+body[data-vista="1"] #pop .av{display:none!important}
+#tut-tip{position:fixed;z-index:60;max-width:250px;background:var(--fg);color:var(--bg);font-size:13.5px;font-weight:500;line-height:1.35;padding:9px 12px;border-radius:9px;box-shadow:0 8px 28px rgba(0,0,0,.28);pointer-events:none;transition:left .18s,top .18s}
+#tut-tip[hidden]{display:none}
+#tut-tip::after{content:'';position:absolute;width:10px;height:10px;background:var(--fg);transform:rotate(45deg)}
+#tut-tip.tip-izq::after{right:-5px;top:calc(50% - 5px)}
+#tut-tip.tip-abajo::after{top:-5px;left:calc(var(--ax) - 5px)}
+#tut-tip.tip-arriba::after{bottom:-5px;left:calc(var(--ax) - 5px)}
+.tip-on:not(g){outline:2.5px solid var(--accent);outline-offset:2px;animation:focoP 1.3s ease-in-out infinite}
+#diagram .snode.tip-on .box{stroke:var(--accent);animation:focoS 1.3s ease-in-out infinite}
+.coach.hecho{border-color:var(--good)}
+.coach .co-nav .hint{margin-right:auto}
 </style>
 
 <div class="app">
@@ -919,14 +930,14 @@ const COLORS=['var(--s1)','var(--s2)','var(--s3)','var(--s4)','var(--s5)','var(-
 function nice(raw){if(raw<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(raw)));const f=raw/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p;}
 function serieOpts(){
   const mt=M.meta,out=[];
-  if(mt.cajas.length)out.push({k:'_meta',name:mt.cajas.length>1?'Meta (suma)':'Meta',get:r=>r._meta,u:metaUni()});
+  if(mt.cajas.length&&((mt.valor!==null&&mt.valor!=='')||mt.cajas.length>1))out.push({k:'_meta',name:mt.cajas.length>1?'Meta (suma)':'Meta',get:r=>r._meta,u:metaUni()});
   for(const c of M.cajas)out.push({k:c.k,name:c.nombre,get:r=>r[c.k],u:c.unidad||''});
   for(const f of M.flujos)out.push({k:f.k,name:f.nombre,get:r=>r[f.k],u:uniDe(f.k),flujo:true});
   return out;
 }
 function serieSel(){
   const ops=serieOpts();let s=Array.isArray(M.grafico)?M.grafico.filter(k=>ops.some(o=>o.k===k)):[];
-  if(!s.length&&!(Array.isArray(M.grafico)&&M.grafico[0]==='__nada')){const mt=M.meta;if(mt.cajas.length)s.push('_meta');for(const c of M.cajas)if(!(mt.cajas.length===1&&mt.cajas[0]===c.k)&&s.length<6)s.push(c.k);}
+  if(!s.length&&!(Array.isArray(M.grafico)&&M.grafico[0]==='__nada')){const mt=M.meta;if(ops.some(o=>o.k==='_meta'))s.push('_meta');for(const c of M.cajas)if(!(s.includes('_meta')&&mt.cajas.length===1&&mt.cajas[0]===c.k)&&s.length<6)s.push(c.k);}
   return s;
 }
 document.addEventListener('click',e=>{
@@ -1071,11 +1082,11 @@ function popCaja(s){
   return `<div class="pop-h"><span class="pop-k">Caja ${nivChip(11)}</span><button class="del" data-close aria-label="cerrar" style="color:var(--fg2);font-size:18px">×</button></div>
     <input type="text" class="big" data-c="nombre" value="${esc(s.nombre)}" placeholder="nombre de la caja">
     <div class="g2"><label>Hoy<input type="number" step="any" data-c="hoy" value="${s.hoy}"></label><label>Unidad<input type="text" data-c="unidad" value="${esc(s.unidad||'')}" placeholder="$, personas, °C"></label></div>
-    <label class="check"><input type="checkbox" data-c="min0" ${s.min0?'checked':''}> No puede bajar de cero</label>
-    <div class="sec"><span class="pop-k">Entra</span>${ins.map(f=>li(f,'in')).join('')||'<span class="hint">nada</span>'}<div class="btns"><button class="sm primary" data-nuevo="in">+ entra</button><button class="link sm" data-nf-ej="${esc(s.k)}">o uno de ejemplo</button></div></div>
-    <div class="sec"><span class="pop-k">Sale</span>${outs.map(f=>li(f,'out')).join('')||'<span class="hint">nada</span>'}<div class="btns"><button class="sm primary" data-nuevo="out">+ sale</button>${otros.length?`<select data-nuevo-a style="width:auto"><option value="">→ pasa a otra caja…</option>${otros.map(x=>`<option value="${esc(x.k)}">${esc(x.nombre)}</option>`).join('')}</select>`:''}</div></div>
-    <div class="sec"><span class="pop-k">Bucles</span><div class="btns"><button class="sm" data-bucle="R" data-caja="${esc(s.k)}" title="un flujo que entra en proporción a lo que ya hay">+ de refuerzo (crece sobre sí misma)</button><button class="sm" data-bucle="B" data-caja="${esc(s.k)}" title="un flujo que la acerca a un nivel deseado">+ de balance (busca un nivel)</button></div></div>
-    <div class="sec">${POP.del?`<div class="confirm">Se borra la caja y los flujos que solo la conectaban a ella. <button class="sm" data-borrar-ok>Borrar</button> <button class="sm" data-borrar-no>Cancelar</button></div>`:`<div class="btns" style="justify-content:space-between"><button class="sm" data-copiar title="Ctrl+C · copia la caja con sus flujos hacia afuera">Copiar</button><button class="del" data-borrar>Borrar caja</button></div>`}</div>`;
+    <label class="check av"><input type="checkbox" data-c="min0" ${s.min0?'checked':''}> No puede bajar de cero</label>
+    <div class="sec"><span class="pop-k">Entra</span>${ins.map(f=>li(f,'in')).join('')||'<span class="hint">nada</span>'}<div class="btns"><button class="sm primary" data-nuevo="in">+ entra</button><button class="link sm av" data-nf-ej="${esc(s.k)}">o uno de ejemplo</button></div></div>
+    <div class="sec"><span class="pop-k">Sale</span>${outs.map(f=>li(f,'out')).join('')||'<span class="hint">nada</span>'}<div class="btns"><button class="sm primary" data-nuevo="out">+ sale</button>${otros.length?`<select data-nuevo-a class="av" style="width:auto"><option value="">→ pasa a otra caja…</option>${otros.map(x=>`<option value="${esc(x.k)}">${esc(x.nombre)}</option>`).join('')}</select>`:''}</div></div>
+    <div class="sec av"><span class="pop-k">Bucles</span><div class="btns"><button class="sm" data-bucle="R" data-caja="${esc(s.k)}" title="un flujo que entra en proporción a lo que ya hay">+ de refuerzo (crece sobre sí misma)</button><button class="sm" data-bucle="B" data-caja="${esc(s.k)}" title="un flujo que la acerca a un nivel deseado">+ de balance (busca un nivel)</button></div></div>
+    <div class="sec av">${POP.del?`<div class="confirm">Se borra la caja y los flujos que solo la conectaban a ella. <button class="sm" data-borrar-ok>Borrar</button> <button class="sm" data-borrar-no>Cancelar</button></div>`:`<div class="btns" style="justify-content:space-between"><button class="sm" data-copiar title="Ctrl+C · copia la caja con sus flujos hacia afuera">Copiar</button><button class="del" data-borrar>Borrar caja</button></div>`}</div>`;
 }
 function popFlujo(f){
   if(!tieneItems(f))prepPOP(f);const tipo=POP.tipo||'formula';
@@ -1084,15 +1095,15 @@ function popFlujo(f){
   if(tipo==='formula'){
     cuerpo=`<input type="text" data-fl="formula" value="${esc(f.formula)}" spellcheck="false" placeholder="tocá los elementos de abajo"><div class="chips">${M.cajas.map(c=>`<button class="chip c" data-ins="${esc(c.k)}">${esc(c.nombre)}</button>`).join('')}${M.datos.map(p=>`<button class="chip p" data-ins="${esc(p.k)}">${esc(p.nombre)}</button>`).join('')}${M.flujos.filter(tieneItems).map(x=>`<button class="chip f" data-ins="${esc(x.k)}" title="total del tablero">${esc(x.nombre)}</button>`).join('')}</div><div class="chips">${[[' + ','+'],[' - ','−'],[' * ','×'],[' / ','÷'],['(','('],[')',')'],[' ^ ','elevado'],['t',plural(M.unidad)+' desde hoy'],['max(0, ','no menos de 0'],['min(','el menor de'],[', ',',']].map(([o,n])=>`<button class="chip o" data-ins="${esc(o)}">${esc(n)}</button>`).join('')}<button class="chip o" data-borrar-f>⌫ borrar todo</button></div>`;
   }else cuerpo=camposHtml(f,tipo);
-  let lectura='';try{const sc=escena(ROWS[TCUR]);const ret={};for(const S in f.retardos)if(f.retardos[S]>0)ret[S]=1;const v=compile(f.formula).fn(sc);lectura=`<div class="read" id="pop-read">${leer(f.formula)} <b>= ${fmtK(v,f.k)}</b>${TCUR?' en '+M.unidad+' '+TCUR:' hoy'}</div>`;}catch(e){lectura=`<div class="read" id="pop-read"><span class="err">${esc(e.message)}</span></div>`;}
+  let lectura='';try{const sc=escena(ROWS[TCUR]);const ret={};for(const S in f.retardos)if(f.retardos[S]>0)ret[S]=1;const v=compile(f.formula).fn(sc);lectura=`<div class="read av" id="pop-read">${leer(f.formula)} <b>= ${fmtK(v,f.k)}</b>${TCUR?' en '+M.unidad+' '+TCUR:' hoy'}</div>`;}catch(e){lectura=`<div class="read av" id="pop-read"><span class="err">${esc(e.message)}</span></div>`;}
   const reglas=f.reglas.map(r=>r.tipo==='max'?`<div class="regla max"><span>Como máximo</span>${opSel('rb:'+r.id,r.b,'dato')}<button class="del" data-rdel="${esc(r.id)}" aria-label="quitar regla">×</button></div>`:`<div class="regla"><span>Solo si</span>${opSel('ra:'+r.id,r.a,'cd')}<select data-rop="${esc(r.id)}"><option value=">"${r.op==='>'?' selected':''}>&gt;</option><option value="<"${r.op==='<'?' selected':''}>&lt;</option></select>${opSel('rb:'+r.id,r.b,'dato')}<button class="del" data-rdel="${esc(r.id)}" aria-label="quitar regla">×</button></div>`).join('');
   return `<div class="pop-h"><span class="pop-k">Flujo ${nivChip(10)}</span><button class="del" data-close aria-label="cerrar" style="color:var(--fg2);font-size:18px">×</button></div>
     <input type="text" class="big" data-fl="nombre" value="${esc(f.nombre)}" placeholder="¿Qué es? Ej.: sueldo, alquiler, interés">
-    ${repEsta(f)?`<label>Sale de${sel('desde',f.desde)}</label>${repHtml(f)}`:`<div class="g2"><label>Sale de${sel('desde',f.desde)}</label><label>Entra a${sel('hacia',f.hacia)}</label></div>${convHtml(f)}${repBoton(f)}`}
+    ${repEsta(f)?`<label>Sale de${sel('desde',f.desde)}</label>${repHtml(f)}`:`<div class="g2 av"><label>Sale de${sel('desde',f.desde)}</label><label>Entra a${sel('hacia',f.hacia)}</label></div>${convHtml(f)}${repBoton(f)}`}
     ${tieneItems(f)?itemsSec(f):`<div class="sec"><span class="pop-k">Cuánto mueve por ${esc(M.unidad)}</span>${tiposGrid(tipo)}${cuerpo}${lectura}<div id="lim-nota">${limNota(f)}</div></div>`}
     <details class="sec fold" data-fold="mira"${FOLD.has('mira')?' open':''}><summary>Qué mira ${nivChip(6)} <small>${esc(miraResumen(f))}</small></summary><div id="pop-mira">${miraHtml(f)}</div></details>
     <details class="sec fold" data-fold="reglas"${FOLD.has('reglas')||f.reglas.length?' open':''}><summary>Reglas ${nivChip(5)} <small>${f.reglas.length?f.reglas.length+' · '+esc(f.reglas.map(reglaTxt).join(' · ')):'ninguna'}</small></summary>${reglas||'<span class="hint">Sin reglas.</span>'}<div class="btns"><button class="sm" data-rnew="si">+ solo si…</button><button class="sm" data-rnew="max">+ como máximo…</button></div></details>
-    <div class="sec"><div class="btns" style="justify-content:space-between"><button class="sm" data-copiar title="Ctrl+C">Copiar</button><button class="del" data-borrar>Borrar flujo</button></div></div>`;
+    <div class="sec av"><div class="btns" style="justify-content:space-between"><button class="sm" data-copiar title="Ctrl+C">Copiar</button><button class="del" data-borrar>Borrar flujo</button></div></div>`;
 }
 const FOLD=new Set();
 document.addEventListener('toggle',e=>{const d=e.target;if(!d.dataset||!d.dataset.fold)return;d.open?FOLD.add(d.dataset.fold):FOLD.delete(d.dataset.fold);},true);
@@ -1112,7 +1123,7 @@ function popFoot(){
     :mod?`<span class="hint">Cambios sin confirmar</span><button class="sm" data-pop-desc>Descartar</button><button class="primary" data-pop-ok>✓ Listo</button>`
     :`<span class="hint">Sin cambios</span><button class="primary" data-pop-ok>✓ Listo</button>`;
 }
-function popConfirmar(){const fue=POP&&(POP.nuevo||(POP.snap&&snapModelo()!==POP.snap));popClose();if(fue){scheduleSave();setStatus('✓ Guardado');setTimeout(()=>setStatus(''),1800);}}
+function popConfirmar(){montoComoPerilla();const fue=POP&&(POP.nuevo||(POP.snap&&snapModelo()!==POP.snap));popClose();if(fue){scheduleSave();setStatus('✓ Guardado');setTimeout(()=>setStatus(''),1800);}}
 function popDescartar(){
   if(!POP||!POP.snap){popClose();return;}
   const s=JSON.parse(POP.snap);M.cajas=s.cajas;M.flujos=s.flujos;M.datos=s.datos;M.meta=s.meta;
@@ -1402,7 +1413,7 @@ function multDe(it,t,m){const u=m.unidad;switch(it.cada){
 function itemValor(it,t,base,over,m){const monto=over&&over['i:'+it.id]!==undefined?over['i:'+it.id]:(+it.monto||0);const mu=multDe(it,t,m);if(!mu)return 0;let g=1;if(it.crece&&base[it.crece]!==undefined)g=Math.pow(1+base[it.crece],t);return monto*mu*g;}
 function itemsValor(f,t,base,over,m){let s=0;for(const it of f.items)s+=itemValor(it,t,base,over,m);return s;}
 function itemsRead(f){const r=ROWS[TCUR]||ROWS[0];return `Se arma con <b>${f.items.length} componente${f.items.length>1?'s':''}</b> en el tablero de entradas y salidas: <b>${fmtK(r?r[f.k]:0,f.k)}</b>${TCUR?' en '+M.unidad+' '+TCUR:' hoy'}`;}
-function itemsSec(f){return `<div class="sec"><span class="pop-k">Cuánto por ${esc(M.unidad)}</span><div class="read" id="pop-read">${itemsRead(f)}</div><div class="btns"><button class="sm primary" data-ir-tab>Abrir el tablero</button><button class="sm" data-items-quitar title="borra los componentes y vuelve a una fórmula">Usar una fórmula</button></div></div>`;}
+function itemsSec(f){return `<div class="sec"><span class="pop-k">Cuánto por ${esc(M.unidad)}</span><div class="read av" id="pop-read">${itemsRead(f)}</div><div class="btns"><button class="sm primary" data-ir-tab>Abrir el tablero</button><button class="sm" data-items-quitar title="borra los componentes y vuelve a una fórmula">Usar una fórmula</button></div></div>`;}
 function desgGastos(total){
   const L=[['Alquiler depto Retiro',900000],['Expensas depto Congreso',120000],['ABL Retiro',35000],['ABL Congreso',20000],['Luz y agua Retiro',40000],['Luz y agua Congreso',15000],['Gas Retiro',5000],['Yoga',100000],['Acuarela',70000],['Carpintería',100000],['Fútbol (2 por semana)',173000],['Supermercado',100000]];
   const s=L.reduce((a,[,v])=>a+v,0);const out=L.map(([n,v])=>({id:uid(),nombre:n,monto:v,cada:'mes',crece:'inflacion'}));
@@ -1669,12 +1680,12 @@ function opW(f,id,val,kind,corto){
   if(kind==='caja')return `<select data-opsrc="${id}">${M.cajas.map(c=>opt(c.k,c.nombre,c.k===val)).join('')}</select>`;
   const v=String(val??'');const isNum=v===''||esNum(v);const u=kind==='pct'?'%':uniDe(f.desde||f.hacia);
   const P=M.datos.filter(p=>kind==='pct'?p.unidad==='%':p.unidad!=='%');const T=kind==='pct'?[]:M.flujos.filter(x=>tieneItems(x)&&x.k!==f.k);
-  const sel=`<select data-opsrc="${id}" data-kind="${kind}" data-corto="${esc(corto||'')}" class="opsrc"><option value="#num"${isNum?' selected':''}>${kind==='pct'?'un porcentaje':'un número'}</option>${P.length?`<optgroup label="Parámetros">${P.map(p=>opt(p.k,p.nombre+' · '+fmtN(p.valor,p.unidad),p.k===v)).join('')}</optgroup>`:''}${T.length?`<optgroup label="Totales del tablero">${T.map(x=>opt(x.k,x.nombre+' · '+fmtK(ROWS[0]?ROWS[0][x.k]:0,x.k),x.k===v)).join('')}</optgroup>`:''}${isNum?'<option value="#new">↗ guardarlo como parámetro</option>':''}</select>`;
+  const sel=`<select data-opsrc="${id}" data-kind="${kind}" data-corto="${esc(corto||'')}" class="opsrc av"><option value="#num"${isNum?' selected':''}>${kind==='pct'?'un porcentaje':'un número'}</option>${P.length?`<optgroup label="Parámetros">${P.map(p=>opt(p.k,p.nombre+' · '+fmtN(p.valor,p.unidad),p.k===v)).join('')}</optgroup>`:''}${T.length?`<optgroup label="Totales del tablero">${T.map(x=>opt(x.k,x.nombre+' · '+fmtK(ROWS[0]?ROWS[0][x.k]:0,x.k),x.k===v)).join('')}</optgroup>`:''}${isNum?'<option value="#new">↗ guardarlo como parámetro</option>':''}</select>`;
   if(isNum){const n=v===''?0:+v;return `<span class="opw"><span class="opn"><input type="number" step="any" data-opv="${id}" data-pct="${kind==='pct'?1:''}" value="${kind==='pct'?+(n*100).toFixed(4):n}"><i>${esc(u)}</i></span>${sel}</span>`;}
   const p=M.datos.find(x=>x.k===v),t=M.flujos.find(x=>x.k===v);
   return `<span class="opw"><span class="opn opp">${p?esc(fmtN(p.valor,p.unidad)):t?esc(fmtK(ROWS[0]?ROWS[0][t.k]:0,t.k)):''}</span>${sel}</span>`;
 }
-function tiposGrid(tipo){return `<div class="tgrid">${TIPOS2.map(([k,t,ej])=>`<button class="tbtn${k===tipo?' on':''}" data-tipo2="${k}"><b>${esc(t)}</b><small>${esc(ej)}</small></button>`).join('')}</div>`;}
+function tiposGrid(tipo){return `<div class="tgrid av">${TIPOS2.map(([k,t,ej])=>`<button class="tbtn${k===tipo?' on':''}" data-tipo2="${k}"><b>${esc(t)}</b><small>${esc(ej)}</small></button>`).join('')}</div>`;}
 function camposHtml(f,tipo){return campos2(tipo).map(([id,lab,kind,corto])=>`<div class="opr2"><span>${esc(lab)}</span>${opW(f,id,POP[id],kind,corto)}</div>`).join('');}
 document.addEventListener('click',e=>{
   const b=e.target.closest('#pop [data-tipo2]');if(!b||!POP)return;const f=M.flujos.find(x=>x.k===POP.k);if(!f)return;
@@ -2180,64 +2191,116 @@ function setVistaN(n,quieto){VISTA_N=Math.max(1,Math.min(3,n));document.body.dat
 function renderVistaN(){const b=$('vista-btn');if(b)b.textContent='Mostrar: '+VISTAS[VISTA_N-1][1].toLowerCase()+' ▾';const m=$('vista-menu');if(m&&!m.hidden)m.innerHTML=vistaMenu();}
 function vistaMenu(){return `<span class="k">Qué mostrar</span>${VISTAS.map(([n,t,q])=>`<button class="ej-i${n===VISTA_N?' on':''}" data-vista-n="${n}"><b>${n}. ${esc(t)}</b><small>${esc(q)}</small></button>`).join('')}`;}
 
-/* ---------- recorrido guiado ---------- */
+/* ---------- recorrido guiado: una burbuja señala qué tocar ---------- */
 const valHoy=k=>Math.abs(+((ROWS[0]||{})[k])||0);
-const confirmado=()=>!(POP&&POP.nuevo);
+const popEn=()=>POP&&!POP.bucle&&!POP.nuevoF&&!POP.nuevoB?(M.cajas.find(c=>c.k===POP.k)?'caja':M.flujos.find(f=>f.k===POP.k)?'flujo':''):'';
+const popAbierto=()=>!!POP;
+const caja0=()=>M.cajas[0];
+const tutFlujoPop=()=>M.flujos.find(f=>f.k===(POP&&POP.k));
+const montoPop=()=>{const i=document.querySelector('#pop [data-opv]');return i?+i.value||0:0;};
+// sub-pasos comunes para crear un flujo que entra o sale de la caja
+function subFlujo(dir,nombreEj,montoTxt){
+  const en=popEn();
+  if(en==='flujo'&&POP.nuevo){const f=tutFlujoPop();
+    if(!String(f.nombre||'').trim())return {sel:'#pop .big',txt:'Escribí un nombre, por ejemplo "'+nombreEj+'".'};
+    if(!montoPop()&&!M.datos.some(p=>p.k===f.formula))return {sel:'#pop [data-opv]',txt:montoTxt};
+    return {sel:'#pop [data-pop-ok]',txt:'Listo: tocá "Crear flujo".'};}
+  if(en==='caja')return {sel:`#pop [data-nuevo="${dir}"]`,txt:dir==='in'?'Tocá "+ entra": lo que llena la caja.':'Tocá "+ sale": lo que vacía la caja.'};
+  if(popAbierto())return {sel:'#pop [data-close]',txt:'Cerrá esta tarjeta.'};
+  return {sel:'#diagram .snode',txt:'Tocá la caja.'};
+}
 const TUT=[
  {t:'Una caja guarda lo que se acumula',q:'Todo sistema tiene algo que se junta con el tiempo: plata, agua, kilos, ganas. Eso es una caja. Vamos a armar tus ahorros.',
-  haz:'Tocá "+ caja", llamala "Ahorros" y en "Hoy" poné cuánto tenés. Después tocá "Crear caja".',ok:()=>M.cajas.length>0&&confirmado(),
-  bien:'Ya tenés tu primera caja. El número de adentro es lo que hay acumulado hoy.',foco:'addcaja crear'},
- {t:'Un flujo la llena',q:'Una caja solo cambia por sus flujos, como una bañera: lo que entra por la canilla la llena y lo que sale por el desagüe la vacía.',
-  haz:'Tocá la caja y después "+ entra". Ponele un nombre ("Lo que ahorro") y un monto por mes. Después "Crear flujo".',ok:()=>confirmado()&&M.flujos.some(f=>!f.desde&&destinos(f).length&&valHoy(f.k)>0),
-  bien:'La válvula del mapa es el flujo. La nube del otro lado significa "afuera del sistema": de dónde viene no nos importa ahora.',foco:'caja entra crear'},
- {t:'Mirá cómo se mueve',q:'Simular es adelantar el tiempo: el taller calcula mes a mes cuánto entra y cuánto sale.',
-  haz:'Tocá "▶ Simular", arriba. Mirá cómo cambia la caja y la línea del gráfico.',ok:()=>SIMULADO||TCUR>0,inicio:()=>{SIMULADO=false;},
-  bien:'La caja sube lo mismo cada mes: una línea recta. Así se comporta un flujo fijo.',foco:'play'},
+  ok:()=>M.cajas.length>0&&!popAbierto(),bien:'Ya tenés tu primera caja. El número de adentro es lo que hay acumulado hoy.',
+  sub:()=>{const en=popEn();if(en==='caja'){const c=M.cajas.find(x=>x.k===POP.k);
+      if(/^Caja \d+$/.test(c.nombre))return {sel:'#pop .big',txt:'Escribí el nombre: "Ahorros".'};
+      if(!(+c.hoy))return {sel:'#pop [data-c="hoy"]',txt:'¿Cuánto tenés ahorrado hoy? Cualquier número sirve.'};
+      return {sel:'#pop [data-pop-ok]',txt:POP.nuevo?'Listo: tocá "Crear caja".':'Tocá "Listo".'};}
+    return {sel:M.cajas.length?'#add-caja':'#diagram .empty [data-act="caja"]',txt:'Tocá acá para crear tu primera caja.'};},
+  auto:()=>{const c={k:keyLibre('ahorros'),nombre:'Ahorros',hoy:100000,unidad:'$',min0:true};M.cajas.push(c);M.meta.cajas=[c.k];renderMeta();cambio(true);}},
+ {t:'Un flujo la llena',q:'Una caja solo cambia por sus flujos, como una bañera: lo que entra por la canilla la llena.',
+  ok:()=>!popAbierto()&&M.flujos.some(f=>!f.desde&&destinos(f).length&&valHoy(f.k)>0),bien:'La válvula del mapa es el flujo. La nube del otro lado quiere decir "afuera del sistema".',
+  sub:()=>subFlujo('in','Lo que ahorro','¿Cuánto ahorrás por mes? Poné un número.'),
+  auto:()=>{const c=caja0();if(!c)return;const p=nuevoDato('Lo que ahorro',50000,c.unidad);M.flujos.push({k:keyLibre('ahorro'),nombre:'Lo que ahorro',desde:'',hacia:c.k,formula:p.k,retardos:{},reglas:[]});renderDatos();cambio(true);}},
+ {t:'Mirá cómo se mueve',q:'Simular es adelantar el tiempo: el taller calcula mes a mes cuánto entra y cuánto sale.',inicio:()=>{SIMULADO=false;},
+  ok:()=>SIMULADO||TCUR>0,bien:'La caja sube lo mismo cada mes: una línea recta. Así se comporta un flujo fijo.',
+  sub:()=>({sel:'#play',txt:'Tocá "Simular" y mirá la caja y el gráfico.'}),auto:()=>{playRun();}},
  {t:'Otro flujo la vacía',q:'Casi siempre algo también sale: gastos, imprevistos, lo que se rompe.',
-  haz:'Tocá la caja y "+ sale". Poné un monto menor que lo que entra y "Crear flujo". Después volvé a simular.',ok:()=>confirmado()&&M.flujos.some(f=>f.desde&&!f.hacia&&valHoy(f.k)>0),
-  bien:'Ahora sube más despacio: la caja cambia por la diferencia entre lo que entra y lo que sale. Si sale más de lo que entra, baja.',foco:'caja sale crear'},
- {t:'Los parámetros son las perillas',q:'Los montos se pueden guardar como parámetros: perillas que movés para probar "¿y si…?". Es la forma más fácil de cambiar un sistema, aunque no la más poderosa.',
-  haz:'Tocá un flujo. Donde está el monto, abrí el menú y elegí "↗ guardarlo como parámetro". Aparece a la derecha: movelo y mirá el gráfico.',ok:()=>M.datos.length>0&&confirmado(),
-  bien:'Movelo con el deslizador de la derecha y mirá cómo cambia todo al instante.',foco:'param'},
- {t:'Un bucle: el sistema se mueve solo',q:'Hasta ahora los flujos eran fijos. Lo interesante empieza cuando un flujo depende de la caja misma: el rendimiento de una inversión crece con lo que ya tenés.',vista:2,
-  haz:'Tocá la caja, elegí "o uno de ejemplo" y en Finanzas, "Rendimiento de una inversión". Después "Crear flujo" y simulá.',ok:()=>confirmado()&&LOOPS.length>0,
-  bien:'Apareció un bucle de refuerzo (R): más ahorro, más rendimiento, más ahorro. La línea se curva hacia arriba. Los bucles de balance (B) hacen lo contrario: empujan hacia un equilibrio, como un termostato.',foco:'caja ejemplo crear'},
- {t:'Una meta',q:'La meta dice hacia dónde querés que vaya el sistema. Con una meta, el taller prueba cada perilla y te recomienda cuál mover.',vista:2,
-  haz:'En "Meta", a la derecha, poné hasta cuánto querés llegar y en cuántos meses.',ok:()=>M.meta.cajas.length>0&&M.meta.valor!==null&&M.meta.valor!=='',
-  bien:'Debajo aparecen las recomendaciones: qué parámetro mover para llegar.',foco:'meta'},
- {t:'Ya sabés modelar',fin:true,q:'Caja, flujo, parámetro, bucle y meta son el corazón de cualquier sistema. Cuando quieras, hay más piezas: retardos (lo que tarda en notarse), reglas ("solo si…") y paradigma (la idea de fondo).'}
+  ok:()=>!popAbierto()&&M.flujos.some(f=>f.desde&&!f.hacia&&valHoy(f.k)>0),bien:'Ahora sube más despacio: la caja cambia por la diferencia entre lo que entra y lo que sale.',
+  sub:()=>subFlujo('out','Gastos','¿Cuánto sale por mes? Probá con menos de lo que entra.'),
+  auto:()=>{const c=caja0();if(!c)return;const p=nuevoDato('Gastos',20000,c.unidad);M.flujos.push({k:keyLibre('gastos'),nombre:'Gastos',desde:c.k,hacia:'',formula:p.k,retardos:{},reglas:[]});renderDatos();cambio(true);}},
+ {t:'Los parámetros son perillas',q:'Cada monto quedó como una perilla, a la derecha. Moverla es la forma más fácil de probar "¿y si…?".',inicio:()=>{M.tut.v0=JSON.stringify(M.datos.map(p=>+p.valor));},
+  ok:()=>M.tut.v0!==undefined&&JSON.stringify(M.datos.map(p=>+p.valor))!==M.tut.v0,bien:'Todo cambia al instante. Es la palanca más fácil de mover, pero no la más poderosa.',
+  sub:()=>M.datos.length?{sel:'#datos-p input[type=range]',txt:'Arrastrá esta perilla y mirá el gráfico.'}:{sel:'',txt:''},
+  auto:()=>{const p=M.datos[0];if(!p)return;p.valor=Math.round((+p.valor||0)*1.5);renderDatos();cambio(false);}},
+ {t:'Un bucle: el sistema se mueve solo',vista:2,q:'Lo interesante empieza cuando un flujo depende de la caja misma: una inversión rinde más cuanto más tenés.',
+  ok:()=>!popAbierto()&&LOOPS.length>0,bien:'Apareció un bucle de refuerzo (R): más ahorro, más rendimiento, más ahorro. Simulá y mirá cómo la línea se curva hacia arriba. Los bucles de balance (B) hacen lo contrario: empujan hacia un equilibrio.',
+  sub:()=>{if(POP&&POP.nuevoF){if(TEMA!=='Finanzas')return {sel:'#pop [data-tema="Finanzas"]',txt:'Elegí el tema "Finanzas".'};return {sel:'#pop [data-bibn="Rendimiento de una inversión"]',txt:'Elegí "Rendimiento de una inversión".'};}
+    const en=popEn();if(en==='flujo'&&POP.nuevo)return {sel:'#pop [data-pop-ok]',txt:'Tocá "Crear flujo".'};
+    if(en==='caja')return {sel:'#pop [data-nf-ej]',txt:'Tocá "o uno de ejemplo".'};
+    if(popAbierto())return {sel:'#pop [data-close]',txt:'Cerrá esta tarjeta.'};
+    return {sel:'#diagram .snode',txt:'Tocá la caja.'};},
+  auto:()=>{const c=caja0();const i=BIBLIO.findIndex(x=>x.n==='Rendimiento de una inversión');if(!c||i<0)return;crearDeBiblio(i,c.k);POP=null;$('pop').hidden=true;cambio(true);}},
+ {t:'Una meta',vista:2,q:'La meta dice hacia dónde querés que vaya el sistema. Con una meta, el taller prueba cada perilla y te dice cuál mover.',
+  ok:()=>M.meta.cajas.length>0&&M.meta.valor!==null&&M.meta.valor!=='',bien:'Debajo aparecen las recomendaciones: qué perilla mover, y cuánto, para llegar.',
+  sub:()=>({sel:'#meta-p [data-meta="valor"]',txt:'¿Hasta cuánto querés llegar? Escribí un número.'}),
+  auto:()=>{const e=metaEstado(ROWS);M.meta.valor=Math.round(((e&&e.fin)||100000)*1.3/1000)*1000;renderMeta();cambio(false);}},
+ {t:'Ya sabés modelar',fin:true,q:'Caja, flujo, perilla, bucle y meta son el corazón de cualquier sistema. Cuando quieras, hay más piezas: retardos (lo que tarda en notarse), reglas ("solo si…") y paradigma (la idea de fondo).'}
 ];
 function tutActivo(){return !!(M&&M.tut&&M.tut.i!==undefined&&M.tut.i!==null);}
-function tutIr(i){if(!M.tut)M.tut={};M.tut.i=i;const s=TUT[i];if(s){if(s.inicio)s.inicio();if(s.vista&&VISTA_N<s.vista)setVistaN(s.vista,true);}scheduleSave();renderCoach(true);renderDiagram();}
-function tutSalir(){if(M.tut)M.tut.i=null;document.body.dataset.foco='';document.body.dataset.tut='';scheduleSave();$('pasos').hidden=true;renderPasos();renderDiagram();}
+function tutIr(i){if(!M.tut)M.tut={};M.tut.i=i;const s=TUT[i];if(s){if(s.inicio)s.inicio();if(s.vista&&VISTA_N<s.vista)setVistaN(s.vista,true);}TIP_K='';scheduleSave();renderCoach(true);renderDiagram();}
+function tutSalir(){if(M.tut)M.tut.i=null;document.body.dataset.tut='';scheduleSave();ocultarTip();$('pasos').hidden=true;renderPasos();renderDiagram();}
 function nuevoRecorrido(){const m=normalize({...tplVacio(),nombre:'Mis ahorros',unidad:'mes'});m.id=uid();m.tut={i:0};LIB.push(m);setVistaN(1,true);abrir(m);scheduleSave();renderCoach(true);}
 let COACH_K='';
 function renderCoach(force){
-  const el=$('pasos');if(!el)return false;if(!tutActivo()){document.body.dataset.foco='';document.body.dataset.tut='';return false;}
+  const el=$('pasos');if(!el)return false;document.body.dataset.foco='';if(!tutActivo()){document.body.dataset.tut='';return false;}
   const i=M.tut.i;document.body.dataset.tut=String(i);
-  if(i<0){const k='w';if(!force&&COACH_K===k&&!el.hidden)return true;COACH_K=k;el.hidden=false;el.className='pasos coach bienv';document.body.dataset.foco='';
+  if(i<0){const k='w';if(!force&&COACH_K===k&&!el.hidden)return true;COACH_K=k;el.hidden=false;el.className='pasos coach bienv';
     el.innerHTML=`<h2 class="co-tit">Bienvenido al taller de sistemas</h2>
     <p>Tu plata, un hábito, tu peso: todo funciona como un sistema. Hay cosas que se acumulan, flujos que las llenan y vacían, y bucles que hacen que crezcan o se frenen solas. Acá lo dibujás y ves cómo se mueve en el tiempo.</p>
     <div class="co-op">
-      <button class="co-b primary" data-tut-go="0"><b>Aprender en 7 pasos</b><small>Armás tu primer sistema con ayuda. Unos 5 minutos.</small></button>
+      <button class="co-b primary" data-tut-go="0"><b>Aprender en 7 pasos</b><small>Armás tu primer sistema y una flecha te va mostrando dónde tocar. Unos 5 minutos.</small></button>
       <button class="co-b" data-tut-ej><b>Ver un ejemplo armado</b><small>Un hábito, tus finanzas o tu peso, con guía para jugar.</small></button>
       <button class="co-b" data-tut-libre><b>Armar el mío</b><small>Ya sé cómo funciona: quiero empezar de cero.</small></button>
     </div>`;return true;}
   const s=TUT[i];if(!s){tutSalir();return false;}
   const hecho=!s.fin&&s.ok();const k=i+'|'+hecho;if(!force&&COACH_K===k&&!el.hidden)return true;COACH_K=k;
-  document.body.dataset.foco=hecho||s.fin?'':(s.foco||'');
-  el.hidden=false;el.className='pasos coach';
-  const NP=TUT.filter(x=>!x.fin).length;const dots=TUT.filter(x=>!x.fin).map((_,j)=>`<i class="${j<i?'ok':j===i?'cur':''}"></i>`).join('');
+  el.hidden=false;el.className='pasos coach'+(hecho?' hecho':'');
+  const NP=TUT.filter(x=>!x.fin).length;const dots=TUT.filter(x=>!x.fin).map((_,j)=>`<i class="${j<i||(j===i&&hecho)?'ok':j===i?'cur':''}"></i>`).join('');
   el.innerHTML=`<div class="co-h"><span class="co-n">${s.fin?'Recorrido completo':'Paso '+(i+1)+' de '+NP}</span><span class="co-dots">${dots}</span><button class="link sm" data-tut-x>Salir del recorrido</button></div>
    <b class="co-t">${esc(s.t)}</b><p>${esc(s.q)}</p>
    ${s.fin?`<div class="co-op">
       <button class="co-b primary" data-tut-ej><b>Ver ejemplos completos</b><small>Un hábito según Hábitos atómicos, finanzas con deuda y ahorro, peso y hambre.</small></button>
       <button class="co-b" data-tut-todo><b>Mostrar todas las piezas</b><small>Retardos, reglas, información, paradigma y las 12 palancas de Meadows.</small></button>
       <button class="co-b" data-tut-x><b>Seguir con mi sistema</b><small>Agregá cajas y flujos a tu gusto.</small></button></div>`
-    :hecho?`<p class="co-ok">✓ ${esc(s.bien)}</p><div class="co-nav">${i>0?'<button class="link sm" data-tut-go="'+(i-1)+'">← Atrás</button>':''}<button class="primary sm" data-tut-go="${i+1}">Siguiente →</button></div>`
-    :`<p class="co-haz"><b>Hacé esto:</b> ${esc(s.haz)}</p><div class="co-nav">${i>0?'<button class="link sm" data-tut-go="'+(i-1)+'">← Atrás</button>':''}<button class="link sm" data-tut-go="${i+1}">Saltear este paso</button></div>`}`;
+    :hecho?`<p class="co-ok">✓ ${esc(s.bien)}</p><div class="co-nav">${i>0?'<button class="link sm" data-tut-go="'+(i-1)+'">← Atrás</button>':''}<button class="primary" data-tut-go="${i+1}" data-tut-sig>Siguiente →</button></div>`
+    :`<div class="co-nav"><span class="hint">Seguí la flecha.</span>${i>0?'<button class="link sm" data-tut-go="'+(i-1)+'">← Atrás</button>':''}<button class="sm" data-tut-auto>Hacelo por mí</button></div>`}`;
   return true;
 }
+/* la burbuja que señala */
+let TIP_K='',TIP_EL=null;
+function ocultarTip(){const t=$('tut-tip');if(t)t.hidden=true;if(TIP_EL)TIP_EL.classList.remove('tip-on');TIP_EL=null;}
+function tipTick(){
+  if(!M||!tutActivo()||M.tut.i<0){ocultarTip();return;}
+  renderCoach();
+  const s=TUT[M.tut.i];if(!s||s.fin){ocultarTip();return;}
+  let tgt;if(s.ok())tgt={sel:'#pasos [data-tut-sig]',txt:'¡Bien! Seguí al próximo paso.'};else tgt=s.sub();
+  const el=tgt&&tgt.sel?document.querySelector(tgt.sel):null;
+  if(!el||!el.getClientRects().length){ocultarTip();return;}
+  if(TIP_EL!==el){if(TIP_EL)TIP_EL.classList.remove('tip-on');TIP_EL=el;el.classList.add('tip-on');}
+  const key=tgt.sel+'|'+tgt.txt;if(key!==TIP_K){TIP_K=key;const r0=el.getBoundingClientRect();if(r0.top<60||r0.bottom>innerHeight-20)el.scrollIntoView({block:'center',behavior:'smooth'});}
+  let t=$('tut-tip');if(!t){t=document.createElement('div');t.id='tut-tip';t.setAttribute('role','status');document.body.appendChild(t);}
+  if(t.dataset.txt!==tgt.txt){t.dataset.txt=tgt.txt;t.innerHTML=`<span>${esc(tgt.txt)}</span>`;}
+  t.hidden=false;
+  const r=el.getBoundingClientRect(),tw=t.offsetWidth,th=t.offsetHeight,m=12;let x,y,lado;
+  if(r.left>tw+m+16&&r.left>innerWidth*0.45){lado='izq';x=r.left-tw-m;y=r.top+r.height/2-th/2;}
+  else if(r.bottom+th+m<innerHeight){lado='abajo';x=r.left+r.width/2-tw/2;y=r.bottom+m;}
+  else {lado='arriba';x=r.left+r.width/2-tw/2;y=r.top-th-m;}
+  x=Math.max(8,Math.min(innerWidth-tw-8,x));y=Math.max(8,Math.min(innerHeight-th-8,y));
+  t.className='tip-'+lado;t.style.left=x+'px';t.style.top=y+'px';
+  const ax=lado==='izq'?0:Math.max(14,Math.min(tw-14,r.left+r.width/2-x));t.style.setProperty('--ax',ax+'px');
+}
+setInterval(tipTick,250);
 document.addEventListener('click',e=>{
   const t=e.target;
   const vb=t.closest('#vista-btn'),vm=$('vista-menu');
@@ -2245,12 +2308,18 @@ document.addEventListener('click',e=>{
   const vn=t.closest('[data-vista-n]');if(vn){setVistaN(+vn.dataset.vistaN);if(vm)vm.hidden=true;return;}
   if(vm&&!vm.hidden&&!t.closest('#vista-menu'))vm.hidden=true;
   const g=t.closest('[data-tut-go]');if(g){tutIr(+g.dataset.tutGo);return;}
+  if(t.closest('[data-tut-auto]')&&tutActivo()){const s=TUT[M.tut.i];if(s&&s.auto){if(POP&&!s.ok()){POP=null;$('pop').hidden=true;$('pop').innerHTML='';}s.auto();scheduleSave();setTimeout(()=>renderCoach(true),60);}return;}
   if(t.closest('[data-tut-x]')){tutSalir();return;}
   if(t.closest('[data-tut-todo]')){setVistaN(3);tutSalir();return;}
   if(t.closest('[data-tut-libre]')){setVistaN(3);tutSalir();return;}
   if(t.closest('[data-tut-ej]')){if(VISTA_N<2)setVistaN(2);tutSalir();const em=$('ej-menu');setTimeout(()=>{const b=$('ej-btn');if(b&&em&&em.hidden)b.click();},0);return;}
   if(t.closest('[data-tut-nuevo]')){const em=$('ej-menu');if(em)em.hidden=true;nuevoRecorrido();return;}
 });
+/* en la vista básica, el monto de un flujo nuevo queda como perilla */
+function montoComoPerilla(){
+  if(VISTA_N!==1||!POP||!POP.nuevo)return;const f=M.flujos.find(x=>x.k===POP.k);if(!f||tieneItems(f))return;
+  if(esNum(f.formula)&&+f.formula!==0){const p=nuevoDato((f.nombre||'Monto').trim()||'Monto',+f.formula,uniDe(f.desde||f.hacia));f.formula=p.k;renderDatos();cambio(true);}
+}
 
 /* ---------- eventos ---------- */
 document.addEventListener('click',e=>{
