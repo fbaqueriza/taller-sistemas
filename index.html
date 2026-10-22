@@ -67,8 +67,10 @@ input[type=range]{padding:0;background:none;border:none;accent-color:var(--accen
 .clock input[type=range]{min-width:120px}
 html,body{overflow-x:hidden}
 .status{font-size:12px;color:var(--muted)}
-.board{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:14px;align-items:start}
-@media (max-width:900px){.board{grid-template-columns:1fr}}
+.board{display:grid;grid-template-columns:340px minmax(0,1fr);gap:14px;align-items:start}
+.board>aside.col{order:-1}
+.board.sin-izq{grid-template-columns:minmax(0,1fr)}
+@media (max-width:900px){.board{grid-template-columns:1fr}.board>aside.col{order:0}}
 .col{display:grid;gap:14px;min-width:0}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px}
 .panel h2{font-family:var(--display);font-size:16px;font-weight:700;margin:0 0 8px;display:flex;align-items:baseline;justify-content:space-between;gap:8px}
@@ -500,6 +502,7 @@ body[data-vista="1"] #pop .av{display:none!important}
 #tut-tip[hidden]{display:none}
 #tut-tip::after{content:'';position:absolute;width:10px;height:10px;background:var(--fg);transform:rotate(45deg)}
 #tut-tip.tip-izq::after{right:-5px;top:calc(50% - 5px)}
+#tut-tip.tip-der::after{left:-5px;top:calc(50% - 5px)}
 #tut-tip.tip-abajo::after{top:-5px;left:calc(var(--ax) - 5px)}
 #tut-tip.tip-arriba::after{bottom:-5px;left:calc(var(--ax) - 5px)}
 .tip-on:not(g){outline:2.5px solid var(--accent);outline-offset:2px;animation:focoP 1.3s ease-in-out infinite}
@@ -2280,7 +2283,9 @@ function renderCoach(force){
 /* la burbuja que señala */
 let TIP_K='',TIP_EL=null;
 function ocultarTip(){const t=$('tut-tip');if(t)t.hidden=true;if(TIP_EL)TIP_EL.classList.remove('tip-on');TIP_EL=null;}
+function ajustarCols(){const b=$('board'),a=b&&b.querySelector('aside.col');if(!a)return;const vacia=![...a.children].some(c=>c.offsetHeight>0);if(b.classList.contains('sin-izq')!==vacia){b.classList.toggle('sin-izq',vacia);if(M)renderDiagram();}}
 function tipTick(){
+  ajustarCols();
   if(!M||!tutActivo()||M.tut.i<0){ocultarTip();return;}
   renderCoach();
   const s=TUT[M.tut.i];if(!s||s.fin){ocultarTip();return;}
@@ -2293,12 +2298,13 @@ function tipTick(){
   if(t.dataset.txt!==tgt.txt){t.dataset.txt=tgt.txt;t.innerHTML=`<span>${esc(tgt.txt)}</span>`;}
   t.hidden=false;
   const r=el.getBoundingClientRect(),tw=t.offsetWidth,th=t.offsetHeight,m=12;let x,y,lado;
-  if(r.left>tw+m+16&&r.left>innerWidth*0.45){lado='izq';x=r.left-tw-m;y=r.top+r.height/2-th/2;}
+  if(r.left+r.width/2<innerWidth*0.45&&r.right+tw+m+16<innerWidth){lado='der';x=r.right+m;y=r.top+r.height/2-th/2;}
+  else if(r.left>tw+m+16&&r.left>innerWidth*0.45){lado='izq';x=r.left-tw-m;y=r.top+r.height/2-th/2;}
   else if(r.bottom+th+m<innerHeight){lado='abajo';x=r.left+r.width/2-tw/2;y=r.bottom+m;}
   else {lado='arriba';x=r.left+r.width/2-tw/2;y=r.top-th-m;}
   x=Math.max(8,Math.min(innerWidth-tw-8,x));y=Math.max(8,Math.min(innerHeight-th-8,y));
   t.className='tip-'+lado;t.style.left=x+'px';t.style.top=y+'px';
-  const ax=lado==='izq'?0:Math.max(14,Math.min(tw-14,r.left+r.width/2-x));t.style.setProperty('--ax',ax+'px');
+  const ax=lado==='izq'||lado==='der'?0:Math.max(14,Math.min(tw-14,r.left+r.width/2-x));t.style.setProperty('--ax',ax+'px');
 }
 setInterval(tipTick,250);
 document.addEventListener('click',e=>{
